@@ -6,6 +6,7 @@ import sys
 import importlib
 import queue
 import threading
+import time
 
 # Global Work Queue
 WORKQ = queue.Queue()
@@ -20,8 +21,10 @@ def DirectoryArgument(name):
 
 def PythonModule(name):
     try:
+        log.info('loading unit: {0}'.format(name))
         module = importlib.import_module(name)
-    except:
+    except Exception as e:
+        print(e)
         raise argparse.ArgumentTypeError('{0} is not a valid module name'.format(name))
     return module
 
@@ -39,7 +42,7 @@ class WorkerThread(threading.Thread):
     def run(self):
         while True:
             work = WORKQ.get()
-            if 'done' in work:
+            if work is None:
                 break
             RESULTS.append(work['unit'].evaluate(CONFIG, work['target']))
             WORKQ.task_done()
@@ -83,10 +86,16 @@ for unit_module in unit_modules:
 parser.add_argument('--threads', '-t', type=int, default=10, help='number of threads to use')
 parser.add_argument('--force', '-f', action='store_true', default=False, help='skip the checks')
 parser.add_argument('target', nargs='+', type=str, help='the target file/url/IP/etc')
+parser.add_argument('--output', '-o', type=argparse.FileType('w'), default=sys.stdout, help='output json file')
 args = parser.parse_args()
 
 # Update the configuration with the arguments
 config.update(vars(args))
+
+if len(args.target) == 1 and args.target[0] == '-':
+    args.target = []
+    for line in sys.stdin.read().split('\n'):
+        args.target.append(line)
 
 # Initialize the units array
 config['units'] = []
@@ -96,7 +105,8 @@ for unit_module in unit_modules:
     unit = unit_module.Unit(config)
     config['units'].append(unit)
 
-print(type(args.threads))
+# Begin a progress output for the units
+p = log.progress('processing')
 
 # Create all the threads
 config['threads'] = []
@@ -104,8 +114,11 @@ for i in range(args.threads):
     config['threads'].append(WorkerThread())
     config['threads'][-1].start()
 
+p.status('filling work queue')
+
 # Add all the target/unit pairs to the work queue
 for target in args.target:
+    # Add each unit to the work queue
     for unit in config['units']:
         if args.force or unit.check(config, target):
             WORKQ.put({
@@ -115,9 +128,21 @@ for target in args.target:
         elif not args.force:
             log.info('{0}: invalid target: \'{1}\''.format(unit.__class__.__module__, target))
 
-# Signal all threads that we have finished
-for i in range(args.threads):
-    WORKQ.put({'done': True})
+while True:
+    n = WORKQ.qsize()
+    if n == 0:
+        break
+    p.status('{0:.2f}% complete'.format((float(len(args.target)-n)/len(args.target))*100.0))
+    time.sleep(0.1)
 
 # Ensure they got the message
 WORKQ.join()
+
+for i in range(args.threads):
+    WORKQ.put(None)
+for i in range(args.threads):
+    config['threads'][i].join()
+
+p.success('all units complete')
+
+json.dump(RESULTS, args.output, indent=4, sort_keys=True)
