@@ -1,8 +1,9 @@
 from pwn import *
+from unit import BaseUnit
 import socket
 import re
 
-class WebUnit(object):
+class WebUnit(BaseUnit):
 
     ADDRESS_PATTERN = r'^((?P<proto>[a-zA-Z][a-zA-Z0-9]*):\/\/)?(?P<host>[a-zA-Z0-9][a-zA-Z0-9\-_.]*)(:(?P<port>[0-9]{1,5}))?(\/(?P<uri>[^?]*))?(\?(?P<query>.*))?$'
     @classmethod
@@ -11,7 +12,7 @@ class WebUnit(object):
         parser.add_argument('--dns', default=None, help='custom dns server to use')
 
     def __init__(self, config):
-        super(WebUnit, self).__init__()
+        super(WebUnit, self).__init__(config)
         self.regex = re.compile(WebUnit.ADDRESS_PATTERN)
 
     # Explode a URL into it's protocol, host, port, uri, and query string
@@ -24,10 +25,10 @@ class WebUnit(object):
         return match.groupdict(default='')
 
     # Check that the target is a web address of some kind
-    def check(self, config, target):
+    def check(self, target):
         # It appears to be okay
         return True
 
     # The sub-class should define this...
-    def evaluate(self, config, target):
+    def evaluate(self, target):
         log.warning('you didn\'t specify an action for this WebUnit')

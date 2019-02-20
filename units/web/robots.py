@@ -8,14 +8,14 @@ class Unit(WebUnit):
     def __init__(self, config):
         super(Unit, self).__init__(config)
 
-    def check(self, config, target):
+    def check(self, target):
         try:
             self.explode_url(target)
         except:
             return False
         return True
 
-    def evaluate(self, config, target):
+    def evaluate(self, target):
 
         # Strip trailing slashes
         target = target.rstrip('/').rstrip('\\')
@@ -27,11 +27,14 @@ class Unit(WebUnit):
         if r.status_code != 200:
             return None
 
+        f,name = self.artifact(target, 'robots.txt')
+        with f:
+            f.write(r.text)
+
         # Result
         result = {
-            'unit': self.__class__.__module__,
-            'target': target,
-            'findings': []
+            'findings': [],
+            'artifact': name
         }
 
         # Look for disallow entries and add them to the findings
