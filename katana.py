@@ -181,3 +181,5 @@ if __name__ == '__main__':
     # Make sure we can create the results file
     with open(os.path.join(args.outdir, 'katana.json'), 'w') as f:
         json.dump(RESULTS, f, indent=4, sort_keys=True)
+
+    print(json.dumps(RESULTS, indent=4, sort_keys=True))
