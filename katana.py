@@ -10,6 +10,7 @@ import time
 import traceback
 import os
 import util
+import pkgutil
 
 # Global Work Queue
 WORKQ = queue.Queue()
@@ -27,20 +28,13 @@ class WorkerThread(threading.Thread):
     def run(self):
         while True:
             # Grab the next item
-            unit,target = WORKQ.get()
+            unit,case = WORKQ.get()
             # The boss says NO.
-            if unit is None and target is None:
+            if unit is None and case is None:
                 break
-
-            # Run unit check on this target, if neededs
-            if not CONFIG['force'] and \
-                not unit.check(target):
-                log.warning('{0}: target {0} is not valid for this unit'.format(
-                    unit.unit_name, target
-                ))
-            else:
-                # Evaluate the target, and append the results
-                RESULTS[target][unit.unit_name] = unit.evaluate(target)
+                
+            # Evaluate the target, and append the results
+            RESULTS[target][unit.unit_name] = unit.evaluate(case)
             
             # Notify boss that we are done
             WORKQ.task_done()
@@ -52,6 +46,16 @@ class ArgumentParserWithHelp(argparse.ArgumentParser):
         print('{0}: error: {1}'.format(self.prog, message))
         self.print_help()
         sys.exit(2)
+
+def load_modules_recursive(path, prefix=''):
+    for importer, name, ispkg in pkgutil.iter_modules(path, prefix):
+        module = importlib.import_module(name)
+    
+        if ispkg:
+            for s in load_modules_recursive(module.__path__, module.__name__ + '.'):
+                yield s
+        else:
+            yield module
 
 # Make sure we find the local packages (first current directory)
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
@@ -86,10 +90,22 @@ if __name__ == '__main__':
         try:
             # import the module
             module = importlib.import_module(name)
-            # initialize any module specific arguments
-            module.Unit.prepare_parser(CONFIG, parser)
-            # add to unit list
-            CONFIG['modules'].append(module)
+            # We don't load units from packages
+            if module.__name__ != module.__package__:
+                try:
+                    # initialize any module specific arguments
+                    module.Unit.prepare_parser(CONFIG, parser)
+                    # add to unit list
+                    CONFIG['modules'].append(module)
+                except:
+                    log.info('{0}: no Unit class found'.format(module.__name__))
+            # Load children, if there are any
+            for m in load_modules_recursive(module.__path__, module.__name__+'.'):
+                try:
+                    m.Unit.prepare_parser(CONFIG, parser)
+                    CONFIG['modules'].append(m)
+                except:
+                    log.info('{0}: no Unit class found'.format(module.__name__))
         except ModuleNotFoundError as e:
             log.error('unit {0} does not exist'.format(name))
         except Exception as e:
@@ -155,7 +171,8 @@ if __name__ == '__main__':
     for target in args.target:
         # Add each unit to the work queue
         for unit in CONFIG['units']:
-            WORKQ.put((unit,target))
+            for case in unit.get_cases(target):
+                WORKQ.put((unit,case))
 
     # Monitor the work queue and update the progress
     while True:
