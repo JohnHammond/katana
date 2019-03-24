@@ -14,7 +14,7 @@ class Unit(WebUnit):
         except:
             return False
         return True
-
+    
     def evaluate(self, target):
 
         # Strip trailing slashes

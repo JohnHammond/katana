@@ -20,7 +20,7 @@ RESULTS = []
 CONFIG = {}
 
 # This is the thread which actually runs the unit checks and stores
-# the results int he RESULT array
+# the results in the RESULT array
 class WorkerThread(threading.Thread):
     def __init__(self):
         super(WorkerThread, self).__init__()
@@ -34,7 +34,9 @@ class WorkerThread(threading.Thread):
                 break
                 
             # Evaluate the target, and append the results
-            RESULTS[target][unit.unit_name] = unit.evaluate(case)
+            unit.check(case)
+            if ( args.force or unit.check(case) ):
+                RESULTS[target][unit.unit_name] = unit.evaluate(case)
             
             # Notify boss that we are done
             WORKQ.task_done()
@@ -99,13 +101,14 @@ if __name__ == '__main__':
                     CONFIG['modules'].append(module)
                 except:
                     log.info('{0}: no Unit class found'.format(module.__name__))
-            # Load children, if there are any
-            for m in load_modules_recursive(module.__path__, module.__name__+'.'):
-                try:
-                    m.Unit.prepare_parser(CONFIG, parser)
-                    CONFIG['modules'].append(m)
-                except:
-                    log.info('{0}: no Unit class found'.format(module.__name__))
+            else:
+                # Load children, if there are any
+                for m in load_modules_recursive(module.__path__, module.__name__+'.'):
+                    try:
+                        m.Unit.prepare_parser(CONFIG, parser)
+                        CONFIG['modules'].append(m)
+                    except Exception as e:
+                        log.info('{0}: no Unit class found'.format(module.__name__))
         except ModuleNotFoundError as e:
             log.error('unit {0} does not exist'.format(name))
         except Exception as e:

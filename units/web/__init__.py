@@ -20,14 +20,16 @@ class WebUnit(BaseUnit):
         match = self.regex.match(target)
         
         if match is None:
-            raise ValueError('{0}: not a valid url'.format(target))
+            log.failure('{0}: not a valid url'.format(target))
+            return False
 
         return match.groupdict(default='')
 
     # Check that the target is a web address of some kind
     def check(self, target):
+        print("are you doing this")
         # It appears to be okay
-        return True
+        return bool(self.explode_url(target))
 
     # The sub-class should define this...
     def evaluate(self, target):
