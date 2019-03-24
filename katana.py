@@ -67,6 +67,7 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.getcwd())
 
 if __name__ == '__main__':
+<<<<<<< HEAD
 	# Initial parser is for unit directory. We need to process this argument first,
 	# so that the specified unit may be loaded
 	parser = ArgumentParserWithHelp(
@@ -152,6 +153,7 @@ if __name__ == '__main__':
 	if len(args.target) == 1 and args.target[0] == '-':
 		args.target = []
 		for line in sys.stdin.read().split('\n'):
+
 			args.target.append(line)
 	
 	# Initialize the units array
@@ -217,3 +219,5 @@ if __name__ == '__main__':
 		json.dump(RESULTS, f, indent=4, sort_keys=True)
 
 	print(json.dumps(RESULTS, indent=4, sort_keys=True))
+
+     

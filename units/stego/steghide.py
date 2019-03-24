@@ -8,8 +8,10 @@ import subprocess
 import os
 import units.raw
 import re
+import units.stego
 
-class Unit(units.raw.RawUnit):
+
+class Unit(units.stego.StegoUnit):
 
 	@classmethod
 	def prepare_parser(cls, config, parser):

@@ -14,6 +14,10 @@ class Unit(WebUnit):
         except:
             return False
         return True
+
+    def prepare_parser(config, parser):
+        pass
+
     
     def evaluate(self, target):
 

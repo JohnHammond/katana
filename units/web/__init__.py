@@ -27,7 +27,6 @@ class WebUnit(BaseUnit):
 
     # Check that the target is a web address of some kind
     def check(self, target):
-        print("are you doing this")
         # It appears to be okay
         return bool(self.explode_url(target))
 

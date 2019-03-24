@@ -2,7 +2,6 @@ from pwn import *
 import hashlib
 
 class BaseUnit(object):
-
 	# Unit constructor (saves the config)
 	def __init__(self, config):
 		self.config = config
@@ -43,6 +42,21 @@ class BaseUnit(object):
 				return path
 		return open(path, mode), path
 
+    # Create an artifact directory
+    def artifact_dir(self, target, name):
+        path = os.path.join(self.get_output_dir(target), name)
+        try:
+            os.mkdir(name)
+        except OSError:
+            if ( "File exists" in e.args ):
+                log.error("Artifact directory '{0}' already exists!".format(path))
+            else:
+                # We don't know what went wrong yet.
+                # Raise this because it might be another bug to squash
+                raise e
+
+        return path
+
 	def get_output_dir(self, target):
 		# If there's only one target, we don't deal with sha256 sums.
 		# Otherwise, the artifacts will be in:
@@ -66,3 +80,4 @@ class BaseUnit(object):
 				))
 
 		return outdir
+

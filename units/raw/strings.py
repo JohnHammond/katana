@@ -11,18 +11,11 @@ class Unit(units.raw.RawUnit):
 
 	@classmethod
 	def prepare_parser(cls, config, parser):
-		pass
+		parser.add_argument('--length', default=4, type=int, help='minimum length of strings to be returned')
 
 	def evaluate(self, target):
 
-		p = subprocess.Popen(['strings', target], stdout = subprocess.PIPE)
+		p = subprocess.Popen(['strings', target, '-n', str(self.config['length'])], 
+			stdout = subprocess.PIPE, stderr=subprocess.PIPE )
 
-		result = {
-			'strings': []
-		}
-
-		for line in [ bytes.decode(l,'ascii').replace("\n","") \
-					  for l in p.stdout.readlines() ]:
-			result['strings'].append(line)
-		
-		return result
+		return self.process_output(p)
