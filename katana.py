@@ -67,7 +67,6 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.getcwd())
 
 if __name__ == '__main__':
-<<<<<<< HEAD
 	# Initial parser is for unit directory. We need to process this argument first,
 	# so that the specified unit may be loaded
 	parser = ArgumentParserWithHelp(
