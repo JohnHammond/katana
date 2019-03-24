@@ -1,0 +1,32 @@
+InfernoSquad
+
+
+Setting up the infrastructure
+
+ create a little intranet
+ --- they use Slack for NETWARS
+ ... 
+
+cyber shield
+april 5th - 19th
+
+maning EndGame -- threat hunting platform
+ it downloads, injects into memory, and then deletes its own file
+ EndGame stops Cobalt Strike. Stops mimikatz 
+
+ADHD - from black hills
+
+HELK - the hunting elk
+
+---------------------------
+
+Reston, va
+felix - herndon va ... bsides nova
+vivian - baltimore ... might be at bsides nova
+
+
+---------------------------
+
+chimaera
+
+Layer 8 -- 
