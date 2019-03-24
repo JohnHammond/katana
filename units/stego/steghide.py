@@ -8,6 +8,7 @@ import subprocess
 import os
 import units.stego
 
+
 class Unit(units.stego.StegoUnit):
 
 	@classmethod
@@ -43,5 +44,5 @@ class Unit(units.stego.StegoUnit):
 			result.pop('stderr')
 		if not len(result['stdout']):
 			result.pop('stdout')
-
+	
 		return result
