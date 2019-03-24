@@ -20,10 +20,10 @@ class Unit(WebUnit):
         # Strip trailing slashes
         target = target.rstrip('/').rstrip('\\')
 
-        # Create a session
+        # View the page
         r = requests.get(target)
         
-        # Result
+   		# Return the cookies
         result = [ vars(cookie) for cookie in r.cookies if cookie ]
            
         return result

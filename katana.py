@@ -104,11 +104,12 @@ if __name__ == '__main__':
             else:
                 # Load children, if there are any
                 for m in load_modules_recursive(module.__path__, module.__name__+'.'):
-                    try:
-                        m.Unit.prepare_parser(CONFIG, parser)
-                        CONFIG['modules'].append(m)
-                    except Exception as e:
-                        log.info('{0}: no Unit class found'.format(module.__name__))
+                    # try:
+                    m.Unit.prepare_parser(CONFIG, parser)
+                    CONFIG['modules'].append(m)
+                    # except Exception as e:
+                    
+                    #     log.info('{0}: no Unit class found'.format(module.__name__))
         except ModuleNotFoundError as e:
             log.error('unit {0} does not exist'.format(name))
         except Exception as e:
