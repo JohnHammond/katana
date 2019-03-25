@@ -47,13 +47,15 @@ class BaseUnit(object):
 			return
 
 		# Look for the patter in the output
-		result = self.pattern.search(output)
+		result = self.pattern.search(output,re.MULTILINE | re.DOTALL)
 
 		# No match
 		if result is None:
 			return
 
+		# add the flags
 		self.flags.append(result.group())
+
 
 
 
@@ -88,7 +90,7 @@ class BaseUnit(object):
 		outdir = os.path.join(
 			self.config['outdir'],
 			'artifacts',
-			hashlib.sha256(target.encode('utf-8')).hexdigest(),
+			hashlib.sha256(target.encode('utf-8')).hexdigest()[-8:],
 			*self.unit_name.split('.')
 		)
 
