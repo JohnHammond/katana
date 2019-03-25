@@ -84,8 +84,7 @@ class Unit(units.stego.StegoUnit):
 				thing = f.read()
 
 		# Check if it matches the pattern
-		if thing != '<BINARY_DATA>' and not self.match_output(thing):
-			return None
+		self.find_flags(thing)
 
 		# Stop processing this unit if we only expect on success
 		if self.config['stop']:

@@ -140,7 +140,7 @@ if __name__ == '__main__':
 	parser.add_argument('--outdir', '-o', default='./results',
 		help='directory to house results')
 	# A Regular Expression patter for units to match
-	parser.add_argument('--pattern', default=None,
+	parser.add_argument('--flag-format', '-ff', default=None,
 		help='regex pattern for output (e.g. "FLAG{.*}")')
 	args = parser.parse_args()
 
@@ -224,6 +224,11 @@ if __name__ == '__main__':
 	# Wait for them to exit
 	for i in range(args.threads):
 		CONFIG['threads'][i].join()
+
+	RESULTS['flags'] = []
+
+	for unit in CONFIG['units']:
+		RESULTS['flags'] += unit.flags
 	
 	p.success('all units complete')
 
@@ -232,5 +237,9 @@ if __name__ == '__main__':
 		json.dump(RESULTS, f, indent=4, sort_keys=True)
 
 	print(json.dumps(RESULTS, indent=4, sort_keys=True))
+
+	# Dumb the flags we found
+	for flag in RESULTS['flags']:
+		log.success('found flag: {0}'.format(flag))
 
      

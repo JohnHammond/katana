@@ -7,10 +7,11 @@ class BaseUnit(object):
 	def __init__(self, config):
 		self.config = config
 		self.completed = False
-		if config['pattern'] == None:
+		if config['flag_format'] == None:
 			self.pattern = None
 		else:
-			self.pattern = re.compile(config['pattern'])
+			self.pattern = re.compile('('+config['flag_format']+')')
+		self.flags = []
 
 	# By default, the only test case is the target itself
 	def get_cases(self, target):
@@ -40,10 +41,21 @@ class BaseUnit(object):
 	def evaluate(self, case):
 		log.error('{0}: no evaluate implemented: bad unit'.format(self.unit_name))
 
-	def match_output(self, output):
+	def find_flags(self, output):
+		# If the user didn't supply a patter, there's nothing to do.
 		if self.pattern == None:
-			return True
-		return self.pattern.match(output)
+			return
+
+		# Look for the patter in the output
+		result = self.pattern.search(output)
+
+		# No match
+		if result is None:
+			return
+
+		self.flags.append(result.group())
+
+
 
 	# Create a new artifact for this target/unit and
 	def artifact(self, target, name, mode='w', create=True):
