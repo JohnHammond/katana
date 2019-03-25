@@ -10,7 +10,7 @@ class BaseUnit(object):
 		if config['flag_format'] == None:
 			self.pattern = None
 		else:
-			self.pattern = re.compile('('+config['flag_format']+')')
+			self.pattern = re.compile('('+config['flag_format']+')', flags=re.MULTILINE | re.DOTALL)
 		self.flags = []
 
 	# By default, the only test case is the target itself
@@ -47,7 +47,7 @@ class BaseUnit(object):
 			return
 
 		# Look for the patter in the output
-		result = self.pattern.search(output,re.MULTILINE | re.DOTALL)
+		result = self.pattern.search(output)
 
 		# No match
 		if result is None:

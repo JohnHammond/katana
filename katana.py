@@ -225,11 +225,12 @@ if __name__ == '__main__':
 	for i in range(args.threads):
 		CONFIG['threads'][i].join()
 
-	RESULTS['flags'] = []
+	if CONFIG['flag_format']:
+		RESULTS['flags'] = []
 
-	for unit in CONFIG['units']:
-		RESULTS['flags'] += unit.flags
-	
+		for unit in CONFIG['units']:
+			RESULTS['flags'] += unit.flags
+		
 	p.success('all units complete')
 
 	# Make sure we can create the results file
@@ -238,6 +239,7 @@ if __name__ == '__main__':
 
 	print(json.dumps(RESULTS, indent=4, sort_keys=True))
 
-	# Dumb the flags we found
-	for flag in RESULTS['flags']:
-		log.success('found flag: {0}'.format(flag))
+	if CONFIG['flag_format']:
+		# Dump the flags we found
+		for flag in RESULTS['flags']:
+			log.success('Found flag: {0}'.format(flag))
