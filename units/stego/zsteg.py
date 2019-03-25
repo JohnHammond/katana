@@ -43,9 +43,11 @@ class Unit(units.stego.StegoUnit):
 			lines = [e+d for e in line.split(d) if e]
 			for temp_line in lines:
 				if (not temp_line.endswith(".. \r")):
+					self.find_flags(temp_line)
 					result["stdout"].append(temp_line)
 		
 		for line in [ l.strip() for l in error.split('\n') if l ]:
+			self.find_flags(line)
 			result["stderr"].append(line)
 
 		if not len(result['stderr']):

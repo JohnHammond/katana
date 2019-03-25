@@ -19,4 +19,9 @@ class Unit(units.raw.RawUnit):
 		p = subprocess.Popen(['strings', target, '-n', str(self.config['length'])], 
 			stdout = subprocess.PIPE, stderr=subprocess.PIPE )
 
-		return util.process_output(p)
+		# Look for flags, if we found them...
+		response = util.process_output(p)
+		self.find_flags(response['stdout'])
+		self.find_flags(response['stderr'])
+
+		return response

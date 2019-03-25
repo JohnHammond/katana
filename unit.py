@@ -43,7 +43,7 @@ class BaseUnit(object):
 	def match_output(self, output):
 		if self.pattern == None:
 			return True
-		return self.pattern.match(output)
+		return self.pattern.search(output, re.MULTILINE | re.DOTALL)
 
 	# Create a new artifact for this target/unit and
 	def artifact(self, target, name, mode='w', create=True):
