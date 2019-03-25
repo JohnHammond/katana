@@ -63,7 +63,7 @@ class BaseUnit(object):
 	def artifact(self, target, name, mode='w', create=True):
 		path = os.path.join(self.get_output_dir(target), name)
 		if not create:
-				return path
+			return path
 		return open(path, mode), path
 
 	# Create an artifact directory

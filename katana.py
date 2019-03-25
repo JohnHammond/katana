@@ -9,7 +9,7 @@ import threading
 import time
 import traceback
 import os
-import util
+import utilities
 import pkgutil
 
 # Global Work Queue
@@ -80,7 +80,7 @@ if __name__ == '__main__':
 		description='Low-hanging fruit checker for CTF problems',
 		add_help=False,
 		allow_abbrev=False)
-	parser.add_argument('--unitdir', type=util.DirectoryArgument,
+	parser.add_argument('--unitdir', type=utilities.DirectoryArgument,
 		default='./units', help='the directory where available units are stored')
 	parser.add_argument('--unit', action='append',
 		required=True, help='the units to run on the targets')

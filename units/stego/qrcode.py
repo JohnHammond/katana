@@ -6,7 +6,7 @@ import argparse
 from pwn import *
 import subprocess
 import units.raw
-import util
+import utilities
 
 class Unit(units.raw.RawUnit):
 
@@ -23,7 +23,7 @@ class Unit(units.raw.RawUnit):
 				log.failure("zbarimg is not in the PATH (not installed)? Cannot run the stego.qrcode unit!")
 				return None
 
-		results = util.process_output(p)
+		results = utilities.process_output(p)
 		# "scanned 2 barcode symbols from 2 images in 0.09 seconds"
 		count = int(results['stderr'][0].split(' ')[1])
 
@@ -31,8 +31,11 @@ class Unit(units.raw.RawUnit):
 			return None
 
 		results = '\n'.join(results['stdout'])
-		things = results.split(':')
-		typ = things[0]
-		things = ':'.join(things[1:])
+		content = results.split(':')
+		typ = content[0]
+		content = ':'.join(content[1:])
 
-		return { 'type': typ, 'content': things }
+		# Look for flags, if we found them...
+		self.find_flags(content)
+
+		return { 'type': typ, 'content': content }

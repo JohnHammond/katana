@@ -6,7 +6,7 @@ import argparse
 from pwn import *
 import subprocess
 import units.forensics
-import util
+import utilities
 
 class Unit(units.forensics.ForensicsUnit):
 
@@ -24,7 +24,7 @@ class Unit(units.forensics.ForensicsUnit):
 				log.failure("binwalk is not in the PATH (not installed)? Cannot run the forensics.binwalk unit!")
 				return None
 
-		results = util.process_output(p)
+		results = utilities.process_output(p)
 		results['artifact'] = binwalk_directory
 
 		return results

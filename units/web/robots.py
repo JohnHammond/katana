@@ -32,6 +32,7 @@ class Unit(WebUnit):
             return None
 
         f,name = self.artifact(target, 'robots.txt')
+        self.find_flags(r.text)
         with f:
             f.write(r.text)
 

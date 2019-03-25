@@ -7,6 +7,7 @@ from pwn import *
 import subprocess
 import os
 import units.stego
+import utilities
 
 class Unit(units.stego.StegoUnit):
 
@@ -23,26 +24,11 @@ class Unit(units.stego.StegoUnit):
 				log.failure("jsteg is not in the PATH (not installed)? Cannot run the stego.jsteg unit!")
 				return None
 
-		stdout = []
-		stderr = []
-
-		result = {
-			"stdout": [],
-			"stderr": [],
-		}
-
-		output = bytes.decode(p.stdout.read(),'ascii')
-		error = bytes.decode(p.stderr.read(),'ascii')
+		# Look for flags, if we found them...
+		response = utilities.process_output(p)
+		if 'stdout' in response:
+			self.find_flags(str(response['stdout']))
+		if 'stderr' in response:
+			self.find_flags(str(response['stderr']))
 		
-		for line in [ l.strip() for l in output.split('\n') if l ]:
-			result["stdout"].append(line)
-		
-		for line in [ l.strip() for l in error.split('\n') if l ]:
-			result["stderr"].append(line)
-
-		if not len(result['stderr']):
-			result.pop('stderr')
-		if not len(result['stdout']):
-			result.pop('stdout')
-		
-		return result
+		return response

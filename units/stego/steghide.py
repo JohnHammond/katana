@@ -46,17 +46,21 @@ class Unit(units.stego.StegoUnit):
 				yield line.rstrip('\n'),(target, line.rstrip('\n'))
 
 	def evaluate(self, target):
-
 		# Split up the target (see get_cases)
 		target_file, password = target
 
 		# Grab the output path for this target and password
-		output_path = self.artifact(target_file, password, create=False)
+		if ( password == "" ):
+			output_path = self.artifact(target_file, "no_password", create=False)	
+		else:
+			output_path = self.artifact(target_file, password, create=False)
 
 		# This file exists, we already tried this password
 		if os.path.exists(output_path):
+			log.failure(output_path)
 			return None
 			
+
 		# Run steghide
 		p = subprocess.Popen(
 			['steghide', 'extract', '-sf', target_file, '-p', password, '-xf', output_path],

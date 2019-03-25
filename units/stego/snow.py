@@ -6,7 +6,7 @@ import argparse
 from pwn import *
 import subprocess
 import units.stego
-import util
+import utilities
 
 class Unit(units.stego.StegoUnit):
 
@@ -23,5 +23,11 @@ class Unit(units.stego.StegoUnit):
 				log.failure("snow is not in the PATH (not installed)? Cannot run the stego.snow unit!")
 				return None
 
-		result = util.process_output(p)
-		return result
+		# Look for flags, if we found them...
+		response = utilities.process_output(p)
+		if 'stdout' in response:
+			self.find_flags(str(response['stdout']))
+		if 'stderr' in response:
+			self.find_flags(str(response['stderr']))
+		
+		return response
