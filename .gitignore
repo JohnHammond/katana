@@ -2,3 +2,4 @@ __pycache__/
 results
 domains.txt
 tests/
+env/
