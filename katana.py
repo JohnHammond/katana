@@ -18,6 +18,8 @@ WORKQ = None
 RESULTS = []
 # The configuration (arguments, really)
 CONFIG = {}
+# Lock for results access
+RESULT_LOCK = threading.RLock()
 
 # This is the thread which actually runs the unit checks and stores
 # the results in the RESULT array
@@ -35,11 +37,16 @@ class WorkerThread(threading.Thread):
 
 			if not unit.completed:
 				if ( args.force or unit.check(case) ):
-					if unit.unit_name not in RESULTS[target] or  RESULTS[target][unit.unit_name] is None:
-						RESULTS[target][unit.unit_name] = {}
+					# Perform the evaluation
 					result = unit.evaluate(case)
+					# Grab the lock for saving the results
 					if result is not None:
-						RESULTS[target][unit.unit_name][name] = result
+						with RESULT_LOCK:
+							# Build the structure if needed
+							if unit.unit_name not in RESULTS[target] or \
+									RESULTS[target][unit.unit_name] == None:
+								RESULTS[target][unit.unit_name] = {}
+							RESULTS[target][unit.unit_name][name] = result
 			
 			# Notify boss that we are done
 			WORKQ.task_done()
@@ -132,6 +139,9 @@ if __name__ == '__main__':
 	# The output directory for this scan
 	parser.add_argument('--outdir', '-o', default='./results',
 		help='directory to house results')
+	# A Regular Expression patter for units to match
+	parser.add_argument('--pattern', default=None,
+		help='regex pattern for output (e.g. "FLAG{.*}")')
 	args = parser.parse_args()
 
 	# Check if the file exists and isn't a directory... that's bad

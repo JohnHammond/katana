@@ -20,9 +20,6 @@ class Unit(units.stego.StegoUnit):
 		parser.add_argument('--password', '-p', type=str,
 		help="A password to try on the file", action="append",
 			default=[])
-		parser.add_argument('--pattern', type=str,
-			help="Pattern which the result should match",
-			default=None)
 		parser.add_argument('--stop', default=True,
 			help="Stop processing on matching password",
 			action="store_false")
@@ -30,8 +27,6 @@ class Unit(units.stego.StegoUnit):
 
 	def __init__(self, config):
 		super(Unit, self).__init__(config)
-		if self.config['pattern'] is not None:
-			self.config['pattern'] = re.compile(self.config['pattern'])
 	
 	def check(self, target):
 		return super(Unit, self).check(target[0])
@@ -89,9 +84,8 @@ class Unit(units.stego.StegoUnit):
 				thing = f.read()
 
 		# Check if it matches the pattern
-		if self.config['pattern'] is not None and thing != '<BINARY_DATA>':
-			if self.config['pattern'].match(thing) is None:
-				return None
+		if thing != '<BINARY_DATA>' and not self.match_output(thing):
+			return None
 
 		# Stop processing this unit if we only expect on success
 		if self.config['stop']:
