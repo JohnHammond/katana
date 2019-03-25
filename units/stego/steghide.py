@@ -9,7 +9,7 @@ import os
 import units.raw
 import re
 import units.stego
-
+import magic
 
 class Unit(units.stego.StegoUnit):
 
@@ -68,18 +68,37 @@ class Unit(units.stego.StegoUnit):
 			stdout = subprocess.PIPE, stderr = subprocess.PIPE
 		)
 
+		# Wait for process completion
+		p.wait()
+
 		# Grab the output
 		output = bytes.decode(p.stdout.read(),'ascii')
 		error = bytes.decode(p.stderr.read(),'ascii')
-		
-		if 'wrote extracted data to' not in error:
-			return None
 
-		if self.config['pattern'] is not None:
-			if self.config['pattern'].match(error) is None:
+		# Check if it succeeded
+		if p.returncode != 0:
+			return None
+	
+		# Grab the file type
+		typ = magic.from_file(output_path)
+		thing = '<BINARY_DATA>'
+		
+		# If the type is text, then we can display it in katana.json
+		if typ == 'text/plain' or 'ASCII text' in typ:
+			with open(output_path, 'r') as f:
+				thing = f.read()
+
+		# Check if it matches the pattern
+		if self.config['pattern'] is not None and thing != '<BINARY_DATA>':
+			if self.config['pattern'].match(thing) is None:
 				return None
 
+		# Stop processing this unit if we only expect on success
 		if self.config['stop']:
 			self.completed = True
-		
-		return error
+	
+		return {
+			'file': output_path,
+			'type': typ,
+			'content': thing
+		}

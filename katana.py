@@ -28,18 +28,18 @@ class WorkerThread(threading.Thread):
 	def run(self):
 		while True:
 			# Grab the next item
-			unit,case = WORKQ.get()
+			unit,name,case = WORKQ.get()
 			# The boss says NO.
-			if unit is None and case is None:
+			if unit is None and case is None and name is None:
 					break
 
 			if not unit.completed:
 				if ( args.force or unit.check(case) ):
 					if unit.unit_name not in RESULTS[target] or  RESULTS[target][unit.unit_name] is None:
-						RESULTS[target][unit.unit_name] = []
+						RESULTS[target][unit.unit_name] = {}
 					result = unit.evaluate(case)
 					if result is not None:
-						RESULTS[target][unit.unit_name].append(result)
+						RESULTS[target][unit.unit_name][name] = result
 			
 			# Notify boss that we are done
 			WORKQ.task_done()
@@ -191,7 +191,7 @@ if __name__ == '__main__':
 				# The threads are working now, stop adding if it's done.
 				if not unit.completed:
 					p.status('adding {0} to work queue (size: {1}, n: {2})'.format(name, WORKQ.qsize(),total))
-					WORKQ.put((unit,case))
+					WORKQ.put((unit,name,case))
 					total += 1
 				else:
 					break
@@ -210,7 +210,7 @@ if __name__ == '__main__':
 
 	# Notify the threads that we are done
 	for i in range(args.threads):
-		WORKQ.put((None,None))
+		WORKQ.put((None,None,None))
 	# Wait for them to exit
 	for i in range(args.threads):
 		CONFIG['threads'][i].join()
