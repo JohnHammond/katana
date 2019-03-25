@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-03-24 13:45:04
+# @Last Modified time: 2019-03-24 20:26:48
 
 from pwn import *
 from unit import BaseUnit
@@ -30,6 +30,9 @@ class StegoUnit(BaseUnit):
             return False
 
 
-    # The sub-class should define this, to actually perform the action...
-    def evaluate(self, target):
-        log.warning('you didn\'t specify an action for this StegoUnit')
+    # The sub-class should define this...
+    #  def evaluate(self, target):
+    #     pass  
+    #
+    # If you do not include this function, the main unit.py
+    # will properly display its name.

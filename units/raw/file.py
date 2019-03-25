@@ -7,6 +7,7 @@ from pwn import *
 import subprocess
 import os
 import units.raw
+import util
 
 class Unit(units.raw.RawUnit):
 
@@ -17,4 +18,4 @@ class Unit(units.raw.RawUnit):
 	def evaluate(self, target):
 
 		p = subprocess.Popen(['file', target], stdout = subprocess.PIPE, stderr = subprocess.PIPE)		
-		return self.process_output(p)
+		return util.process_output(p)

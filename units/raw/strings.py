@@ -6,6 +6,7 @@ import argparse
 from pwn import *
 import subprocess
 import units.raw
+import util
 
 class Unit(units.raw.RawUnit):
 
@@ -18,4 +19,4 @@ class Unit(units.raw.RawUnit):
 		p = subprocess.Popen(['strings', target, '-n', str(self.config['length'])], 
 			stdout = subprocess.PIPE, stderr=subprocess.PIPE )
 
-		return self.process_output(p)
+		return util.process_output(p)

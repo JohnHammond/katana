@@ -3,7 +3,7 @@ from unit import BaseUnit
 import socket
 import re
 
-class CryptoUnit(BaseUnit):
+class ForensicsUnit(BaseUnit):
 
     @classmethod
     def prepare_parser(cls, config, parser):
@@ -11,11 +11,10 @@ class CryptoUnit(BaseUnit):
         pass
 
     def __init__(self, config):
-        super(CryptoUnit, self).__init__(config)
+        super(ForensicsUnit, self).__init__(config)
 
     # The sub-class should define this...
     def check(self, target):
-
         return True
 
     # The sub-class should define this...
@@ -24,3 +23,4 @@ class CryptoUnit(BaseUnit):
     #
     # If you do not include this function, the main unit.py
     # will properly display its name.
+    

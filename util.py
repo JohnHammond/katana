@@ -30,3 +30,29 @@ def GetFullyQualifiedClassName(o):
         return o.__class__.__name__  # Avoid reporting __builtin__
     else:
         return module + '.' + o.__class__.__name__
+
+# -------------------------------------------------------------------
+
+# These are utility functions that may be used in more than one module.
+
+def process_output(popen_object):
+
+    result = {
+        "stdout": [],
+        "stderr": [],
+    }
+
+    output = bytes.decode(popen_object.stdout.read(),'ascii')
+    error = bytes.decode(popen_object.stderr.read(),'ascii')
+    
+    for line in [ l.strip() for l in error.split('\n') if l ]:
+        result["stderr"].append(line)
+    for line in [ l.strip() for l in output.split('\n') if l ]:
+        result["stdout"].append(line)
+
+    if not len(result['stderr']):
+        result.pop('stderr')
+    if not len(result['stdout']):
+        result.pop('stdout')
+    
+    return result
