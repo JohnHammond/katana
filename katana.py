@@ -9,7 +9,7 @@ import threading
 import time
 import traceback
 import os
-import util
+import utilities
 import pkgutil
 
 # Global Work Queue
@@ -80,7 +80,7 @@ if __name__ == '__main__':
 		description='Low-hanging fruit checker for CTF problems',
 		add_help=False,
 		allow_abbrev=False)
-	parser.add_argument('--unitdir', type=util.DirectoryArgument,
+	parser.add_argument('--unitdir', type=utilities.DirectoryArgument,
 		default='./units', help='the directory where available units are stored')
 	parser.add_argument('--unit', action='append',
 		required=True, help='the units to run on the targets')
@@ -225,11 +225,12 @@ if __name__ == '__main__':
 	for i in range(args.threads):
 		CONFIG['threads'][i].join()
 
-	RESULTS['flags'] = []
+	if CONFIG['flag_format']:
+		RESULTS['flags'] = []
 
-	for unit in CONFIG['units']:
-		RESULTS['flags'] += unit.flags
-	
+		for unit in CONFIG['units']:
+			RESULTS['flags'] += unit.flags
+		
 	p.success('all units complete')
 
 	# Make sure we can create the results file
@@ -238,6 +239,7 @@ if __name__ == '__main__':
 
 	print(json.dumps(RESULTS, indent=4, sort_keys=True))
 
-	# Dumb the flags we found
-	for flag in RESULTS['flags']:
-		log.success('found flag: {0}'.format(flag))
+	if CONFIG['flag_format']:
+		# Dump the flags we found
+		for flag in RESULTS['flags']:
+			log.success('Found flag: {0}'.format(flag))

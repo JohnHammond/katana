@@ -36,11 +36,11 @@ class Unit(WebUnit):
 
         # If the response is anything other than a "Not Found",
         # we might have something here...
-        if r.status_code != 404 and 'Directory ' in r.text:
+        if r.status_code != 404 and 'Index ' in r.text:
+            return None
         else:
             result = {
                 'git_repo': url,
             }
     
             return result
-            return None

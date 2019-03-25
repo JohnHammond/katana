@@ -6,7 +6,7 @@ import argparse
 from pwn import *
 import subprocess
 import units.raw
-import util
+import utilities
 
 class Unit(units.raw.RawUnit):
 
@@ -20,8 +20,10 @@ class Unit(units.raw.RawUnit):
 			stdout = subprocess.PIPE, stderr=subprocess.PIPE )
 
 		# Look for flags, if we found them...
-		response = util.process_output(p)
-		self.find_flags(response['stdout'])
-		self.find_flags(response['stderr'])
-
+		response = utilities.process_output(p)
+		if 'stdout' in response:
+			self.find_flags(str(response['stdout']))
+		if 'stderr' in response:
+			self.find_flags(str(response['stderr']))
+		
 		return response

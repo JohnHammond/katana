@@ -7,7 +7,7 @@ from pwn import *
 import subprocess
 import os
 import units.raw
-import util
+import utilities
 
 class Unit(units.raw.RawUnit):
 
@@ -18,4 +18,12 @@ class Unit(units.raw.RawUnit):
 	def evaluate(self, target):
 
 		p = subprocess.Popen(['file', target], stdout = subprocess.PIPE, stderr = subprocess.PIPE)		
-		return util.process_output(p)
+		
+		# Look for flags, if we found them...
+		response = utilities.process_output(p)
+		if 'stdout' in response:
+			self.find_flags(str(response['stdout']))
+		if 'stderr' in response:
+			self.find_flags(str(response['stderr']))
+		
+		return response

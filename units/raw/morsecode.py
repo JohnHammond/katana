@@ -8,7 +8,7 @@ import argparse
 from pwn import *
 import subprocess
 import units.raw
-import util
+import utilities
 
 class Unit(units.raw.RawUnit):
 
@@ -143,6 +143,10 @@ class Unit(units.raw.RawUnit):
 				final_morse_code.append(inverse_morse_alphabet[x])
 
 		if ( count ):
-			return ''.join(final_morse_code).upper()
+			
+			final = ''.join(final_morse_code).upper()
+			self.find_flags(final)
+
+			return final
 		else:
 			return None
