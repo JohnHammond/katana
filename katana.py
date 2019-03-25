@@ -97,13 +97,13 @@ if __name__ == '__main__':
 			module = importlib.import_module(name)
 			# We don't load units from packages
 			if module.__name__ != module.__package__:
-				#try:
+				try:
 					# initialize any module specific arguments
 					module.Unit.prepare_parser(CONFIG, parser)
 					# add to unit list
 					CONFIG['modules'].append(module)
-				#except:
-					#log.info('{0}: no Unit class found'.format(module.__name__))
+				except:
+					log.info('{0}: no Unit class found'.format(module.__name__))
 			else:
 				# Load children, if there are any
 				for m in load_modules_recursive(module.__path__, module.__name__+'.'):
@@ -222,5 +222,3 @@ if __name__ == '__main__':
 		json.dump(RESULTS, f, indent=4, sort_keys=True)
 
 	print(json.dumps(RESULTS, indent=4, sort_keys=True))
-
-     

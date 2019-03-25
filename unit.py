@@ -66,7 +66,7 @@ class BaseUnit(object):
 		outdir = os.path.join(
 			self.config['outdir'],
 			'artifacts',
-			hashlib.sha256(target.encode('utf-8')).hexdigest(),
+			hashlib.sha256(target.encode('utf-8')).hexdigest()[-8:],
 			*self.unit_name.split('.')
 		)
 
