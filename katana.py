@@ -139,6 +139,9 @@ if __name__ == '__main__':
 	# The output directory for this scan
 	parser.add_argument('--outdir', '-o', default='./results',
 		help='directory to house results')
+	# A Regular Expression patter for units to match
+	parser.add_argument('--pattern', default=None,
+		help='regex pattern for output (e.g. "FLAG{.*}")')
 	args = parser.parse_args()
 
 	# Check if the file exists and isn't a directory... that's bad

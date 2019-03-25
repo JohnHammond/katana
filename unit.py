@@ -1,11 +1,16 @@
 from pwn import *
 import hashlib
+import re
 
 class BaseUnit(object):
 	# Unit constructor (saves the config)
 	def __init__(self, config):
 		self.config = config
 		self.completed = False
+		if config['pattern'] == None:
+			self.pattern = None
+		else:
+			self.pattern = re.compile(config['pattern'])
 
 	# By default, the only test case is the target itself
 	def get_cases(self, target):
@@ -34,6 +39,11 @@ class BaseUnit(object):
 
 	def evaluate(self, case):
 		log.error('{0}: no evaluate implemented: bad unit'.format(self.unit_name))
+
+	def match_output(self, output):
+		if self.pattern == None:
+			return True
+		return self.pattern.match(output)
 
 	# Create a new artifact for this target/unit and
 	def artifact(self, target, name, mode='w', create=True):
