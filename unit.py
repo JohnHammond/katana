@@ -43,10 +43,12 @@ class BaseUnit(object):
 		return open(path, mode), path
 
 	# Create an artifact directory
-	def artifact_dir(self, target, name):
+	def artifact_dir(self, target, name, create=True):
 		path = os.path.join(self.get_output_dir(target), name)
+		if not create:
+				return path
 		try:
-			os.mkdir(name)
+			os.mkdir(path)
 		except OSError:
 			if ( "File exists" in e.args ):
 				log.error("Artifact directory '{0}' already exists!".format(path))

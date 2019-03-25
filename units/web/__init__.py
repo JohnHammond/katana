@@ -31,5 +31,8 @@ class WebUnit(BaseUnit):
         return bool(self.explode_url(target))
 
     # The sub-class should define this...
-    def evaluate(self, target):
-        log.warning('you didn\'t specify an action for this WebUnit')
+    #  def evaluate(self, target):
+    #     pass  
+    #
+    # If you do not include this function, the main unit.py
+    # will properly display its name.

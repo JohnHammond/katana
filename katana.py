@@ -113,10 +113,12 @@ if __name__ == '__main__':
 					except Exception as e:
 						log.info('{0}: no Unit class found'.format(module.__name__))
 		except ModuleNotFoundError as e:
-			log.error('unit {0} does not exist'.format(name))
+			log.failure('unit {0} does not exist'.format(name))
+			exit()
 		except Exception as e:
 			traceback.print_exc()
-			log.error('unknown error when loading {0}: {1}'.format(name, e))
+			log.failure('unknown error when loading {0}: {1}'.format(name, e))
+			exit()
 	
 	# The number of threads to use
 	parser.add_argument('--threads', '-t', type=int, default=10,
@@ -134,13 +136,15 @@ if __name__ == '__main__':
 
 	# Check if the file exists and isn't a directory... that's bad
 	if os.path.exists(args.outdir):
-		log.error('{0}: directory exists'.format(args.outdir))
+		log.failure('{0}: directory exists'.format(args.outdir))
+		exit()
 	elif not os.path.exists(args.outdir):
 		# Create the directory if needed
 		try:
 			os.mkdir(args.outdir)
 		except:
-			log.error('{0}: unable to create directory'.format(args.outdir))
+			log.failure('{0}: unable to create directory'.format(args.outdir))
+			exit()
 
 	# Create a work queue twice the size of the number of threads
 	WORKQ = queue.Queue(maxsize=args.threads*2)

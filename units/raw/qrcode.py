@@ -6,6 +6,7 @@ import argparse
 from pwn import *
 import subprocess
 import units.raw
+import util
 
 class Unit(units.raw.RawUnit):
 
@@ -22,4 +23,4 @@ class Unit(units.raw.RawUnit):
 				log.failure("zbarimg is not in the PATH (not installed)? Cannot run the stego.qrcode unit!")
 				return None
 
-		return self.process_output(p)
+		return util.process_output(p)
