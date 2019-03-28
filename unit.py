@@ -44,17 +44,18 @@ class BaseUnit(object):
 	def find_flags(self, output):
 		# If the user didn't supply a patter, there's nothing to do.
 		if self.pattern == None:
-			return
+			return False
 
 		# Look for the patter in the output
 		result = self.pattern.search(output)
 
 		# No match
 		if result is None:
-			return
+			return False
 
 		# add the flags
 		self.flags.append(result.group())
+		return True
 
 
 

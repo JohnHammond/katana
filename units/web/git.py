@@ -30,13 +30,13 @@ class Unit(WebUnit):
         target = target.rstrip('/').rstrip('\\')
 
         # Try to get see if there is a .git directory
-        url = '{0}/{1}'.format(target, '.git/')
+        url = '{0}/{1}'.format(target, '.git/HEAD')
         r = requests.get(url)
 
 
         # If the response is anything other than a "Not Found",
         # we might have something here...
-        if r.status_code != 404 and 'Index ' in r.text:
+        if r.status_code == 404:
             return None
         else:
             result = {

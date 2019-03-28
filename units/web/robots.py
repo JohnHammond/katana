@@ -18,14 +18,41 @@ class Unit(WebUnit):
     def prepare_parser(config, parser):
         pass
 
+    def get_cases(self, target):
+        
+        # This should "yield 'name', (params,to,pass,to,evaluate)"
+        # evaluate will see this second argument as only one variable and you will need to parse them out
+
+        target = target.rstrip('/').rstrip('\\')
+
+        # Assume that you are in fact the Google crawler.
+        headers = { 'User-Agent': 'Googlebot/2.1' }
+
+        # Try to get the robots.txt file
+        r = requests.get('{0}/{1}'.format(target, 'robots.txt'), headers = headers)
+
+        # Check if the request succeeded
+        if r.status_code != 200:
+            # Completely fail if there is nothing there.
+            return None
+
+        f,name = self.artifact(target, 'robots.txt')
+        self.find_flags(r.text)
+        with f:
+            f.write(r.text)
+
+        
     
     def evaluate(self, target):
 
         # Strip trailing slashes
         target = target.rstrip('/').rstrip('\\')
 
+        # Assume that you are in fact the Google crawler.
+        headers = { 'User-Agent': 'Googlebot/2.1' }
+
         # Try to get the robots.txt file
-        r = requests.get('{0}/{1}'.format(target, 'robots.txt'))
+        r = requests.get('{0}/{1}'.format(target, 'robots.txt'), headers = headers)
 
         # Check if the request succeeded
         if r.status_code != 200:

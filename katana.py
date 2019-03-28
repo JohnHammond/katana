@@ -230,6 +230,7 @@ if __name__ == '__main__':
 
 		for unit in CONFIG['units']:
 			RESULTS['flags'] += unit.flags
+		RESULTS['flags'] = list(set(RESULTS['flags']))
 		
 	p.success('all units complete')
 
@@ -237,7 +238,8 @@ if __name__ == '__main__':
 	with open(os.path.join(args.outdir, 'katana.json'), 'w') as f:
 		json.dump(RESULTS, f, indent=4, sort_keys=True)
 
-	print(json.dumps(RESULTS, indent=4, sort_keys=True))
+	# Cleanly display the results of each unit
+	print(json.dumps({ x: RESULTS[x] for x in RESULTS if RESULTS[x] != {} }, indent=4, sort_keys=True))
 
 	if CONFIG['flag_format']:
 		# Dump the flags we found
