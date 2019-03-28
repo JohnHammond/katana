@@ -53,12 +53,9 @@ class BaseUnit(object):
 		if result is None:
 			return False
 
-		# add the flags
+		# add the flag
 		self.flags.append(result.group())
 		return True
-
-
-
 
 	# Create a new artifact for this target/unit and
 	def artifact(self, target, name, mode='w', create=True):
