@@ -81,7 +81,6 @@ class Unit(EsotericUnit):
 
     def evaluate(self, target):
 
-        print(target)
         if self.config['bf_file'] or os.path.isfile(target):
             with open(target, 'r') as f:
                 target = f.read()
@@ -99,4 +98,3 @@ class Unit(EsotericUnit):
             return None
 
         return output
-
