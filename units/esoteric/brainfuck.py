@@ -34,10 +34,13 @@ def buildbracemap(code):
     return bracemap
 
 def evaluate_brainfuck(code):
-# def evaluate_brainfuck(code, mapping='><+-.,[]', infile=sys.stdin):
     output = []
-    code    = cleanup(list(code))
-    bracemap = buildbracemap(code)
+
+    try:
+        code    = cleanup(list(code))
+        bracemap = buildbracemap(code)
+    except:
+        return ""
 
     cells, codeptr, cellptr = [0], 0, 0
 
