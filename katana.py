@@ -46,7 +46,10 @@ class WorkerThread(threading.Thread):
 							if unit.unit_name not in RESULTS[target] or \
 									RESULTS[target][unit.unit_name] == None:
 								RESULTS[target][unit.unit_name] = {}
-							RESULTS[target][unit.unit_name][name] = result
+							if result:
+								RESULTS[target][unit.unit_name][name] = result
+							else:
+								RESULTS[target].pop(unit.unit_name)
 			
 			# Notify boss that we are done
 			WORKQ.task_done()

@@ -378,4 +378,6 @@ class Unit(EsotericUnit):
 			output = brainfuck_unit.evaluate(self, target)
 
 		self.find_flags(output)
+		
 		return output
+		

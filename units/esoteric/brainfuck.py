@@ -89,7 +89,6 @@ class Unit(EsotericUnit):
 
         try:
             output = evaluate_brainfuck(target)
-            self.find_flags(output)
 
             # JOHN: Again, this is from Caleb's old code.
             # output = evaluate_brainfuck(target, self.config['bf_map'], self.config['bf_input'])
@@ -97,4 +96,5 @@ class Unit(EsotericUnit):
             log.warning('{0}: invalid brainfuck command detected')
             return None
 
+        self.find_flags(output)
         return output
