@@ -46,10 +46,13 @@ class WorkerThread(threading.Thread):
 							if unit.unit_name not in RESULTS[target] or \
 									RESULTS[target][unit.unit_name] == None:
 								RESULTS[target][unit.unit_name] = {}
-							if result:
-								RESULTS[target][unit.unit_name][name] = result
-							else:
-								RESULTS[target].pop(unit.unit_name)
+							RESULTS[target][unit.unit_name][name] = result
+							
+							# JOHN: I wanted to use this hide entries with no results...
+							# if result:
+							# 	RESULTS[target][unit.unit_name][name] = result
+							# else:
+							# 	RESULTS[target].pop(unit.unit_name)
 			
 			# Notify boss that we are done
 			WORKQ.task_done()
@@ -113,6 +116,7 @@ if __name__ == '__main__':
 					# add to unit list
 					CONFIG['modules'].append(module)
 				except:
+					print("this one")
 					log.info('{0}: no Unit class found'.format(module.__name__))
 			else:
 				# Load children, if there are any
@@ -121,6 +125,7 @@ if __name__ == '__main__':
 						m.Unit.prepare_parser(CONFIG, parser)
 						CONFIG['modules'].append(m)
 					except Exception as e:
+						print(e.args)
 						log.info('{0}: no Unit class found'.format(module.__name__))
 		except ModuleNotFoundError as e:
 			log.failure('unit {0} does not exist'.format(name))

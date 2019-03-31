@@ -24,6 +24,9 @@ class Unit(units.web.WebUnit):
 		
 		# This should "yield 'name', (params,to,pass,to,evaluate)"
 		# evaluate will see this second argument as only one variable and you will need to parse them out
+		
+		if not self.config['flag_format']:
+			log.warning('No flag format specified, basic_sqli will not be effective.')
 
 		r = requests.get(target)
 

@@ -14,8 +14,8 @@ class Unit(WebUnit):
     def __init__(self, config):
         super(Unit, self).__init__(config)
 
-    def prepare_parser(config, parser):
-        pass
+    # def prepare_parser(config, parser):
+    #     pass
 
     def check(self, target):
         try:

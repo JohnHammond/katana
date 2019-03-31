@@ -8,8 +8,14 @@ class WebUnit(BaseUnit):
     ADDRESS_PATTERN = r'^((?P<proto>[a-zA-Z][a-zA-Z0-9]*):\/\/)?(?P<host>[a-zA-Z0-9][a-zA-Z0-9\-_.]*)(:(?P<port>[0-9]{1,5}))?(\/(?P<uri>[^?]*))?(\?(?P<query>.*))?$'
     @classmethod
     def prepare_parser(cls, config, parser):
-        parser.add_argument('--proxy', default=None, help='proxy (host:port) to use for web connections')
-        parser.add_argument('--dns', default=None, help='custom dns server to use')
+        try:
+            parser.add_argument('--proxy', default=None, help='proxy (host:port) to use for web connections')
+            parser.add_argument('--dns', default=None, help='custom dns server to use')
+        except:
+            # These arguments will be inherited by the Units...
+            # So it may repeatedly conflict. We'll just have to ignore these
+            pass
+
 
     def __init__(self, config):
         super(WebUnit, self).__init__(config)

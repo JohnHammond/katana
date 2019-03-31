@@ -16,8 +16,8 @@ class Unit(WebUnit):
             return False
         return True
 
-    def prepare_parser(config, parser):
-        pass
+    # def prepare_parser(config, parser):
+    #     pass
 
     def get_cases(self, target):
 

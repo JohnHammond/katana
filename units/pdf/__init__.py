@@ -7,7 +7,14 @@ class PdfUnit(BaseUnit):
 
     @classmethod
     def prepare_parser(cls, config, parser):
-        pass
+        try:
+            # Add potential argument parsers in here.
+            # parser.add_argument('--proxy', default=None, help='proxy (host:port) to use for web connections')
+            pass
+        except:
+            # These arguments will be inherited by the Units...
+            # So it may repeatedly conflict. We'll just have to ignore these
+            pass
 
     def __init__(self, config):
         super(PdfUnit, self).__init__(config)
