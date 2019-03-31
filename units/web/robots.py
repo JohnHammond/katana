@@ -2,6 +2,7 @@
 from pwn import *
 import requests
 from web import WebUnit
+from katana import RESULTS 
 
 class Unit(WebUnit):
 
@@ -19,17 +20,17 @@ class Unit(WebUnit):
         pass
 
     def get_cases(self, target):
-        
+
         # This should "yield 'name', (params,to,pass,to,evaluate)"
         # evaluate will see this second argument as only one variable and you will need to parse them out
 
-        target = target.rstrip('/').rstrip('\\')
+        stripped_target = target.rstrip('/').rstrip('\\')
 
         # Assume that you are in fact the Google crawler.
         headers = { 'User-Agent': 'Googlebot/2.1' }
 
         # Try to get the robots.txt file
-        r = requests.get('{0}/{1}'.format(target, 'robots.txt'), headers = headers)
+        r = requests.get('{0}/{1}'.format(stripped_target, 'robots.txt'), headers = headers)
 
         # Check if the request succeeded
         if r.status_code != 200:
@@ -41,30 +42,9 @@ class Unit(WebUnit):
         with f:
             f.write(r.text)
 
+        RESULTS.update({ target : {} })
         
-    
-    def evaluate(self, target):
-
-        # Strip trailing slashes
-        target = target.rstrip('/').rstrip('\\')
-
-        # Assume that you are in fact the Google crawler.
-        headers = { 'User-Agent': 'Googlebot/2.1' }
-
-        # Try to get the robots.txt file
-        r = requests.get('{0}/{1}'.format(target, 'robots.txt'), headers = headers)
-
-        # Check if the request succeeded
-        if r.status_code != 200:
-            return None
-
-        f,name = self.artifact(target, 'robots.txt')
-        self.find_flags(r.text)
-        with f:
-            f.write(r.text)
-
-        # Result
-        result = {
+        RESULTS[target][self.unit_name] = {
             'findings': [],
             'artifact': name
         }
@@ -72,16 +52,32 @@ class Unit(WebUnit):
         # Look for disallow entries and add them to the findings
         for line in r.text.split('\n'):
             line = line.strip().split(':')
-            if line[0].strip() != 'Disallow':
-                # This is not a disallow entry
+            if line[0].strip().startswith('#'):
+                # This is a comma
                 continue
             elif len(line) == 1:
-                # This disallow is empty for some reason
+                # This line is empty for some reason
                 continue
-            result['findings'].append(':'.join(line[1:]).strip())
-
-        # robots.txt exists, but contains no disallow entries
-        if len(result['findings']) == 0:
-            return None
             
-        return result
+            RESULTS[target][self.unit_name]['findings'].append(':'.join(line))
+
+            # Yield each link, so we can retrieve it and hunt for flags inside of evaluate()
+            yield line[1], '{0}/{1}'.format(stripped_target, line[1]) 
+    
+    def evaluate(self, target):
+
+        # Assume that you are in fact the Google crawler.
+        headers = { 'User-Agent': 'Googlebot/2.1' }
+
+        # Retrieve the listed location and hunt for flags.
+        r = requests.get(target, headers = headers)
+        
+        # Hunt!
+        self.find_flags(r.text)
+
+        # We've been doing weird stuff with the RESULTS dictionary...
+        # So if twe
+        try:
+            return RESULTS[target][self.unit_name]
+        except KeyError:
+            pass

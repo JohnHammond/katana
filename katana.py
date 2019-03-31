@@ -14,8 +14,8 @@ import pkgutil
 
 # Global Work Queue
 WORKQ = None
-# Results list
-RESULTS = []
+# Results dictionary
+RESULTS = {}
 # The configuration (arguments, really)
 CONFIG = {}
 # Lock for results access
@@ -190,7 +190,7 @@ if __name__ == '__main__':
 	p.status('filling work queue')
 
 	RESULTS = { t: {} for t in args.target }
-
+	
 	total = 0
 	
 	# Add all the target/unit pairs to the work queue
