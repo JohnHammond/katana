@@ -2,6 +2,7 @@ from pwn import *
 import hashlib
 import re
 import base64
+import binascii
 
 class BaseUnit(object):
 	# Unit constructor (saves the config)
@@ -11,7 +12,7 @@ class BaseUnit(object):
 		if config['flag_format'] == None:
 			self.pattern = None
 		else:
-			self.pattern = re.compile('('+config['flag_format']+')', flags=re.MULTILINE | re.DOTALL)
+			self.pattern = re.compile('('+config['flag_format']+')', flags=re.MULTILINE | re.DOTALL | re.IGNORECASE )
 		self.flags = []
 
 	# By default, the only test case is the target itself
@@ -59,7 +60,6 @@ class BaseUnit(object):
 		#                                          is the raw regex string
 		# Also, we remove the surrounding () parentheses
 		raw_flag = self.pattern.pattern.replace('^', '')[1:-1]
-		# print('raw_flag', raw_flag)
 
 		found_regex = 0
 		for index in range(len(raw_flag)):
@@ -74,32 +74,38 @@ class BaseUnit(object):
 		# Plus one because this the index is zero-based and slicing is not...
 		raw_flag = raw_flag[:index+1]
 		
+		hex_flag = binascii.hexlify(bytes(raw_flag,'utf-8')).decode('utf-8')
+
 		base64_flag = base64.b64encode(bytes(raw_flag, 'utf-8')).decode('utf-8')
-		
 		padding = base64_flag.count('=')
 		trustworthy_base64 = base64_flag.replace('=','')[:-padding]
 		
 
 		base64_regex = '[a-zA-Z0-9+/]+={0,2}'
-		base64_pattern = re.compile(trustworthy_base64 + base64_regex)
-		
+		hex_regex = '[a-fA-F0-9]*'
+
+		hex_pattern = re.compile(hex_flag + hex_regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
+		base64_pattern = re.compile(trustworthy_base64 + base64_regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
 
 		# Look for the pattern in the output
 		result = self.pattern.search(output)
 		base64_result = base64_pattern.search(output)
+		hex_result = hex_pattern.search(output)
 		
 		# No match
-		if result is None and base64_result is None:
+		if result is None and base64_result is None and hex_result is None:
 		# if result is None:
 			return False
 
 		# add the flag
-		for match in [ result, base64_result ]:
+		for match in [ result, base64_result, hex_result ]:
 			if match:
 				# We will use this approach, to show the original base64 finding
 				self.flags.append(match.group())
 				if match == base64_result:
 					self.flags.append(base64.b64decode(match.group()).decode('utf-8'))
+				if match == hex_result:
+					self.flags.append(binascii.unhexlify(match.group()).decode('utf-8'))
 
 		return True
 

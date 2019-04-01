@@ -116,7 +116,6 @@ if __name__ == '__main__':
 					# add to unit list
 					CONFIG['modules'].append(module)
 				except:
-					print("this one")
 					log.info('{0}: no Unit class found'.format(module.__name__))
 			else:
 				# Load children, if there are any
