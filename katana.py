@@ -115,8 +115,7 @@ if __name__ == '__main__':
 					module.Unit.prepare_parser(CONFIG, parser)
 					# add to unit list
 					CONFIG['modules'].append(module)
-				except:
-					print("this one")
+				except AttributeError:
 					log.info('{0}: no Unit class found'.format(module.__name__))
 			else:
 				# Load children, if there are any
@@ -174,11 +173,10 @@ if __name__ == '__main__':
 	if len(args.target) == 1 and args.target[0] == '-':
 		args.target = []
 		for line in sys.stdin.read().split('\n'):
-
 			args.target.append(line)
 	
-	# Initialize the units array
-	CONFIG['units'] = []
+	# Build units for each target
+	CONFIG['units'] = [] #{ t: [ m.Unit(CONFIG, t) for m in CONFIG['modules'] ] for t in args.target }
 	
 	# Build unit objects from loaded modules
 	for module in CONFIG['modules']:
