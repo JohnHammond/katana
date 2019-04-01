@@ -47,7 +47,7 @@ class BaseUnit(object):
 		if self.pattern == None:
 			return False
 
-		
+		'''
 		# JOHN: Below is my attempt to search for Base64 encoded flag formats
 		special_regex_characters = [
 			"\\d", "\\w", '\\s', "\\D", "\\W", '\\S',
@@ -82,24 +82,29 @@ class BaseUnit(object):
 
 		base64_regex = '[a-zA-Z0-9+/]+={0,2}'
 		base64_pattern = re.compile(trustworthy_base64 + base64_regex)
-		
+		'''
 
 		# Look for the pattern in the output
 		result = self.pattern.search(output)
-		base64_result = base64_pattern.search(output)
+		# base64_result = base64_pattern.search(output)
 		
 		# No match
-		if result is None and base64_result is None:
-		# if result is None:
+		# if result is None and base64_result is None:
+		if result is None:
 			return False
 
 		# add the flag
-		for match in [ result, base64_result ]:
-			if match:
-				# We will use this approach, to show the original base64 finding
-				self.flags.append(match.group())
-				if match == base64_result:
-					self.flags.append(base64.b64decode(match.group()).decode('utf-8'))
+
+		self.flags.append(result.group())
+		# for match in [ result, base64_result ]:
+		# 	# print("outside if", end = ' ')
+		# 	# print(match)
+		# 	if match:
+		# 		# print("inside if", end = ' ')
+		# 		# print(match)
+		# 		self.flags.append(match.group())
+		# 		if match == base64_result:
+		# 			self.flags.append(base64.b64decode(match.group()))
 
 		return True
 
