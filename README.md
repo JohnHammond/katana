@@ -48,6 +48,12 @@ web
 	- cookies
 	- basic_sqli
 
+crypto
+	- caesar
+	- reverse
+	- atbash
+	- rot47
+
 forensics
 	- foremost
 	- binwalk
@@ -59,6 +65,9 @@ esoteric
 	- brainfuck
 	- malbolge
 	- pikalang
+
+zip
+	- crack
 
 ```
 
