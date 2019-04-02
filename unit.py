@@ -84,6 +84,7 @@ class BaseUnit(object):
 		base64_regex = '[a-zA-Z0-9+/]+={0,2}'
 		hex_regex = '[a-fA-F0-9]*'
 
+
 		hex_pattern = re.compile(hex_flag + hex_regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
 		base64_pattern = re.compile(trustworthy_base64 + base64_regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
 

@@ -149,7 +149,7 @@ if __name__ == '__main__':
 		help='directory to house results')
 	# A Regular Expression patter for units to match
 	parser.add_argument('--flag-format', '-ff', default=None,
-		help='regex pattern for output (e.g. "FLAG{.*}")')
+		help='regex pattern for output (e.g. "FLAG{.*?}")')
 	args = parser.parse_args()
 
 	# Check if the file exists and isn't a directory... that's bad
@@ -250,3 +250,5 @@ if __name__ == '__main__':
 		# Dump the flags we found
 		for flag in RESULTS['flags']:
 			log.success('Found flag: {0}'.format(flag))
+	else:
+		log.warning("No flag format was specified, so no flag hunting was done.")

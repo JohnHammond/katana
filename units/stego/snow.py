@@ -10,10 +10,6 @@ import utilities
 
 class Unit(units.stego.StegoUnit):
 
-	@classmethod
-	def prepare_parser(cls, config, parser):
-		pass
-
 	def evaluate(self, target):
 
 		try:
