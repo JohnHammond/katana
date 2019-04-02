@@ -103,7 +103,11 @@ class BaseUnit(object):
 				# We will use this approach, to show the original base64 finding
 				self.flags.append(match.group())
 				if match == base64_result:
-					self.flags.append(base64.b64decode(match.group()).decode('utf-8'))
+					try:
+						# This tries to decode too often. If it tries and fails, it must not be Base64
+						self.flags.append(base64.b64decode(match.group()).decode('utf-8'))
+					except:
+						pass
 				if match == hex_result:
 					self.flags.append(binascii.unhexlify(match.group()).decode('utf-8'))
 
