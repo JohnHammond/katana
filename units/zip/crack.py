@@ -48,6 +48,9 @@ class Unit(ZipUnit):
 			except RuntimeError:
 				# Pw didn't work
 				return None
+
+			# We found the password
+			self.completed = True
 			
 			# Look for flags in the extracted data
 			for info in z.infolist():
