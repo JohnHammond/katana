@@ -11,11 +11,12 @@ A lot of the context and ideas from this stem from the living document at [https
 
 **Katana is written in Python3.**
 
-Installation
+Dependencies 
 ---------------
 
 ```
-pip install -r requirements.txt
+sudo apt install -y python3-pip libffi-dev libssl-dev
+sudo pip3 install -r requirements.txt
 ```
 
 Framework Methodology
