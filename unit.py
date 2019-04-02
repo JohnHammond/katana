@@ -89,9 +89,9 @@ class BaseUnit(object):
 		base64_pattern = re.compile(trustworthy_base64 + base64_regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
 
 		# Look for the pattern in the output
-		result = self.pattern.search(output)
-		base64_result = base64_pattern.search(output)
-		hex_result = hex_pattern.search(output)
+		result = self.pattern.search(str(output))
+		base64_result = base64_pattern.search(str(output))
+		hex_result = hex_pattern.search(str(output))
 		
 		# No match
 		if result is None and base64_result is None and hex_result is None:

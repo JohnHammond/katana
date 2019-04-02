@@ -96,12 +96,13 @@ def execute_step(a, c, d, mem, inf=sys.stdin.buffer, outf=sys.stdout.buffer):
     return a, c, d, mem, output
 def execute(code, inf=sys.stdin.buffer, allow_not_isprint=False, debug=False):
     output = []
+
     try:
         mem = initial_memory(code, allow_not_isprint=allow_not_isprint)
     except:
         # If this fails, it is probably not Malbolge. Stop trying.
         return None
-        pass
+
     a, c, d = 0, 0, 0
     while True:
         if debug:

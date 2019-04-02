@@ -40,7 +40,7 @@ def evaluate_brainfuck(code):
         code    = cleanup(list(code))
         bracemap = buildbracemap(code)
     except:
-        return ""
+        return None
 
     cells, codeptr, cellptr = [0], 0, 0
 
@@ -84,11 +84,12 @@ class Unit(EsotericUnit):
 
     def evaluate(self, target):
 
-        if self.config['bf_file'] or os.path.isfile(target):
-            with open(target, 'r') as f:
-                target = f.read()
-        else:
-            target = target.lstrip()
+        if 'bf_file' in self.config:
+            if self.config['bf_file'] or os.path.isfile(target):
+                with open(target, 'r') as f:
+                    target = f.read()
+            else:
+                target = target.lstrip()
 
         try:
             output = evaluate_brainfuck(target)

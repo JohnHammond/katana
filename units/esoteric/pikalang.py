@@ -367,15 +367,18 @@ class Unit(EsotericUnit):
 			self.find_flags(output)
 
 		except ValueError:
-
+			output = ""
 			p_mappings = ["pikachu", "pikapi", 'pichu', 'pika', 'pipi', 'chu', 'ka', 'pi']
 			r_mappings = [".",        ",",      '<',     '[',      '>',  ']',  '-',  '+']
 
+			potentially_pikalang = 0
 			for i in range(len(p_mappings)):
-				target = target.replace(p_mappings[i], r_mappings[i])
-			
-			target = target.replace(' ' ,'')
-			output = brainfuck_unit.evaluate(self, target)
+				if p_mappings[i] in target:
+					target = target.replace(p_mappings[i], r_mappings[i])
+					potentially_pikalang += 1
+			if potentially_pikalang >= 3:
+				target = target.replace(' ' ,'')
+				output = brainfuck_unit.evaluate(self, target)
 
 		self.find_flags(output)
 		
