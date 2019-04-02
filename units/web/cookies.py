@@ -27,8 +27,8 @@ class Unit(WebUnit):
         result = [ vars(cookie) for cookie in r.cookies if cookie ]
         
         # Hunt for flags...
-        for key, value in result:
-            self.find_flags(key)
-            self.find_flags(value)
+        for key in result:
+            for x in key:
+                self.find_flags(x)
 
         return result

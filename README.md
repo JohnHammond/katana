@@ -11,11 +11,13 @@ A lot of the context and ideas from this stem from the living document at [https
 
 **Katana is written in Python3.**
 
-Installation
+Dependencies 
 ---------------
 
 ```
-pip install -r requirements.txt
+sudo apt install -y python3-pip libffi-dev libssl-dev pandoc
+sudo pip3 install -r requirements.txt
+sudo pip3 install git+https://github.com/arthaud/python3-pwntools.git
 ```
 
 Framework Methodology
@@ -46,6 +48,12 @@ web
 	- cookies
 	- basic_sqli
 
+crypto
+	- caesar
+	- reverse
+	- atbash
+	- rot47
+
 forensics
 	- foremost
 	- binwalk
@@ -57,6 +65,9 @@ esoteric
 	- brainfuck
 	- malbolge
 	- pikalang
+
+zip
+	- crack
 
 ```
 
