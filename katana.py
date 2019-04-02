@@ -31,6 +31,7 @@ class WorkerThread(threading.Thread):
 		while True:
 			# Grab the next item
 			unit,name,case = WORKQ.get()
+			target = CONFIG['target']
 			# The boss says NO.
 			if unit is None and case is None and name is None:
 					break
@@ -43,10 +44,10 @@ class WorkerThread(threading.Thread):
 					if result is not None:
 						with RESULT_LOCK:
 							# Build the structure if needed
-							if unit.unit_name not in RESULTS[target] or \
-									RESULTS[target][unit.unit_name] == None:
-								RESULTS[target][unit.unit_name] = {}
-							RESULTS[target][unit.unit_name][name] = result
+							if unit.unit_name not in RESULTS or \
+									RESULTS[unit.unit_name] == None:
+								RESULTS[unit.unit_name] = {}
+							RESULTS[unit.unit_name][name] = result
 							
 							# JOHN: I wanted to use this hide entries with no results...
 							# if result:
@@ -141,7 +142,7 @@ if __name__ == '__main__':
 	parser.add_argument('--force', '-f', action='store_true',
 		default=False, help='skip the checks')
 	# The list of targets to scan
-	parser.add_argument('target', nargs='+', type=str, default='-',
+	parser.add_argument('target', type=str, default='-',
 		help='the target file/url/IP/etc')
 	# The output directory for this scan
 	parser.add_argument('--outdir', '-o', default='./results',
@@ -195,22 +196,20 @@ if __name__ == '__main__':
 
 	p.status('filling work queue')
 
-	RESULTS = { t: {} for t in args.target }
+	RESULTS = {}
 	
 	total = 0
 	
-	# Add all the target/unit pairs to the work queue
-	for target in args.target:
-		# Add each unit to the work queue
-		for unit in CONFIG['units']:
-			for name,case in unit.get_cases(target):
-				# The threads are working now, stop adding if it's done.
-				if not unit.completed:
-					p.status('adding {0} to work queue (size: {1}, n: {2})'.format(name, WORKQ.qsize(),total))
-					WORKQ.put((unit,name,case))
-					total += 1
-				else:
-					break
+	# Add each unit to the work queue
+	for unit in CONFIG['units']:
+		for name,case in unit.get_cases(args.target):
+			# The threads are working now, stop adding if it's done.
+			if not unit.completed:
+				p.status('adding {0} to work queue (size: {1}, n: {2})'.format(name, WORKQ.qsize(),total))
+				WORKQ.put((unit,name,case))
+				total += 1
+			else:
+				break
 
 	# Monitor the work queue and update the progress
 	while True:
@@ -245,7 +244,7 @@ if __name__ == '__main__':
 		json.dump(RESULTS, f, indent=4, sort_keys=True)
 
 	# Cleanly display the results of each unit
-	print(json.dumps({ x: RESULTS[x] for x in RESULTS if RESULTS[x] != {} }, indent=4, sort_keys=True))
+	print(json.dumps(RESULTS, indent=4, sort_keys=True))
 
 	if CONFIG['flag_format']:
 		# Dump the flags we found
