@@ -1,3 +1,2 @@
-pwntools
 requests
 argparse

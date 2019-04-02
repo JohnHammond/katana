@@ -15,8 +15,9 @@ Dependencies
 ---------------
 
 ```
-sudo apt install -y python3-pip libffi-dev libssl-dev
+sudo apt install -y python3-pip libffi-dev libssl-dev pandoc
 sudo pip3 install -r requirements.txt
+sudo pip3 install git+https://github.com/arthaud/python3-pwntools.git
 ```
 
 Framework Methodology
