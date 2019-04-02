@@ -376,6 +376,9 @@ class Unit(EsotericUnit):
 				if p_mappings[i] in target:
 					target = target.replace(p_mappings[i], r_mappings[i])
 					potentially_pikalang += 1
+
+			# This is an arbitrary threshold to see if we are actually dealing with Pikalang...
+			# (just so we don't go in an infinite loop for no reason)
 			if potentially_pikalang >= 3:
 				target = target.replace(' ' ,'')
 				output = brainfuck_unit.evaluate(self, target)
