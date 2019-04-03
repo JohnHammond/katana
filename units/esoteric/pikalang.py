@@ -364,7 +364,6 @@ class Unit(EsotericUnit):
 
 		try:
 			output = run(target, self.config['pika_args'])
-			self.find_flags(output)
 
 		except ValueError:
 			output = ""

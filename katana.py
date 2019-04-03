@@ -47,13 +47,12 @@ class WorkerThread(threading.Thread):
 							if unit.unit_name not in RESULTS or \
 									RESULTS[unit.unit_name] == None:
 								RESULTS[unit.unit_name] = {}
-							RESULTS[unit.unit_name][name] = result
-							
-							# JOHN: I wanted to use this hide entries with no results...
-							# if result:
-							# 	RESULTS[target][unit.unit_name][name] = result
-							# else:
-							# 	RESULTS[target].pop(unit.unit_name)
+
+							# JOHN: I use this to hide entries with no results
+							if bool(result):
+								RESULTS[unit.unit_name][name] = result
+							else:
+								RESULTS.pop(unit.unit_name)
 			
 			# Notify boss that we are done
 			WORKQ.task_done()
@@ -234,9 +233,12 @@ if __name__ == '__main__':
 		RESULTS['flags'] = []
 
 		for unit in CONFIG['units']:
-			RESULTS['flags'] += unit.flags
+			if unit.flags != "None":
+				RESULTS['flags'] += unit.flags
 		RESULTS['flags'] = list(set(RESULTS['flags']))
-		
+		if not RESULTS['flags']:
+			RESULTS.pop('flags')
+	
 	p.success('all units complete')
 
 	# Make sure we can create the results file
@@ -244,11 +246,17 @@ if __name__ == '__main__':
 		json.dump(RESULTS, f, indent=4, sort_keys=True)
 
 	# Cleanly display the results of each unit
-	print(json.dumps(RESULTS, indent=4, sort_keys=True))
+	all_results = json.dumps(RESULTS, indent=4, sort_keys=True)
+	if all_results != '{}':
+		print(all_results)
+	else:
+		log.failure("no interesting results were found.")
 
 	if CONFIG['flag_format']:
-		# Dump the flags we found
-		for flag in RESULTS['flags']:
-			log.success('Found flag: {0}'.format(flag))
+
+		if 'flags' in RESULTS: # I test this in case we removed the flags because they were empty:
+			# Dump the flags we found
+			for flag in RESULTS['flags']:
+					log.success('Found flag: {0}'.format(flag))
 	else:
-		log.warning("No flag format was specified, so no flag hunting was done.")
+		log.warning("no flag format was specified.")

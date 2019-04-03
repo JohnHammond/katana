@@ -143,5 +143,6 @@ class Unit(EsotericUnit):
             log.warning('{0}: invalid malbolge command detected')
             return None
 
-        self.find_flags(output)
+        if output:
+            self.find_flags(output)
         return output

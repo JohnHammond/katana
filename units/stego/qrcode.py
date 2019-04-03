@@ -25,7 +25,11 @@ class Unit(units.raw.RawUnit):
 
 		results = utilities.process_output(p)
 		# "scanned 2 barcode symbols from 2 images in 0.09 seconds"
-		count = int(results['stderr'][0].split(' ')[1])
+		try:
+			# If we can read the number of results...
+			count = int(results['stderr'][0].split(' ')[1])
+		except:
+			count = 0
 
 		if count == 0:
 			return None

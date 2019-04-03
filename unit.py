@@ -106,9 +106,12 @@ class BaseUnit(object):
 				if match == base64_result:
 					try:
 						# This tries to decode too often. If it tries and fails, it must not be Base64
-						self.flags.append(base64.b64decode(match.group()).decode('utf-8'))
+						b64_decoded = base64.b64decode(match.group()).decode('utf-8')
 					except:
-						pass
+						b64_decoded = None
+					if b64_decoded:
+						self.flags.append(b64_decoded)
+
 				if match == hex_result:
 					self.flags.append(binascii.unhexlify(match.group()).decode('utf-8'))
 
