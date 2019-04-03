@@ -85,13 +85,20 @@ class BaseUnit(object):
 		hex_regex = '[a-fA-F0-9]*'
 
 
-		hex_pattern = re.compile(hex_flag + hex_regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
-		base64_pattern = re.compile(trustworthy_base64 + base64_regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
-
 		# Look for the pattern in the output
 		result = self.pattern.search(str(output))
-		base64_result = base64_pattern.search(str(output))
-		hex_result = hex_pattern.search(str(output))
+
+		# Only actually search for these if there is something to work with!
+		if hex_flag:
+			hex_pattern = re.compile(hex_flag + hex_regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
+			hex_result = hex_pattern.search(str(output))
+		else:
+			hex_result = None
+		if trustworthy_base64:
+			base64_pattern = re.compile(trustworthy_base64 + base64_regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
+			base64_result = base64_pattern.search(str(output))
+		else:
+			base64_result = None
 		
 		# No match
 		if result is None and base64_result is None and hex_result is None:
@@ -110,6 +117,7 @@ class BaseUnit(object):
 					except:
 						b64_decoded = None
 					if b64_decoded:
+
 						self.flags.append(b64_decoded)
 
 				if match == hex_result:
