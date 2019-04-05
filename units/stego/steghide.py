@@ -13,57 +13,52 @@ import magic
 
 class Unit(units.stego.StegoUnit):
 
-	@classmethod
-	def prepare_parser(cls, config, parser):
+	def __init__(self, katana):
+		super(Unit, self).__init__(katana)
+	
+		# Create a new katana argument parser
+		parser = katana.ArgumentParser()
 		parser.add_argument('--dict', '-d', type=argparse.FileType('r', encoding='latin-1'),
 			help="Dictionary for bruteforcing")
 		parser.add_argument('--password', '-p', type=str,
-		help="A password to try on the file", action="append",
+			help="A password to try on the file", action="append",
 			default=[])
 		parser.add_argument('--stop', default=True,
 			help="Stop processing on matching password",
 			action="store_false")
-		return
 
-	def __init__(self, config):
-		super(Unit, self).__init__(config)
-	
-	def check(self, target):
-		return super(Unit, self).check(target[0])
+		# Parse the arguments
+		katana.parse_args(parser=parser)	
 
-	def get_cases(self, target):
+	def enumerate(self, katana):
 		# The default is to check an empty password
-		yield 'empty password',(target, '')
+		yield ''
 
 		# Check other passwords specified explicitly
-		for p in self.config['password']:
-			yield p,(target,p)
+		for p in katana.config['password']:
+			yield p
 
 		# Add all the passwords from the dictionary file
-		if 'dict' in self.config and self.config['dict'] is not None:
-			self.config['dict'].seek(0)
-			for line in self.config['dict']:
-				yield line.rstrip('\n'),(target, line.rstrip('\n'))
+		if 'dict' in katana.config and katana.config['dict'] is not None:
+			katana.config['dict'].seek(0)
+			for line in katana.config['dict']:
+				yield line.rstrip('\n')
 
-	def evaluate(self, target):
-		# Split up the target (see get_cases)
-		target_file, password = target
+	def evaluate(self, katana, password):
 
 		# Grab the output path for this target and password
 		if ( password == "" ):
-			output_path = self.artifact(target_file, "no_password", create=False)	
+			output_path = self.artifact(katana, "no_password", create=False)	
 		else:
-			output_path = self.artifact(target_file, password, create=False)
+			output_path = self.artifact(katana, password, create=False)
 
 		# This file exists, we already tried this password
 		if os.path.exists(output_path):
 			log.failure(output_path)
-			return None
-			
 
 		# Run steghide
 		p = subprocess.Popen(
-			['steghide', 'extract', '-sf', target_file, '-p', password, '-xf', output_path],
+			['steghide', 'extract', '-sf', katana.target, '-p', password, '-xf', output_path],
 			stdout = subprocess.PIPE, stderr = subprocess.PIPE
 		)
 
@@ -88,14 +83,14 @@ class Unit(units.stego.StegoUnit):
 				thing = f.read()
 
 		# Check if it matches the pattern
-		self.find_flags(thing)
+		katana.locate_flags(thing)
 
 		# Stop processing this unit if we only expect on success
-		if self.config['stop']:
+		if katana.config['stop']:
 			self.completed = True
 	
-		return {
+		katana.add_results({
 			'file': output_path,
 			'type': typ,
 			'content': thing
-		}
+		})

@@ -1,5 +1,14 @@
 import os
 import importlib
+import argparse
+
+# This subclass of argparse will print the help whenever there
+# is a syntactic error in the options parsing
+class ArgumentParserWithHelp(argparse.ArgumentParser):
+	def error(self, message):
+		print('{0}: error: {1}'.format(self.prog, message))
+		self.print_help()
+		sys.exit(2)
 
 # argparse type to automatically verify that the specified path
 # exists and is a directory
@@ -30,6 +39,15 @@ def GetFullyQualifiedClassName(o):
         return o.__class__.__name__  # Avoid reporting __builtin__
     else:
         return module + '.' + o.__class__.__name__
+
+def find_modules_recursively(path, prefix):
+	""" Locate all modules under a path """
+	for importer, name, ispkg in pkgutil.iter_modules(path, prefix):
+		if ispkg:
+			for s in find_modules_recursively(module.__path__, module.__name__ + '.'):
+				yield s
+		else:
+			yield name
 
 # -------------------------------------------------------------------
 

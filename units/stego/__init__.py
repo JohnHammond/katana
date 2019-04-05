@@ -6,38 +6,11 @@
 
 from pwn import *
 from unit import BaseUnit
+import units
 import os
 
 class StegoUnit(BaseUnit):
-
-    @classmethod
-    def prepare_parser(cls, config, parser):
-        try:
-            # Add potential argument parsers in here.
-            # parser.add_argument('--proxy', default=None, help='proxy (host:port) to use for web connections')
-            pass
-        except:
-            # These arguments will be inherited by the Units...
-            # So it may repeatedly conflict. We'll just have to ignore these
-            pass
-
-
-    def __init__(self, config):
-        super(StegoUnit, self).__init__(config)
-
-
-    # The sub-class should define this, to see if the action is feasible...
-    def check(self, target):
-        if ( os.path.exists(target) ):
-            return True
-        else:
-            log.failure("%s does not exist!" % target )
-            return False
-
-
-    # The sub-class should define this...
-    #  def evaluate(self, target):
-    #     pass  
-    #
-    # If you do not include this function, the main unit.py
-    # will properly display its name.
+	def __init__(self, katana):
+		super(StegoUnit, self).__init__(katana)
+		if not os.path.exists(katana.target):
+			raise units.NotApplicable()
