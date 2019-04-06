@@ -213,7 +213,7 @@ class Katana(object):
 
 	# JOHN: This still needs to be implemented.
 	#       But it will become the entry-point for our recursive functionality
-	def pass_back(self, data):
+	def recurse(self, unit, data):
 		pass
 
 	def load_unit(self, name, required=True, recurse=True):

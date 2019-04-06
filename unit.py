@@ -60,5 +60,3 @@ class BaseUnit(object):
 				raise e
 
 		return path
-
-	

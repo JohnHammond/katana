@@ -31,7 +31,7 @@ class Unit(units.raw.RawUnit):
 			p = subprocess.Popen(['zbarimg', katana.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		except FileNotFoundError as e:
 			if "No such file or directory: 'zbarimg'" in e.args:
-				log.failure("zbarimg is not in the PATH (not installed)? Cannot run the stego.qrcode unit!")
+				log.failure("zbarimg is not in the PATH (not installed)? Cannot run the raw.qrcode unit!")
 				return None
 
 		# Look for flags, if we found them...
@@ -40,11 +40,11 @@ class Unit(units.raw.RawUnit):
 			
 			# If we see anything interesting in here... scan it again!
 			for line in response['stdout']:
-				katana.pass_back(line)
+				katana.recurse(self, line)
 
 			katana.locate_flags(str(response['stdout']))
-			katana.add_result( 'stdout', response['stdout'] )
+			katana.add_result( self, 'stdout', response['stdout'] )
 
 		if 'stderr' in response:
 			katana.locate_flags(str(response['stderr']))
-			katana.add_result( 'stderr', response['stderr'] )
+			katana.add_result( self, 'stderr', response['stderr'] )

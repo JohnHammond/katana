@@ -144,11 +144,11 @@ class Unit(units.raw.RawUnit):
 
 		if ( count ):
 			
-			final = ''.join(final_morse_code).upper()
+			final_morse_code = ''.join(final_morse_code).upper()
 
-			# Who knows what this data may be. So keep scanning it!
-			katana.pass_back(final)
-			
-			katana.locate_flags(final)
-			katana.add_result( 'result', final )
+			# Who knows what this data may be. So keep track of where 
+			katana.recurse(self, final_morse_code)
+
+			katana.locate_flags(final_morse_code)
+			katana.add_result( self, 'result', final_morse_code_decoded )
 			
