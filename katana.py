@@ -146,7 +146,6 @@ class Katana(object):
 		# If the user didn't supply a pattern, there's nothing to do.
 		if self.flag_pattern == None:
 			return False
-
 		
 		# JOHN: Below is my attempt to search for Base64 encoded flag formats
 		special_regex_characters = [
