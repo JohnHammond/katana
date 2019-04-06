@@ -118,7 +118,7 @@ class Katana(object):
 				r = r[p.unit_name]
 			if unit.unit_name not in r:
 				r[unit.unit_name] = {}
-			r.update(d)
+			r[unit.unit_name].update(d)
 
 	def evaluate(self):
 		""" Start processing all units """
@@ -140,16 +140,18 @@ class Katana(object):
 		self.add_to_work(self.units)
 
 		# Monitor the work queue and update the progress
-		while True:
-			# Grab the numer of items in the queue
-			n = self.work.qsize()
-			# End if we are done
-			if n == 0:
-				break
-			# Print a nice percentage compelte
-			prog.status('{0:.2f}% complete'.format((self.total_work-float(n)) / float(self.total_work)))
-			# We want to give the threads time to execute
-			time.sleep(0.5)
+		# while True:
+		# 	# Grab the numer of items in the queue
+		# 	n = self.work.qsize()
+		# 	# End if we are done
+		# 	if n == 0:
+		# 		break
+		# 	# Print a nice percentage compelte
+		# 	prog.status('{0:.2f}% complete'.format((self.total_work-float(n)) / float(self.total_work)))
+		# 	# We want to give the threads time to execute
+		# 	time.sleep(0.5)
+
+		self.work.join()
 
 		prog.status('all units complete. waiting for thread exit')
 
@@ -198,76 +200,18 @@ class Katana(object):
 		# If the user didn't supply a pattern, there's nothing to do.
 		if self.flag_pattern == None:
 			return False
-		
-		# JOHN: Below is my attempt to search for Base64 encoded flag formats
-		special_regex_characters = [
-			"\\d", "\\w", '\\s', "\\D", "\\W", '\\S',
-			"+", "{", '}', "*", "?", '.', '|', '(', ')', '[', ']',
-		]
 
-		# In case someone for some reason includes this...
-		# And the 'pattern' is a compiled regex... the 'pattern.pattern' 
-		#                                          is the raw regex string
-		# Also, we remove the surrounding () parentheses
-		raw_flag = self.flag_pattern.pattern.replace('^', '')[1:-1]
+		match = self.flag_pattern.search(output)
+		if match:
+			self.add_flag(match.group())
+			return True
 
-		found_regex = 0
-		for index in range(len(raw_flag)):
-			character = raw_flag[index]
-			if character in special_regex_characters:
-				# This is as far as we can go in the flag pattern.
-				found_regex = 1
-				break
-		
-		index -= 1*found_regex  
-		
-		# Plus one because this the index is zero-based and slicing is not...
-		raw_flag = raw_flag[:index+1]
-		
-		hex_flag = binascii.hexlify(bytes(raw_flag,'utf-8')).decode('utf-8')
+		return False
 
-		base64_flag = base64.b64encode(bytes(raw_flag, 'utf-8')).decode('utf-8')
-		padding = base64_flag.count('=')
-		trustworthy_base64 = base64_flag.replace('=','')[:-padding]
-		
-
-		base64_regex = '[a-zA-Z0-9+/]+={0,2}'
-		hex_regex = '[a-fA-F0-9]*'
-
-		hex_pattern = re.compile(hex_flag + hex_regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
-		base64_pattern = re.compile(trustworthy_base64 + base64_regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
-
-		# Look for the pattern in the output
-		result = self.flag_pattern.search(output)
-		base64_result = base64_pattern.search(output)
-		hex_result = hex_pattern.search(output)
-		
-		# No match
-		if result is None and base64_result is None and hex_result is None:
-		# if result is None:
-			return False
-
-		# add the flag
-		for match in [ result, base64_result, hex_result ]:
-			if match:
-				# We will use this approach, to show the original base64 finding
-				self.add_flag(match.group())
-				if match == base64_result:
-					try:
-						# This tries to decode too often. If it tries and fails, it must not be Base64
-						self.add_flag(base64.b64decode(match.group()).decode('utf-8'))
-					except:
-						pass
-				if match == hex_result:
-					self.add_flag(binascii.unhexlify(match.group()).decode('utf-8'))
-
-		return True
-
-	# JOHN: This still needs to be implemented.
-	#       But it will become the entry-point for our recursive functionality
 	def recurse(self, unit, data):
 		units = self.locate_units(data, parent=unit)
 		self.add_to_work(units)
+
 
 	def load_unit(self, target, name, required=True, recurse=True, parent=None):
 		try:
@@ -284,11 +228,6 @@ class Katana(object):
 						log.info('{0}: no Unit class found'.format(module.__name__))
 
 				yield unit_class(self, parent, target)
-				# try:
-				# 	# return unit_class(self, parent, target)
-				# except units.NotApplicable:
-				# 	if required:
-				# 		log.info('{0}: not applicable to target'.format(module.__name__))
 
 			elif recurse:
 				# Load children, if there are any
@@ -307,6 +246,7 @@ class Katana(object):
 				traceback.print_exc()
 				log.failure('unknown error when loading {0}: {1}'.format(name, e))
 				exit()
+
 
 	def locate_units(self, target, parent=None):
 
@@ -336,7 +276,6 @@ class Katana(object):
 				# If this unit is NotApplicable, don't try it!
 				pass
 
-		print(units_so_far)
 		return units_so_far
 
 	def parse_args(self, parser=None):
@@ -356,6 +295,7 @@ class Katana(object):
 	# Build an argument parser for katana
 	def ArgumentParser(self, *args, **kwargs):
 		return argparse.ArgumentParser(parents=self.parsers, add_help = False, *args, **kwargs)
+
 
 	def worker(self):
 		""" Katana worker thread to process unit execution """

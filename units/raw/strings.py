@@ -52,10 +52,10 @@ class Unit(units.raw.RawUnit):
 		if 'stdout' in response:
 			
 			# If we see anything interesting in here... scan it again!
-			for line in str(response['stdout']):
+			for line in response['stdout']:
 				katana.recurse(self, line)
+				katana.locate_flags(line)
 
-			katana.locate_flags(str(response['stdout']))
 			katana.add_result( self, 'stdout', response['stdout'] )
 
 		if 'stderr' in response:
