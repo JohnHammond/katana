@@ -12,21 +12,21 @@ import utilities
 
 class Unit(units.raw.RawUnit):
 
-	@classmethod
-	def prepare_parser(cls, config, parser):
-		pass
+	# We do not need to include the constructor in this case.
+	# Because we are working with the "raw" unit,
+	# we should really expect anything.
 
-	def evaluate(self, target):
+	def evaluate(self, katana, case):
 
-		if os.path.isfile(target):
+		if os.path.isfile(katana.target):
 			try:
-				source = open(target).read()
+				source = open(katana.target).read()
 
 			# If this is a binary object, we probably can't read it...
 			except UnicodeDecodeError:
 				return None
 		else:
-			source = target
+			source = katana.target
 
 		international_morse_code_mapping = {
 			"di-dah":"A",
@@ -145,8 +145,10 @@ class Unit(units.raw.RawUnit):
 		if ( count ):
 			
 			final = ''.join(final_morse_code).upper()
-			self.find_flags(final)
 
-			return final
-		else:
-			return None
+			# Who knows what this data may be. So keep scanning it!
+			katana.pass_back(final)
+			
+			katana.locate_flags(final)
+			katana.add_result( 'result', final )
+			

@@ -1,6 +1,7 @@
 import os
 import importlib
 import argparse
+import pkgutil
 
 # This subclass of argparse will print the help whenever there
 # is a syntactic error in the options parsing

@@ -163,7 +163,6 @@ class Katana(object):
 		# If the user didn't supply a pattern, there's nothing to do.
 		if self.flag_pattern == None:
 			return False
-
 		
 		# JOHN: Below is my attempt to search for Base64 encoded flag formats
 		special_regex_characters = [
@@ -229,6 +228,10 @@ class Katana(object):
 
 		return True
 
+	# JOHN: This still needs to be implemented.
+	#       But it will become the entry-point for our recursive functionality
+	def pass_back(self, data):
+		pass
 
 	def load_unit(self, target, name, required=True, recurse=True, parent=None):
 		try:

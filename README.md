@@ -100,5 +100,97 @@ If you are running Katana multiple times and just want to see the output, you ma
 Cookbooks
 ----------
 
-When you are given a file, in most cases you will want to include the `raw` unit, in addition to the category you are working with.
+__strings__
 
+
+```
+rm -r results/ ; ./katana.py --unit raw ../tests/orchestra
+```
+
+__exiftool__
+
+This detects the Base64 encoded flag.
+
+```
+rm -r results/ ; ./katana.py --unit raw ../tests/woof64.jpg --flag-format USCGA{.*?}
+```
+
+__Morsecode__
+
+This detects the hex encoded flag
+
+```
+rm -r results/ ; ./katana.py --unit raw ../tests/tamuctf_morsecode.txt --flag-format gigem{.*?}
+```
+
+__QR code__
+
+```
+rm -r results/ ; ./katana.py --unit raw ../tests/qrcode.png --flag-format USCGA{.*}
+```
+
+
+__steghide__
+
+Without a password: 
+
+```
+rm -r results/; ./katana.py --unit raw --unit stego ../tests/rubber_ducky.jpg -ff "USCGA{.*?}"
+```
+
+With a password:
+
+```
+rm -r results/; ./katana.py --unit raw --unit stego ../tests/evil_ducky.jpg --dict /opt/rockyou.txt -ff "USCGA{.*?}"
+```
+
+__snow__
+
+```
+rm -r results/; ./katana.py --unit raw --unit stego ../tests/let_it_snow.txt -ff "USCGA{.*?}"
+```
+
+__zsteg__
+
+```
+rm -r results/; ./katana.py --unit raw --unit stego ../tests/pierre.png -ff "USCGA{.*?}"
+```
+
+__robots.txt__
+
+```
+rm -r results/; ./katana.py --unit web http://web5.tamuctf.com -ff "gigem{.*?}"
+```
+
+
+__Basic SQL Injection__
+
+```
+rm -r results/; ./katana.py --unit web http://web1.tamuctf.com -ff "gigem{.*?}"
+rm -r results/; ./katana.py --unit web http://2018shell.picoctf.com:53261/ -ff "picoCTF{.*}"
+```
+
+__Cookies__
+
+```
+rm -r results/; ./katana.py --unit web.cookies "http://www.whatarecookies.com/"
+```
+
+__Crypto__
+
+```
+rm -r results/ ; ./katana.py --unit raw --unit crypto ../tests/welcome_crypto.txt -ff sun{.*?}
+```
+
+
+__Pikalang__
+
+```
+rm -r results/ ; ./katana.py --unit esoteric ../tests/it.pokeball 
+```
+
+__Malbolge__
+
+```
+rm -r results/ ; ./katana.py --unit esoteric ../tests/malbolge.txt 
+```

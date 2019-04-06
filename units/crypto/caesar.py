@@ -46,11 +46,11 @@ class Unit(units.crypto.CryptoUnit):
 			results = []
 
 			for shift_value in range(len(string.ascii_lowercase)):
-				results.append( self.caesar(source, shift_value) )
+				results.append( str(shift_value) + ": "  + self.caesar(source, shift_value) )
 
 			return results
 		else:
-			return self.caesar(source, self.config['shift'])
+			return str(self.config['shift']) + ": " + self.caesar(source, self.config['shift'])
 
 
 
