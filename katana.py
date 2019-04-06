@@ -30,11 +30,41 @@ class Katana(object):
 		self.results_lock = threading.RLock()
 		self.total_work = 0
 
+		# Initial parser is for unit directory. We need to process this argument first,
+		# so that the specified unit may be loaded
+		self.parser = ArgumentParserWithHelp(
+			description='Low-hanging fruit checker for CTF problems',
+			add_help=False,
+			allow_abbrev=False)
+		self.parser.add_argument('--unitdir', type=utilities.DirectoryArgument,
+			default='./units', help='the directory where available units are stored')
+		self.parser.add_argument('--unit', action='append',
+			required=False, default = [], help='the units to run on the targets')
+		self.parser.add_argument('--unit-help', action='store_true',
+			default=False, help='display help on unit selection')
+		# The number of threads to use
+		self.parser.add_argument('--threads', '-t', type=int, default=10,
+			help='number of threads to use')
+		# Whether or not to use the built-in module checks
+		self.parser.add_argument('--force', '-f', action='store_true',
+			default=False, help='skip the checks')
+		# The list of targets to scan
+		self.parser.add_argument('target', type=str,
+			help='the target file/url/IP/etc') 
+		# The output directory for this scan
+		self.parser.add_argument('--outdir', '-o', default='./results',
+			help='directory to house results')
+		# A Regular Expression patter for units to match
+		self.parser.add_argument('--flag-format', '-ff', default=None,
+			help='regex pattern for output (e.g. "FLAG{.*}")')
+		self.parser.add_argument('--auto', '-a', default=False,
+			action='store_true', help='automatically search for matching units in unitdir')
+
 		# Parse initial arguments
 		self.parse_args()
 
 		# We want the "-" target to signify stdin
-		if len(self.target) == 1 and self.target[0] == '-':
+		if len(self.original_target) == 1 and self.original_target[0] == '-':
 			self.config['target'] = sys.stdin.read()
 
 		# Compile the flag format if given
@@ -63,10 +93,6 @@ class Katana(object):
 		# Find units which match this target
 		self.units = self.locate_units(self.config['target'])
 
-		# This will cause an error for any unknown arguments still in the queue
-		parser = self.ArgumentParser()
-		parser.parse_args()
-
 	@property
 	def original_target(self):
 		""" Shorthand for grabbing the target """
@@ -74,7 +100,7 @@ class Katana(object):
 	
 	def add_result(self, unit, key, val):
 		""" Add a single result to the results dict """
-		self.add_results({key:val})
+		self.add_results(unit, {key:val})
 
 	def add_results(self, unit, d):
 		""" Update the results dict with the given dict """
@@ -249,26 +275,33 @@ class Katana(object):
 			module = importlib.import_module(name)
 			# We don't load units from packages
 			if module.__name__ != module.__package__:
-				unit_clas = None
+				unit_class = None
 				# Try to grab the unit class. Fail if it doesn't exit
 				try:
 					unit_class = module.Unit
 				except AttributeError:
 					if required:
 						log.info('{0}: no Unit class found'.format(module.__name__))
-				try:
-					self.units.append(unit_class(self, parent, target))
-				except units.NotApplicable:
-					if required:
-						log.info('{0}: not applicable to target'.format(module.__name__))
+
+				yield unit_class(self, parent, target)
+				# try:
+				# 	# return unit_class(self, parent, target)
+				# except units.NotApplicable:
+				# 	if required:
+				# 		log.info('{0}: not applicable to target'.format(module.__name__))
+
 			elif recurse:
 				# Load children, if there are any
 				for m in find_modules_recursively(module.__path__, module.__name__+'.'):
-					self.load_unit(target, m, required, True)
-		except ModuleNotFoundError as e:
+					for unit in self.load_unit(target, m, required, True):
+						yield unit
+
+		except ImportError as e:
 			if required:
 				log.failure('unit {0} does not exist'.format(name))
 				exit()
+		except units.NotApplicable as e:
+			raise e
 		except Exception as e:
 			if required:
 				traceback.print_exc()
@@ -277,57 +310,40 @@ class Katana(object):
 
 	def locate_units(self, target, parent=None):
 
+		units_so_far = []
+
 		# Load explicit units
 		for unit in self.config['unit']:
-			self.load_unit(target, unit, required=True, recurse=True, parent=parent)
+			try:
+				for current_unit in self.load_unit(target, unit, required=True, recurse=True, parent=parent):
+					units_so_far.append(current_unit)
+			except units.NotApplicable:
+				# If this unit is NotApplicable, don't try it!
+				pass
 
 		# Do we want to search for units automatically?
 		if not self.config['auto']:
-			return
+			return units_so_far
 
 		# Iterate through all `.py` files in the unitdir directory
 		# Grab everything that has a unit, and check if it's valid.
 		# if it is, add it to the unit list.
 		for name in find_modules_recursively(self.config['unitdir'], ''):
-			self.load_unit(target, name, required=False, recurse=False, parent=parent)
+			try:
+				for current_unit in self.load_unit(target, name, required=False, recurse=False, parent=parent):
+					units_so_far.append(current_unit)
+			except units.NotApplicable as e:
+				# If this unit is NotApplicable, don't try it!
+				pass
+
+		print(units_so_far)
+		return units_so_far
 
 	def parse_args(self, parser=None):
 		""" Use the given parser to parse the remaining arguments """
 
-		# If no parser was specified, parse with the default parser
-		if parser is None:
-			# Initial parser is for unit directory. We need to process this argument first,
-			# so that the specified unit may be loaded
-			parser = ArgumentParserWithHelp(
-				description='Low-hanging fruit checker for CTF problems',
-				add_help=False,
-				allow_abbrev=False)
-			parser.add_argument('--unitdir', type=utilities.DirectoryArgument,
-				default='./units', help='the directory where available units are stored')
-			parser.add_argument('--unit', action='append',
-				required=True, help='the units to run on the targets')
-			parser.add_argument('--unit-help', action='store_true',
-				default=False, help='display help on unit selection')
-			# The number of threads to use
-			parser.add_argument('--threads', '-t', type=int, default=10,
-				help='number of threads to use')
-			# Whether or not to use the built-in module checks
-			parser.add_argument('--force', '-f', action='store_true',
-				default=False, help='skip the checks')
-			# The list of targets to scan
-			parser.add_argument('target', type=str,
-				help='the target file/url/IP/etc') 
-			# The output directory for this scan
-			parser.add_argument('--outdir', '-o', default='./results',
-				help='directory to house results')
-			# A Regular Expression patter for units to match
-			parser.add_argument('--flag-format', '-ff', default=None,
-				help='regex pattern for output (e.g. "FLAG{.*}")')
-			parser.add_argument('--auto', '-a', default=False,
-				action='store_true', help='automatically search for matching units in unitdir')
-
 		# Parse the arguments
-		args, remaining = parser.parse_known_args()
+		args, remaining = self.parser.parse_known_args()
 
 		# Add this parser to a list of parsers for parents
 		self.parsers.append(parser)
@@ -339,14 +355,13 @@ class Katana(object):
 	
 	# Build an argument parser for katana
 	def ArgumentParser(self, *args, **kwargs):
-		return argparse.ArgumentParser(parents=self.parsers, *args, **kwargs)
+		return argparse.ArgumentParser(parents=self.parsers, add_help = False, *args, **kwargs)
 
 	def worker(self):
 		""" Katana worker thread to process unit execution """
 		while True:
 			# Grab the next item
 			unit,name,case = self.work.get()
-			target = self.target
 
 			# The boss says NO. STAHP.
 			if unit is None and case is None and name is None:
@@ -375,5 +390,6 @@ if __name__ == '__main__':
 	print(json.dumps(katana.results, indent=4, sort_keys=True))
 
 	# Dump the flags we found
-	for flag in katana.results['flags']:
-		log.success('Found flag: {0}'.format(flag))
+	if 'flags' in katana.results:
+		for flag in katana.results['flags']:
+			log.success('Found flag: {0}'.format(flag))

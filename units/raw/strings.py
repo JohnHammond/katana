@@ -7,26 +7,40 @@ from pwn import *
 import subprocess
 import units.raw
 import utilities
+import os
+from units import NotApplicable
 
 class Unit(units.raw.RawUnit):
 
-	def __init__(self, katana):
-		super(Unit, self).__init__(katana)
+	def __init__(self, katana, parent, target):
+		super(Unit, self).__init__(katana, parent, target)
+
+		if not os.path.isfile(target):
+			raise NotApplicable
 	
 		# Create a new katana argument parser
-		parser = katana.ArgumentParser()
-		parser.add_argument('--strings-length', '-sl', type=int,
-			help="minimum length of strings to return", default=4)
+		#parser = katana.ArgumentParser()
+		try:
+			katana.parser.add_argument('--strings-length', '-sl', type=int,
+				help="minimum length of strings to return", default=4)
+		except:
+			# If we recurse, we have already seen this argument. Ignore it.
+			pass
 
 		# Parse the arguments
-		katana.parse_args(parser=parser)
+		#try:
+		katana.parse_args()
+		#except argparse.ArgumentError:
+			# We are going to duplicate arguments every time.
+			# Oh well.
+		#	pass
 
 
 	def evaluate(self, katana, case):
 
 		# Run the process.
 		try:
-			p = subprocess.Popen(['strings', katana.target, '-n', str(katana.config['strings_length'])], 
+			p = subprocess.Popen(['strings', self.target, '-n', str(katana.config['strings_length'])], 
 				stdout = subprocess.PIPE, stderr=subprocess.PIPE )
 		except FileNotFoundError as e:
 			if "No such file or directory: 'strings'" in e.args:

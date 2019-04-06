@@ -6,8 +6,10 @@ import binascii
 
 class BaseUnit(object):
 	# Unit constructor (saves the config)
-	def __init__(self, katana):
+	def __init__(self, katana, parent, target):
 		self.completed = False
+		self.parent = parent
+		self.target = target
 
 	# By default, the only test case is the target itself
 	def enumerate(self, katana):
