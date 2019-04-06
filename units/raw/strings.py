@@ -32,6 +32,10 @@ class Unit(units.raw.RawUnit):
 		response = utilities.process_output(p)
 		if 'stdout' in response:
 			
+			# If we see anything interesting in here... scan it again!
+			for line in str(response['stdout']):
+				katana.pass_back(line)
+
 			katana.locate_flags(str(response['stdout']))
 			katana.add_result( 'stdout', response['stdout'] )
 
