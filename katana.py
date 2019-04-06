@@ -28,6 +28,7 @@ class Katana(object):
 		self.completed = False
 		self.results = { }
 		self.results_lock = threading.RLock()
+		self.total_work = 0
 
 		# Parse initial arguments
 		self.parse_args()
@@ -60,7 +61,11 @@ class Katana(object):
 				log.error('{0}: unable to create directory'.format(self.config['outdir']))
 
 		# Find units which match this target
-		self.locate_units(self.config['target'])
+		self.units = self.locate_units(self.config['target'])
+
+		# This will cause an error for any unknown arguments still in the queue
+		parser = self.ArgumentParser()
+		parser.parse_args()
 
 	@property
 	def original_target(self):
@@ -105,21 +110,8 @@ class Katana(object):
 
 		prog.status('filling work queue')
 
-		# Add all the cases to the work queue
-		nitems = 0
-		for unit in self.units:
-			if not self.completed:
-				case_no = 0
-				for case in unit.enumerate(self):
-					if not unit.completed:
-						prog.status('adding {0}[{1}] to work queue (size: {2}, total: {3})'.format(
-							unit.unit_name, case_no, self.work.qsize(), nitems
-						))
-						self.work.put((unit, case_no, case))
-						nitems += 1
-						case_no += 1
-					else:
-						break
+		# Add the known units to the work queue
+		self.add_to_work(self.units)
 
 		# Monitor the work queue and update the progress
 		while True:
@@ -129,7 +121,7 @@ class Katana(object):
 			if n == 0:
 				break
 			# Print a nice percentage compelte
-			prog.status('{0:.2f}% complete'.format(float(n) / float(nitems)))
+			prog.status('{0:.2f}% complete'.format((self.total_work-float(n)) / float(self.total_work)))
 			# We want to give the threads time to execute
 			time.sleep(0.5)
 
@@ -150,6 +142,23 @@ class Katana(object):
 		prog.success('threads exited. evaluation complete')
 
 		log.success('wrote output summary to {0}'.format(os.path.join(self.config['outdir'], 'katana.json')))
+
+	def add_to_work(self, units):
+		# Add all the cases to the work queue
+		for unit in units:
+			if not self.completed:
+				case_no = 0
+				for case in unit.enumerate(self):
+					if not unit.completed:
+						#prog.status('adding {0}[{1}] to work queue (size: {2}, total: {3})'.format(
+						#	unit.unit_name, case_no, self.work.qsize(), self.total_work
+						#))
+						self.work.put((unit, case_no, case))
+						self.total_work += 1
+						case_no += 1
+					else:
+						break
+
 
 	def add_flag(self, flag):
 		if 'flags' not in self.results:
@@ -231,7 +240,8 @@ class Katana(object):
 	# JOHN: This still needs to be implemented.
 	#       But it will become the entry-point for our recursive functionality
 	def recurse(self, unit, data):
-		pass
+		units = self.locate_units(data, parent=unit)
+		self.add_to_work(units)
 
 	def load_unit(self, target, name, required=True, recurse=True, parent=None):
 		try:
@@ -280,10 +290,6 @@ class Katana(object):
 		# if it is, add it to the unit list.
 		for name in find_modules_recursively(self.config['unitdir'], ''):
 			self.load_unit(target, name, required=False, recurse=False, parent=parent)
-
-		# This will cause an error for any unknown arguments still in the queue
-		parser = self.ArgumentParser()
-		parser.parse_args()
 
 	def parse_args(self, parser=None):
 		""" Use the given parser to parse the remaining arguments """
