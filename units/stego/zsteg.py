@@ -7,21 +7,24 @@ from pwn import *
 import subprocess
 import os
 import units.stego
+import units
 
 class Unit(units.stego.StegoUnit):
 
-	@classmethod
-	def prepare_parser(cls, config, parser):
-		pass
+	def __init__(self, katana):
+		super(Unit, self).__init__(katana)
+		if os.system('which zsteg') != 0:
+			log.failure('zsteg is not in the PATH (not installed)? Cannot run the stego.zsteg unit!')
+			raise units.NotApplicable()
 
-	def evaluate(self, target):
+	def evaluate(self, katana, case):
 
 		try:
-			p = subprocess.Popen(['zsteg', '-a', target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+			p = subprocess.Popen(['zsteg', '-a', katana.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		except FileNotFoundError as e:
 			if "No such file or directory: 'zsteg'" in e.args:
 				log.failure("zsteg is not in the PATH (not installed)? Cannot run the stego.zsteg unit!")
-				return None
+				return
 
 		stdout = []
 		stderr = []
@@ -43,11 +46,11 @@ class Unit(units.stego.StegoUnit):
 			lines = [e+d for e in line.split(d) if e]
 			for temp_line in lines:
 				if (not temp_line.endswith(".. \r")):
-					self.find_flags(temp_line)
+					katana.locate_flags(temp_line)
 					result["stdout"].append(temp_line)
 		
 		for line in [ l.strip() for l in error.split('\n') if l ]:
-			self.find_flags(line)
+			katana.locate_flags(line)
 			result["stderr"].append(line)
 
 		if not len(result['stderr']):
@@ -55,4 +58,4 @@ class Unit(units.stego.StegoUnit):
 		if not len(result['stdout']):
 			result.pop('stdout')
 		
-		return result
+		katana.add_results(result)

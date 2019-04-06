@@ -26,7 +26,7 @@ class Katana(object):
 		self.units = []
 		self.threads = []
 		self.completed = False
-		self.results = { 'flags': [] }
+		self.results = { }
 		self.results_lock = threading.RLock()
 
 		# Parse initial arguments
@@ -60,19 +60,34 @@ class Katana(object):
 				log.error('{0}: unable to create directory'.format(self.config['outdir']))
 
 		# Find units which match this target
-		self.locate_units()
+		self.locate_units(self.config['target'])
 
 	@property
-	def target(self):
+	def original_target(self):
 		""" Shorthand for grabbing the target """
 		return self.config['target']
 	
-	def add_result(self, key, val):
+	def add_result(self, unit, key, val):
+		""" Add a single result to the results dict """
 		self.add_results({key:val})
 
-	def add_results(self, d):
+	def add_results(self, unit, d):
+		""" Update the results dict with the given dict """
 		with self.results_lock:
-			self.results.update(d)
+			parents = []
+			parent = unit.parent
+			# Are you my mother?
+			while parent is not None:
+				parents.append(parent)
+				parent = parent.parent
+			# Start at the global results
+			r = self.results
+			# Recurse through parent units
+			for p in parents[::-1]:
+				r = r[p.unit_name]
+			if unit.unit_name not in r:
+				r[unit.unit_name] = {}
+			r.update(d)
 
 	def evaluate(self):
 		""" Start processing all units """
@@ -137,6 +152,8 @@ class Katana(object):
 		log.success('wrote output summary to {0}'.format(os.path.join(self.config['outdir'], 'katana.json')))
 
 	def add_flag(self, flag):
+		if 'flags' not in self.results:
+			self.results['flags'] = []
 		with self.results_lock:
 			self.results['flags'].append(flag)
 	
@@ -216,7 +233,7 @@ class Katana(object):
 	def recurse(self, unit, data):
 		pass
 
-	def load_unit(self, name, required=True, recurse=True):
+	def load_unit(self, target, name, required=True, recurse=True, parent=None):
 		try:
 			# import the module
 			module = importlib.import_module(name)
@@ -230,14 +247,14 @@ class Katana(object):
 					if required:
 						log.info('{0}: no Unit class found'.format(module.__name__))
 				try:
-					self.units.append(unit_class(self))
+					self.units.append(unit_class(self, parent, target))
 				except units.NotApplicable:
 					if required:
 						log.info('{0}: not applicable to target'.format(module.__name__))
 			elif recurse:
 				# Load children, if there are any
 				for m in find_modules_recursively(module.__path__, module.__name__+'.'):
-					self.load_unit(m, required, True)
+					self.load_unit(target, m, required, True)
 		except ModuleNotFoundError as e:
 			if required:
 				log.failure('unit {0} does not exist'.format(name))
@@ -248,11 +265,11 @@ class Katana(object):
 				log.failure('unknown error when loading {0}: {1}'.format(name, e))
 				exit()
 
-	def locate_units(self):
+	def locate_units(self, target, parent=None):
 
 		# Load explicit units
 		for unit in self.config['unit']:
-			self.load_unit(unit, required=True, recurse=True)
+			self.load_unit(target, unit, required=True, recurse=True, parent=parent)
 
 		# Do we want to search for units automatically?
 		if not self.config['auto']:
@@ -262,7 +279,7 @@ class Katana(object):
 		# Grab everything that has a unit, and check if it's valid.
 		# if it is, add it to the unit list.
 		for name in find_modules_recursively(self.config['unitdir'], ''):
-			self.load_unit(name, required=False, recurse=False)
+			self.load_unit(target, name, required=False, recurse=False, parent=parent)
 
 		# This will cause an error for any unknown arguments still in the queue
 		parser = self.ArgumentParser()
