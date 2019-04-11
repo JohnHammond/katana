@@ -216,7 +216,8 @@ class Katana(object):
 		return False
 
 	def recurse(self, unit, data):
-		units = self.locate_units(data, parent=unit)
+		log.info('RECURSE')
+		units = self.locate_units(data, parent=unit, recurse=True)
 		self.add_to_work(units)
 
 
@@ -257,7 +258,7 @@ class Katana(object):
 				exit()
 		
 
-	def locate_units(self, target, parent=None):
+	def locate_units(self, target, parent=None, recurse=False):
 
 		units_so_far = []
 
@@ -271,7 +272,7 @@ class Katana(object):
 				pass
 
 		# Do we want to search for units automatically?
-		if not self.config['auto']:
+		if not self.config['auto'] and not recurse:
 			return units_so_far
 
 		# Iterate through all `.py` files in the unitdir directory
@@ -317,7 +318,7 @@ class Katana(object):
 			if self.total_work > 0:
 				left = self.work.qsize()
 				done = self.total_work - left
-				progress.status('{0:.2f}% complete'.format((float(done)/float(self.total_work))*100))
+				progress.status('{0:.2f}% work queue utilization; {1} total items in queued; {2} completed'.format((float(done)/float(self.total_work))*100, self.total_work, done))
 			time.sleep(0.1)
 
 	def worker(self):
