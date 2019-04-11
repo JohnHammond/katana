@@ -10,7 +10,7 @@ import units
 import os
 
 class StegoUnit(BaseUnit):
-	def __init__(self, katana):
-		super(StegoUnit, self).__init__(katana)
-		if not os.path.exists(katana.target):
+	def __init__(self, katana, parent, target):
+		super(StegoUnit, self).__init__(katana, parent, target)
+		if not os.path.exists(self.target):
 			raise units.NotApplicable()

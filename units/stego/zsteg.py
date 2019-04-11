@@ -11,8 +11,8 @@ import units
 
 class Unit(units.stego.StegoUnit):
 
-	def __init__(self, katana):
-		super(Unit, self).__init__(katana)
+	def __init__(self, katana, parent, target):
+		super(Unit, self).__init__(katana, parent, target)
 		if os.system('which zsteg') != 0:
 			log.failure('zsteg is not in the PATH (not installed)? Cannot run the stego.zsteg unit!')
 			raise units.NotApplicable()
@@ -20,7 +20,7 @@ class Unit(units.stego.StegoUnit):
 	def evaluate(self, katana, case):
 
 		try:
-			p = subprocess.Popen(['zsteg', '-a', katana.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+			p = subprocess.Popen(['zsteg', '-a', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		except FileNotFoundError as e:
 			if "No such file or directory: 'zsteg'" in e.args:
 				log.failure("zsteg is not in the PATH (not installed)? Cannot run the stego.zsteg unit!")
@@ -58,4 +58,4 @@ class Unit(units.stego.StegoUnit):
 		if not len(result['stdout']):
 			result.pop('stdout')
 		
-		katana.add_results(result)
+		katana.add_results(self, result)

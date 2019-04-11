@@ -136,6 +136,10 @@ class Katana(object):
 
 		prog.status('filling work queue')
 
+		status_done = threading.Event()
+		status_thread = threading.Thread(target=self.progress, args=(prog,status_done))
+		status_thread.start()
+
 		# Add the known units to the work queue
 		self.add_to_work(self.units)
 
@@ -152,6 +156,9 @@ class Katana(object):
 		# 	time.sleep(0.5)
 
 		self.work.join()
+
+		status_done.set()
+		status_thread.join()
 
 		prog.status('all units complete. waiting for thread exit')
 
@@ -294,9 +301,6 @@ class Katana(object):
 		# Parse the arguments
 		args, remaining = self.parser.parse_known_args()
 
-		# Add this parser to a list of parsers for parents
-		self.parsers.append(parser)
-
 		# Update the configuration
 		self.config.update(vars(args))
 
@@ -306,6 +310,13 @@ class Katana(object):
 	def ArgumentParser(self, *args, **kwargs):
 		return argparse.ArgumentParser(parents=self.parsers, add_help = False, *args, **kwargs)
 
+	def progress(self, progress, done_event):
+		while not done_event.is_set():
+			if self.total_work > 0:
+				left = self.work.qsize()
+				done = self.total_work - left
+				progress.status('{0:.2f}% complete'.format((float(done)/float(self.total_work))*100))
+			time.sleep(0.1)
 
 	def worker(self):
 		""" Katana worker thread to process unit execution """

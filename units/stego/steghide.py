@@ -14,21 +14,18 @@ import magic
 class Unit(units.stego.StegoUnit):
 
 
-	def __init__(self, katana):
-		super(Unit, self).__init__(katana)
+	def __init__(self, katana, parent, target):
+		super(Unit, self).__init__(katana, parent, target)
 	
 		# Create a new katana argument parser
-		try:
-			katana.parser.add_argument('--dict', '-d', type=argparse.FileType('r', encoding='latin-1'),
-				help="Dictionary for bruteforcing")
-			katana.parser.add_argument('--password', '-p', type=str,
-				help="A password to try on the file", action="append",
-				default=[])
-			katana.parser.add_argument('--stop', default=True,
-				help="Stop processing on matching password",
-				action="store_false")
-		except:
-			pass
+		katana.add_argument('--dict', '-d', type=argparse.FileType('r', encoding='latin-1'),
+			help="Dictionary for bruteforcing")
+		katana.add_argument('--password', '-p', type=str,
+			help="A password to try on the file", action="append",
+			default=[])
+		katana.add_argument('--stop', default=True,
+			help="Stop processing on matching password",
+			action="store_false")
 
 		# Parse the arguments
 		katana.parse_args()	
@@ -61,7 +58,7 @@ class Unit(units.stego.StegoUnit):
 
 		# Run steghide
 		p = subprocess.Popen(
-			['steghide', 'extract', '-sf', katana.target, '-p', password, '-xf', output_path],
+			['steghide', 'extract', '-sf', self.target, '-p', password, '-xf', output_path],
 			stdout = subprocess.PIPE, stderr = subprocess.PIPE
 		)
 
@@ -86,7 +83,7 @@ class Unit(units.stego.StegoUnit):
 		# Check if it matches the pattern
 		katana.locate_flags(thing)
 
-		katana.recurse(output_path)
+		katana.recurse(self, output_path)
 
 		katana.add_results(self, {
 			'file': output_path,
