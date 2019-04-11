@@ -216,7 +216,6 @@ class Katana(object):
 		return False
 
 	def recurse(self, unit, data):
-		log.info('RECURSE')
 		units = self.locate_units(data, parent=unit, recurse=True)
 		self.add_to_work(units)
 
@@ -262,29 +261,29 @@ class Katana(object):
 
 		units_so_far = []
 
-		# Load explicit units
-		for unit in self.config['unit']:
-			try:
-				for current_unit in self.load_unit(target, unit, required=True, recurse=True, parent=parent):
-					units_so_far.append(current_unit)
-			except units.NotApplicable:
-				# If this unit is NotApplicable, don't try it!
-				pass
-
-		# Do we want to search for units automatically?
 		if not self.config['auto'] and not recurse:
-			return units_so_far
+			# Load explicit units
+			for unit in self.config['unit']:
+				try:
+					for current_unit in self.load_unit(target, unit, required=True, recurse=True, parent=parent):
+						units_so_far.append(current_unit)
+				except units.NotApplicable:
+					# If this unit is NotApplicable, don't try it!
+					pass
+		else:
+			if self.config['auto'] and len(self.config['unit']) > 0:
+				log.warning('ignoring --unit options in favor of --auto')
 
-		# Iterate through all `.py` files in the unitdir directory
-		# Grab everything that has a unit, and check if it's valid.
-		# if it is, add it to the unit list.
-		for name in find_modules_recursively(self.config['unitdir'], ''):
-			try:
-				for current_unit in self.load_unit(target, name, required=False, recurse=False, parent=parent):
-					units_so_far.append(current_unit)
-			except units.NotApplicable as e:
-				# If this unit is NotApplicable, don't try it!
-				pass
+			# Iterate through all `.py` files in the unitdir directory
+			# Grab everything that has a unit, and check if it's valid.
+			# if it is, add it to the unit list.
+			for name in find_modules_recursively(self.config['unitdir'], ''):
+				try:
+					for current_unit in self.load_unit(target, name, required=False, recurse=False, parent=parent):
+						units_so_far.append(current_unit)
+				except units.NotApplicable as e:
+					# If this unit is NotApplicable, don't try it!
+					pass
 
 		return units_so_far
 
