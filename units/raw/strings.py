@@ -17,16 +17,9 @@ class Unit(units.raw.RawUnit):
 
 		if not os.path.isfile(target):
 			raise NotApplicable
-	
-		# Create a new katana argument parser
-		#parser = katana.ArgumentParser()
-		try:
-			katana.parser.add_argument('--strings-length', '-sl', type=int,
+		
+		katana.add_argument('--strings-length', '-sl', type=int,
 				help="minimum length of strings to return", default=4)
-		except:
-			# If we recurse, we have already seen this argument. Ignore it.
-			pass
-
 		katana.parse_args()
 		
 

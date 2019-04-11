@@ -296,9 +296,6 @@ class Katana(object):
 		# Parse the arguments
 		args, remaining = self.parser.parse_known_args()
 
-		# Add this parser to a list of parsers for parents
-		self.parsers.append(parser)
-
 		# Update the configuration
 		self.config.update(vars(args))
 
