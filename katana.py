@@ -17,6 +17,15 @@ import binascii
 import base64
 import units
 
+'''
+JOHN: 12:27 AM Thursday April 11 2019
+
+The last place we left off was trying to change 
+how the add_result and add_results functions would keep track of
+recursive children results... we supplied an index parameter
+that needs to be fixed in all the units. 
+'''
+
 class Katana(object):
 
 	def __init__(self):
@@ -98,9 +107,32 @@ class Katana(object):
 		""" Shorthand for grabbing the target """
 		return self.config['target']
 	
-	def add_result(self, unit, key, val):
+	def add_result(self, unit, index, key, val):
 		""" Add a single result to the results dict """
-		self.add_results(unit, {key:val})
+		with self.results_lock:
+			parents = []
+			parent = unit.parent
+			# Are you my mother?
+			while parent is not None:
+				parents.append(parent)
+				parent = parent.parent
+			# Start at the global results
+			r = self.results
+			# Recurse through parent units
+			for p in parents[::-1]:
+				# If we have not seen results from this parent,
+				# THAT'S FINE.... just be ready for it
+				if not p.unit_name in r:
+					r[p.unit_name] = { 'results': [], 'children': {} }	
+				r = r[p.unit_name]['children']
+			if unit.unit_name not in r:
+				r[unit.unit_name] = { 'results': [], 'children': {} }
+			if idx is None:
+				r[unit.unit_name]['results'].append({key: val})
+				index = len(r[unit.unit_name]['results'])-1
+			else:
+				r[unit.unit_name]['results'][index][key] = val
+		return index
 
 	def add_results(self, unit, d):
 		""" Update the results dict with the given dict """
@@ -118,11 +150,13 @@ class Katana(object):
 				# If we have not seen results from this parent,
 				# THAT'S FINE.... just be ready for it
 				if not p.unit_name in r:
-					r[p.unit_name] = {}	
-				r = r[p.unit_name]
+					r[p.unit_name] = { 'results': [], 'children': {} }	
+				r = r[p.unit_name]['children']
 			if unit.unit_name not in r:
-				r[unit.unit_name] = {}
-			r[unit.unit_name].update(d)
+				r[unit.unit_name] = { 'results': [], 'children': {} }
+			r[unit.unit_name]['results'].append(d)
+			idx = len(r[unit.unit_name]['results'])-1
+		return idx
 
 	def evaluate(self):
 		""" Start processing all units """
@@ -282,7 +316,7 @@ class Katana(object):
 					# If this unit is NotApplicable, don't try it!
 					pass
 		else:
-			if self.config['auto'] and len(self.config['unit']) > 0:
+			if self.config['auto'] and len(self.config['unit']) > 0 and not recurse:
 				log.warning('ignoring --unit options in favor of --auto')
 
 			# Iterate through all `.py` files in the unitdir directory
