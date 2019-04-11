@@ -29,6 +29,7 @@ class Katana(object):
 		self.results = { }
 		self.results_lock = threading.RLock()
 		self.total_work = 0
+		self.blacklist = []
 
 		# Initial parser is for unit directory. We need to process this argument first,
 		# so that the specified unit may be loaded
@@ -232,6 +233,11 @@ class Katana(object):
 
 
 	def load_unit(self, target, name, required=True, recurse=True, parent=None):
+		
+		# This unit is not compatible with the system (previous dependancy error)
+		if name in self.blacklist:
+			return
+
 		try:
 			# import the module
 			module = importlib.import_module(name)
@@ -261,6 +267,11 @@ class Katana(object):
 
 		except units.NotApplicable as e:
 			raise e
+		except units.DependancyError as e:
+			log.failure('{0}: failed due to missing dependancy: {1}'.format(
+				name, e.dependancy
+			))
+			self.blacklist.append(name)
 		except Exception as e:
 			if required:
 				traceback.print_exc()

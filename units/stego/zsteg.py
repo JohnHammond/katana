@@ -13,9 +13,6 @@ class Unit(units.stego.StegoUnit):
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
-		if os.system('which zsteg') != 0:
-			log.failure('zsteg is not in the PATH (not installed)? Cannot run the stego.zsteg unit!')
-			raise units.NotApplicable()
 
 	def evaluate(self, katana, case):
 
@@ -59,3 +56,10 @@ class Unit(units.stego.StegoUnit):
 			result.pop('stdout')
 		
 		katana.add_results(self, result)
+
+# Ensure the system has the required binaries installed. This will prevent the module from running on _all_ targets
+try:
+	subprocess.check_output(['which','zsteg'])
+except:
+	raise units.DependancyError('zsteg')
+

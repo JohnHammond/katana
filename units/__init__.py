@@ -6,3 +6,7 @@
 
 class NotApplicable(Exception):
 	pass
+
+class DependancyError(Exception):
+	def __init__(self, dep):
+		self.dependancy = dep
