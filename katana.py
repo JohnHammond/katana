@@ -217,6 +217,7 @@ class Katana(object):
 		try:
 			# import the module
 			module = importlib.import_module(name)
+
 			# We don't load units from packages
 			if module.__name__ != module.__package__:
 				unit_class = None
@@ -231,7 +232,7 @@ class Katana(object):
 
 			elif recurse:
 				# Load children, if there are any
-				for m in find_modules_recursively(module.__path__, module.__name__+'.'):
+				for m in find_modules_recursively(os.path.dirname(module.__file__), module.__name__+'.'):
 					for unit in self.load_unit(target, m, required, True):
 						yield unit
 
@@ -239,6 +240,7 @@ class Katana(object):
 			if required:
 				log.failure('unit {0} does not exist'.format(name))
 				exit()
+
 		except units.NotApplicable as e:
 			raise e
 		except Exception as e:
@@ -246,7 +248,7 @@ class Katana(object):
 				traceback.print_exc()
 				log.failure('unknown error when loading {0}: {1}'.format(name, e))
 				exit()
-
+		
 
 	def locate_units(self, target, parent=None):
 

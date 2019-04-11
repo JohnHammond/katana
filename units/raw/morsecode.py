@@ -18,15 +18,15 @@ class Unit(units.raw.RawUnit):
 
 	def evaluate(self, katana, case):
 
-		if os.path.isfile(katana.target):
+		if os.path.isfile(self.target):
 			try:
-				source = open(katana.target).read()
+				source = open(self.target).read()
 
 			# If this is a binary object, we probably can't read it...
 			except UnicodeDecodeError:
 				return None
 		else:
-			source = katana.target
+			source = self.target
 
 		international_morse_code_mapping = {
 			"di-dah":"A",

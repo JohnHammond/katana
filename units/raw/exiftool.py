@@ -7,17 +7,20 @@ from pwn import *
 import subprocess
 import units.raw
 import utilities
+from units import NotApplicable
 
 class Unit(units.raw.RawUnit):
 
-	@classmethod
-	def prepare_parser(cls, config, parser):
-		pass
+	def __init__(self, katana, parent, target):
+		super(Unit, self).__init__(katana, parent, target)
 
-	def evaluate(self, target):
+		if not os.path.isfile(target):
+			raise NotApplicable
+
+	def evaluate(self, katana, case):
 
 		try:
-			p = subprocess.Popen(['exiftool', target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+			p = subprocess.Popen(['exiftool', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		except FileNotFoundError as e:
 			if "No such file or directory: 'exiftool'" in e.args:
 				log.failure("exiftool is not in the PATH (not installed)? Cannot run the stego.exiftool unit!")
@@ -26,8 +29,8 @@ class Unit(units.raw.RawUnit):
 		# Look for flags, if we found them...
 		response = utilities.process_output(p)
 		if 'stdout' in response:
-			self.find_flags(str(response['stdout']))
+			katana.locate_flags(str(response['stdout']))
+			katana.add_result( self, 'stdout', response['stdout'] )
 		if 'stderr' in response:
-			self.find_flags(str(response['stderr']))
-		
-		return response
+			katana.locate_flags(str(response['stderr']))
+			katana.add_result( self, 'stderr', response['stderr'] )

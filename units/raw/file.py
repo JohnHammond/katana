@@ -8,18 +8,20 @@ import subprocess
 import os
 import units.raw
 import utilities
+from units import NotApplicable
 
 class Unit(units.raw.RawUnit):
 
-	# We do not need to include the constructor in this case.
-	# Because we are working with the "raw" unit,
-	# we should really expect anything.
-
+	def __init__(self, katana, parent, target):
+		super(Unit, self).__init__(katana, parent, target)
+		# We can only handle this if it is a file!
+		if not os.path.isfile(target):
+			raise NotApplicable
 
 	def evaluate(self, katana, case):
 
 		try:
-			p = subprocess.Popen(['file', katana.target], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+			p = subprocess.Popen(['file', self.target], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		except FileNotFoundError as e:
 			if "No such file or directory: 'file'" in e.args:
 				log.failure("file is not in the PATH (not installed)? Cannot run the raw.file unit!")

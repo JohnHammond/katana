@@ -27,14 +27,8 @@ class Unit(units.raw.RawUnit):
 			# If we recurse, we have already seen this argument. Ignore it.
 			pass
 
-		# Parse the arguments
-		#try:
 		katana.parse_args()
-		#except argparse.ArgumentError:
-			# We are going to duplicate arguments every time.
-			# Oh well.
-		#	pass
-
+		
 
 	def evaluate(self, katana, case):
 
