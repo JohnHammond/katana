@@ -10,12 +10,16 @@ import units.raw
 import re
 import units.stego
 import magic
+import units
 
 class Unit(units.stego.StegoUnit):
 
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
+
+		if not os.path.isfile(target):
+			raise units.NotApplicable()
 	
 		# Create a new katana argument parser
 		katana.add_argument('--dict', '-d', type=argparse.FileType('r', encoding='latin-1'),
