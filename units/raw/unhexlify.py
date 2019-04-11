@@ -26,12 +26,10 @@ class Unit(units.raw.RawUnit):
 
 
 	def evaluate(self, katana, case):
-		# print("evaling")
-		print(self.target)
+		
 		try:
 			result = binascii.unhexlify(self.target).decode('utf-8')
-			print(result)
-		except binascii.Error:
+		except (binascii.Error, UnicodeDecodeError):
 			# This won't decode right... must not be right!
 			return
 

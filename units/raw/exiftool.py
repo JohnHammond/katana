@@ -14,7 +14,13 @@ class Unit(units.raw.RawUnit):
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
-		if not os.path.isfile(target):
+		try:
+			if not os.path.isfile(target):
+				raise NotApplicable
+
+		# JOHN: These apparently happen in Python 3 if you pass
+		#       a filename that contains a null-byte... 
+		except ValueError:
 			raise NotApplicable
 
 	def evaluate(self, katana, case):
@@ -29,8 +35,22 @@ class Unit(units.raw.RawUnit):
 		# Look for flags, if we found them...
 		response = utilities.process_output(p)
 		if 'stdout' in response:
-			katana.locate_flags(str(response['stdout']))
-			katana.add_result( self, 'stdout', response['stdout'] )
+			# katana.locate_flags(str(response['stdout']))
+			for line in response['stdout']:
+				delimited = line.split(':')
+				metadata = delimited[0]
+				value = ':'.join(delimited[1:]).strip()
+				
+				katana.locate_flags(value)
+				katana.locate_flags(metadata)
+			
+				katana.recurse(self, value)
+				katana.recurse(self, metadata)
+
+				katana.add_result( self, metadata, value )
+
+
+
 		if 'stderr' in response:
 			katana.locate_flags(str(response['stderr']))
 			katana.add_result( self, 'stderr', response['stderr'] )

@@ -15,9 +15,15 @@ class Unit(units.raw.RawUnit):
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
-		if not os.path.isfile(target):
+		try:
+			if not os.path.isfile(target):
+				raise NotApplicable
+
+		# JOHN: These apparently happen in Python 3 if you pass
+		#       a filename that contains a null-byte... 
+		except ValueError:
 			raise NotApplicable
-		
+			
 		katana.add_argument('--strings-length', '-sl', type=int,
 				help="minimum length of strings to return", default=4)
 		katana.parse_args()
@@ -40,8 +46,8 @@ class Unit(units.raw.RawUnit):
 			
 			# If we see anything interesting in here... scan it again!
 			for line in response['stdout']:
-				katana.recurse(self, line)
 				katana.locate_flags(line)
+				katana.recurse(self, line)
 
 			katana.add_result( self, 'stdout', response['stdout'] )
 

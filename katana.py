@@ -115,6 +115,10 @@ class Katana(object):
 			r = self.results
 			# Recurse through parent units
 			for p in parents[::-1]:
+				# If we have not seen results from this parent,
+				# THAT'S FINE.... just be ready for it
+				if not p.unit_name in r:
+					r[p.unit_name] = {}	
 				r = r[p.unit_name]
 			if unit.unit_name not in r:
 				r[unit.unit_name] = {}
@@ -199,7 +203,8 @@ class Katana(object):
 		if 'flags' not in self.results:
 			self.results['flags'] = []
 		with self.results_lock:
-			self.results['flags'].append(flag)
+			if flag not in self.results['flags']:
+				self.results['flags'].append(flag)
 	
 	def locate_flags(self, output):
 		""" Look for flags in the given data/output """
@@ -216,6 +221,12 @@ class Katana(object):
 		return False
 
 	def recurse(self, unit, data):
+		# JOHN: If this `recurse` is set to True, it will recurse 
+		#       WITH EVERYTHING even IF you specify a single unit.
+		#       This is the intent, but should be left to "False" for testing
+		
+		if (data is None or data == "" ):
+			return
 		units = self.locate_units(data, parent=unit, recurse=True)
 		self.add_to_work(units)
 

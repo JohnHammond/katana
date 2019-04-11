@@ -9,25 +9,25 @@ from pwn import *
 import subprocess
 import units.raw
 import utilities
+from units import NotApplicable
 
 class Unit(units.raw.RawUnit):
 
-	# We do not need to include the constructor in this case.
-	# Because we are working with the "raw" unit,
-	# we should really expect anything.
 
 	def evaluate(self, katana, case):
 
-		if os.path.isfile(self.target):
-			try:
-				source = open(self.target).read()
+		try:
+			source = open(self.target).read()
 
-			# If this is a binary object, we probably can't read it...
-			except UnicodeDecodeError:
-				return None
-		else:
+		# JOHN: These apparently happen in Python 3 if you pass
+		#       a filename that contains a null-byte... 
+		except (ValueError, OSError):
 			source = self.target
-
+		
+		# If this is a binary object, we probably can't read it...
+		except UnicodeDecodeError:
+			return None
+		
 		international_morse_code_mapping = {
 			"di-dah":"A",
 			"dah-di-di-dit":"B",
@@ -146,9 +146,9 @@ class Unit(units.raw.RawUnit):
 			
 			final_morse_code = ''.join(final_morse_code).upper()
 
-			# Who knows what this data may be. So keep track of where 
+
+			# Who knows what this data may be. So scan it again!
 			katana.recurse(self, final_morse_code)
 
 			katana.locate_flags(final_morse_code)
-			katana.add_result( self, 'result', final_morse_code_decoded )
-			
+			katana.add_result( self, 'result', final_morse_code )
