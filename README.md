@@ -76,13 +76,9 @@ zip
 Support for Flag Formats
 -------------
 
-Katana offers support to hunt for a flag, if a flag format is supplied. You can supply `--flag-format` (or shorthand `-f`) with a regular expression to return a flag if there was one in Katana's findings.
+Katana offers support to hunt for a flag, if a flag format is supplied. You can supply `--flag-format` (or shorthand `-ff`) with a regular expression to return a flag if there was one in Katana's findings.
 
 Examples:
-
-```
-$ ./katana --unit raw --unit stego pierre.png --flag-format USCGA{.*}
-```
 
 ```
 $ ./katana --unit raw --unit stego pierre.png --flag-format USCGA{.*}
