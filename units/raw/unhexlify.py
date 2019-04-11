@@ -15,7 +15,6 @@ class Unit(units.raw.RawUnit):
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
-		print("we tryings", target)
 
 		hex_characters = 'abcdef1234567890'
 		if self.target.lower().startswith('0x'):

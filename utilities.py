@@ -49,7 +49,6 @@ def find_modules_recursively(path, prefix):
 
 		if ispkg:
 			for s in find_modules_recursively(module_path, name + '.'):
-
 				yield s
 		else:
 			yield name

@@ -16,19 +16,17 @@ class Unit(units.raw.RawUnit):
 	# Because we are working with something "raw", we can essentially accept everything.
 	# No need to "check" if this applicable.
 
-	def __init__(self, katana):
-
-		super(Unit, self).__init__(katana)
-
+	def __init__(self, katana, parent, target):
+		super(Unit, self).__init__(katana, parent, target)
 		# We can only handle this if it is a file!
-		if not os.path.isfile(katana.target):
+		if not os.path.isfile(target):
 			raise NotApplicable
 
 
 	def evaluate(self, katana, case):
 
 		try:
-			p = subprocess.Popen(['zbarimg', katana.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+			p = subprocess.Popen(['zbarimg', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		except FileNotFoundError as e:
 			if "No such file or directory: 'zbarimg'" in e.args:
 				log.failure("zbarimg is not in the PATH (not installed)? Cannot run the raw.qrcode unit!")
