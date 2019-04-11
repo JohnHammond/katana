@@ -13,22 +13,25 @@ import magic
 
 class Unit(units.stego.StegoUnit):
 
+
 	def __init__(self, katana):
 		super(Unit, self).__init__(katana)
 	
 		# Create a new katana argument parser
-		parser = katana.ArgumentParser()
-		parser.add_argument('--dict', '-d', type=argparse.FileType('r', encoding='latin-1'),
-			help="Dictionary for bruteforcing")
-		parser.add_argument('--password', '-p', type=str,
-			help="A password to try on the file", action="append",
-			default=[])
-		parser.add_argument('--stop', default=True,
-			help="Stop processing on matching password",
-			action="store_false")
+		try:
+			katana.parser.add_argument('--dict', '-d', type=argparse.FileType('r', encoding='latin-1'),
+				help="Dictionary for bruteforcing")
+			katana.parser.add_argument('--password', '-p', type=str,
+				help="A password to try on the file", action="append",
+				default=[])
+			katana.parser.add_argument('--stop', default=True,
+				help="Stop processing on matching password",
+				action="store_false")
+		except:
+			pass
 
 		# Parse the arguments
-		katana.parse_args(parser=parser)	
+		katana.parse_args()	
 
 	def enumerate(self, katana):
 		# The default is to check an empty password
@@ -77,19 +80,15 @@ class Unit(units.stego.StegoUnit):
 		typ = magic.from_file(output_path)
 		thing = '<BINARY_DATA>'
 		
-		# If the type is text, then we can display it in katana.json
-		if typ == 'text/plain' or 'ASCII text' in typ:
-			with open(output_path, 'r') as f:
-				thing = f.read()
+		with open(output_path, 'r') as f:
+			thing = f.read()
 
 		# Check if it matches the pattern
 		katana.locate_flags(thing)
 
-		# Stop processing this unit if we only expect on success
-		if katana.config['stop']:
-			self.completed = True
-	
-		katana.add_results({
+		katana.recurse(output_path)
+
+		katana.add_results(self, {
 			'file': output_path,
 			'type': typ,
 			'content': thing

@@ -5,6 +5,7 @@ import base64
 import binascii
 
 class BaseUnit(object):
+
 	# Unit constructor (saves the config)
 	def __init__(self, katana, parent, target):
 		self.completed = False
