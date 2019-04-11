@@ -2,11 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-<<<<<<< HEAD
 # @Last Modified time: 2019-03-31 17:30:48
-=======
-# @Last Modified time: 2019-04-10 23:49:45
->>>>>>> f024ae6a2622428ffea39a314b0237e9e8184ea2
 
 from pwn import *
 from unit import BaseUnit

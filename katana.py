@@ -106,34 +106,7 @@ class Katana(object):
 	@property
 	def original_target(self):
 		""" Shorthand for grabbing the target """
-		return self.config['target']
-	
-	def add_result(self, unit, index, key, val):
-		""" Add a single result to the results dict """
-		with self.results_lock:
-			parents = []
-			parent = unit.parent
-			# Are you my mother?
-			while parent is not None:
-				parents.append(parent)
-				parent = parent.parent
-			# Start at the global results
-			r = self.results
-			# Recurse through parent units
-			for p in parents[::-1]:
-				# If we have not seen results from this parent,
-				# THAT'S FINE.... just be ready for it
-				if not p.unit_name in r:
-					r[p.unit_name] = { 'results': [], 'children': {} }	
-				r = r[p.unit_name]['children']
-			if unit.unit_name not in r:
-				r[unit.unit_name] = { 'results': [], 'children': {} }
-			if idx is None:
-				r[unit.unit_name]['results'].append({key: val})
-				index = len(r[unit.unit_name]['results'])-1
-			else:
-				r[unit.unit_name]['results'][index][key] = val
-		return index
+		return self.config['target']	
 
 	def add_results(self, unit, d):
 		""" Update the results dict with the given dict """
