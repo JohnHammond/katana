@@ -280,7 +280,17 @@ class Katana(object):
 
 		return units_so_far
 
-	def parse_args(self, parser=None):
+	def add_argument(self, *args, **kwargs):
+		""" Add an argument to the argument parser """
+
+		try:
+			self.parser.add_argument(*args, **kwargs)
+		except argparse.ArgumentError as e:
+			return e
+	
+		return None
+
+	def parse_args(self, final=False):
 		""" Use the given parser to parse the remaining arguments """
 
 		# Parse the arguments
