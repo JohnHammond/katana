@@ -19,7 +19,7 @@ class Unit(units.raw.RawUnit):
 		if self.target.lower().startswith('0x'):
 			self.target = self.target[2:]
 
-		PATTERN = re.compile( '[abcdef1234567890]{3,}', flags=re.MULTILINE | \
+		PATTERN = re.compile( '[abcdef1234567890]{5,}', flags=re.MULTILINE | \
 								re.DOTALL | re.IGNORECASE  )
 		hex_result = PATTERN.findall(str(self.target))
 
