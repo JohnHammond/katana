@@ -7,17 +7,24 @@ from pwn import *
 import subprocess
 import os
 import units.stego
+import magic
 import units
+
+dependancy_command = 'zsteg'
 
 class Unit(units.stego.StegoUnit):
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
+		# zsteg will only work on PNG images!
+		if 'PNG image' not in magic.from_file(target):
+			raise units.NotApplicable
+
 	def evaluate(self, katana, case):
 
 		try:
-			p = subprocess.Popen(['zsteg', '-a', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+			p = subprocess.Popen([dependancy_command, '-a', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		except FileNotFoundError as e:
 			if "No such file or directory: 'zsteg'" in e.args:
 				log.failure("zsteg is not in the PATH (not installed)? Cannot run the stego.zsteg unit!")
@@ -59,7 +66,6 @@ class Unit(units.stego.StegoUnit):
 
 # Ensure the system has the required binaries installed. This will prevent the module from running on _all_ targets
 try:
-	subprocess.check_output(['which','zsteg'])
-except:
-	raise units.DependancyError('zsteg')
-
+	subprocess.check_output(['which',dependancy_command])
+except (FileNotFoundError, subprocess.CalledProcessError) as e:
+	raise units.DependancyError(dependancy_command)

@@ -119,11 +119,13 @@ class Katana(object):
 				# If we have not seen results from this parent,
 				# THAT'S FINE.... just be ready for it
 				if not p.unit_name in r:
-					r[p.unit_name] = { 'results': [], 'children': {} }	
-				r = r[p.unit_name]['children']
+					r[p.unit_name] = { 'results': [] }	
 			if unit.unit_name not in r:
-				r[unit.unit_name] = { 'results': [], 'children': {} }
-			r[unit.unit_name]['results'].append(d)
+				r[unit.unit_name] = { 'results': [] }
+
+			if d != {}:
+				r[unit.unit_name]['results'].append(d)
+
 
 	def evaluate(self):
 		""" Start processing all units """
@@ -228,6 +230,7 @@ class Katana(object):
 		
 		if (data is None or data == "" ):
 			return
+
 		units = self.locate_units(data, parent=unit, recurse=True)
 		self.add_to_work(units)
 
