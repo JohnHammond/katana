@@ -251,13 +251,13 @@ class Katana(object):
 			# JOHN: This is what runs if just pass --unit ...
 			elif recurse:
 				# Load children, if there are any
-				print("MODULE CALL", os.path.dirname(module.__file__), module.__name__+'.')
 				for m in find_modules_recursively(os.path.dirname(module.__file__), module.__name__+'.'):
 					for unit in self.load_unit(target, m, required, True):
 						yield unit
 
 		except ImportError as e:
 			if required:
+				traceback.print_exc()
 				log.failure('unit {0} does not exist'.format(name))
 				exit()
 
@@ -296,7 +296,7 @@ class Katana(object):
 			# Iterate through all `.py` files in the unitdir directory
 			# Grab everything that has a unit, and check if it's valid.
 			# if it is, add it to the unit list.
-			
+
 			for name in find_modules_recursively(self.config['unitdir'], ''):
 				try:
 					for current_unit in self.load_unit(target, name, required=False, recurse=False, parent=parent):

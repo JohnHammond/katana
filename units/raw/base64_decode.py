@@ -32,7 +32,7 @@ class Unit(units.FileOrDataUnit):
 		
 		for result in self.base64_result:
 			try:
-				decoded = base64.b64decode(result).decode('utf-8')
+				decoded = base64.b64decode(result).decode('ascii')
 
 				katana.recurse(self, decoded)
 

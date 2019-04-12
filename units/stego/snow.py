@@ -7,7 +7,7 @@ from pwn import *
 import subprocess
 import units.stego
 import utilities
-from md5 import md5
+from hashlib import md5
 
 dependancy_command = 'snow'
 

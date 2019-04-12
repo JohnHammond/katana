@@ -16,24 +16,31 @@ class Unit(units.raw.RawUnit):
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
-		hex_characters = 'abcdef1234567890'
 		if self.target.lower().startswith('0x'):
 			self.target = self.target[2:]
 
-		for character in self.target.lower():
-			if character not in hex_characters:
-				raise NotApplicable
+		PATTERN = re.compile( '[abcdef1234567890]{3,}', flags=re.MULTILINE | \
+								re.DOTALL | re.IGNORECASE  )
+		hex_result = PATTERN.findall(str(self.target))
 
+
+		if hex_result is None or hex_result == []:
+			raise NotApplicable()
+		else:
+			self.hex_result = hex_result
 
 	def evaluate(self, katana, case):
 		
-		try:
-			result = binascii.unhexlify(self.target).decode('utf-8')
-		except (binascii.Error, UnicodeDecodeError):
-			# This won't decode right... must not be right!
-			return
+		for result in self.hex_result:
+			try:
+				result = binascii.unhexlify(result).decode('utf-8')
 
-		katana.recurse(self, result)
+				katana.recurse(self, result)
 
-		self.locate_flags(katana, result )
-		katana.add_results( self, result )
+				self.locate_flags(katana, result )
+				katana.add_results( self, result )
+			
+			except (binascii.Error, UnicodeDecodeError):
+				# This won't decode right... must not be right!
+				pass
+

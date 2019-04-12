@@ -8,9 +8,10 @@ import subprocess
 import os
 import units.raw
 import utilities
+import magic
 from units import NotApplicable
 
-class Unit(units.raw.RawUnit):
+class Unit(units.FileUnit):
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
@@ -20,24 +21,10 @@ class Unit(units.raw.RawUnit):
 
 	def evaluate(self, katana, case):
 
-		try:
-			p = subprocess.Popen(['file', self.target], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-		except FileNotFoundError as e:
-			if "No such file or directory: 'file'" in e.args:
-				log.failure("file is not in the PATH (not installed)? Cannot run the raw.file unit!")
-				return None
-		
 		# Look for flags, if we found them...
-		response = utilities.process_output(p)
-		if 'stdout' in response:
-			
-			# If we see anything interesting in here... scan it again!
-			for line in response['stdout']:
-				katana.recurse(self, line)
+		response = magic.from_file(self.target)
+		
+		katana.recurse(self, response)
 
-			self.locate_flags(katana, str(response['stdout']))
-
-		if 'stderr' in response:
-			self.locate_flags(katana, str(response['stderr']))
-
+		self.locate_flags(katana, response)
 		katana.add_results(self, response)
