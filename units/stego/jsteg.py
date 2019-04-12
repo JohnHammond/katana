@@ -5,40 +5,39 @@ from io import StringIO
 import argparse
 from pwn import *
 import subprocess
-import units.raw
-import utilities
 import os
-import magic
-from units import NotApplicable
+import units.stego
+import utilities
+import units
 
-dependancy_command = 'zbarimg'
+dependancy_command = 'jsteg'
 
-class Unit(units.raw.RawUnit):
+class Unit(units.FileUnit):
 
 	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
-		# We can only handle this if it is a file!
-		if not os.path.isfile(target) or 'image' not in magic.from_file(target):
-			raise NotApplicable
-
+		# This ensures it is a JPG
+		super(Unit, self).__init__(katana, parent, target, keywords=['jpg', 'jpeg'])
 
 	def evaluate(self, katana, case):
 
-		p = subprocess.Popen([dependancy_command, self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		try:
+			p = subprocess.Popen([dependancy_command, 'reveal', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		except FileNotFoundError as e:
+			if "No such file or directory: 'jsteg'" in e.args:
+				log.failure("jsteg is not in the PATH (not installed)? Cannot run the stego.jsteg unit!")
+				return None
 
 		# Look for flags, if we found them...
 		response = utilities.process_output(p)
+		
 		if 'stdout' in response:
-			
-			# If we see anything interesting in here... scan it again!
 			for line in response['stdout']:
 				katana.recurse(self, line)
-
-			self.locate_flags(katana,str(response['stdout']))
-
+				self.locate_flags(katana, str(response['stdout']))
+				
 		if 'stderr' in response:
 			self.locate_flags(katana, str(response['stderr']))
-
+		
 		katana.add_results(self, response)
 
 # Ensure the system has the required binaries installed. This will prevent the module from running on _all_ targets

@@ -10,24 +10,12 @@ import subprocess
 import units.raw
 import utilities
 from units import NotApplicable
+import units
 
-class Unit(units.raw.RawUnit):
-
+class Unit(units.FileOrDataUnit):
 
 	def evaluate(self, katana, case):
 
-		try:
-			source = open(self.target).read()
-
-		# JOHN: These apparently happen in Python 3 if you pass
-		#       a filename that contains a null-byte... 
-		except (ValueError, OSError):
-			source = self.target
-		
-		# If this is a binary object, we probably can't read it...
-		except UnicodeDecodeError:
-			return None
-		
 		international_morse_code_mapping = {
 			"di-dah":"A",
 			"dah-di-di-dit":"B",
@@ -134,7 +122,7 @@ class Unit(units.raw.RawUnit):
 		inverse_morse_alphabet = dict((v, k) for (k, v) in morse_alphabet.items())
 
 		count = 0
-		for x in source.split():
+		for x in self.target.split():
 			if x in international_morse_code_mapping:
 				count += 1
 				final_morse_code.append(international_morse_code_mapping[x])

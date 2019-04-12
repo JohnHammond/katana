@@ -3,3 +3,4 @@ results
 domains.txt
 tests/
 env/
+*.pyc

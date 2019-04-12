@@ -9,7 +9,7 @@ import units.raw
 import utilities
 from units import NotApplicable
 
-class Unit(units.raw.RawUnit):
+class Unit(units.FileUnit):
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)

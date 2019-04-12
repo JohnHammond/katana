@@ -17,15 +17,6 @@ import binascii
 import base64
 import units
 
-'''
-JOHN: 12:27 AM Thursday April 11 2019
-
-The last place we left off was trying to change 
-how the add_result and add_results functions would keep track of
-recursive children results... we supplied an index parameter
-that needs to be fixed in all the units. 
-'''
-
 class Katana(object):
 
 	def __init__(self):
@@ -257,6 +248,7 @@ class Katana(object):
 
 				yield unit_class(self, parent, target)
 
+			# JOHN: This is what runs if just pass --unit ...
 			elif recurse:
 				# Load children, if there are any
 				for importer, name, ispkg in pkgutil.walk_packages(module.__path__, module.__name__+'.'):
@@ -265,6 +257,7 @@ class Katana(object):
 
 		except ImportError as e:
 			if required:
+				traceback.print_exc()
 				log.failure('unit {0} does not exist'.format(name))
 				exit()
 
@@ -287,6 +280,7 @@ class Katana(object):
 
 		units_so_far = []
 
+		# JOHN: This is what runs if you pass `-a`...
 		if not self.config['auto'] and not recurse:
 			# Load explicit units
 			for unit in self.config['unit']:

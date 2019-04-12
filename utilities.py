@@ -51,9 +51,11 @@ def find_modules_recursively(path, prefix):
 		log.failure('looking at {0}'.format(name))
 		module_path = os.path.join(path, name.replace('.','/'))
 		if ispkg:
+			
 			for s in find_modules_recursively(module_path, name + '.'):
 				yield s
 		else:
+			
 			yield name
 
 # -------------------------------------------------------------------
@@ -80,4 +82,5 @@ def process_output(popen_object):
 	if not len(result['stdout']):
 		result.pop('stdout')
 	
-	return result
+	if result != {}:
+		return result

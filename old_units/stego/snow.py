@@ -15,7 +15,7 @@ class Unit(units.stego.StegoUnit):
 		pass
 
 	def evaluate(self, target):
-
+		
 		try:
 			p = subprocess.Popen(['snow', target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		except FileNotFoundError as e:
