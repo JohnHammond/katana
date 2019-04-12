@@ -11,7 +11,7 @@ from hashlib import md5
 
 dependancy_command = 'snow'
 
-class Unit(units.stego.StegoUnit):
+class Unit(units.FileUnit):
 
 
 	def evaluate(self, katana, case):
