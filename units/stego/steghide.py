@@ -16,7 +16,7 @@ class Unit(units.FileUnit):
 
 
 	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target, keywords=['jpg', 'jpeg'])
+		super(units.FileUnit, self).__init__(katana, parent, target, keywords=['jpg', 'jpeg'])
 
 		if not os.path.isfile(target):
 			raise units.NotApplicable()

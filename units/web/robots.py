@@ -82,6 +82,6 @@ class Unit(WebUnit):
 				# This line is empty for some reason
 				continue
 
-			self.locate_flags(katana, line)
+			katana.locate_flags(self, line)
 			katana.recurse(self, line)
 			katana.add_results(self, line)

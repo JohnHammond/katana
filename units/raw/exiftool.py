@@ -9,6 +9,8 @@ import units.raw
 import utilities
 from units import NotApplicable
 
+dependancy_command = 'exiftool'
+
 class Unit(units.FileUnit):
 
 	def __init__(self, katana, parent, target):
@@ -25,13 +27,9 @@ class Unit(units.FileUnit):
 
 	def evaluate(self, katana, case):
 
-		try:
-			p = subprocess.Popen(['exiftool', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-		except FileNotFoundError as e:
-			if "No such file or directory: 'exiftool'" in e.args:
-				log.failure("exiftool is not in the PATH (not installed)? Cannot run the stego.exiftool unit!")
-				return None
-
+	
+		p = subprocess.Popen([dependancy_command, self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		
 		# Look for flags, if we found them...
 		response = utilities.process_output(p)
 		if 'stdout' in response:
@@ -51,3 +49,10 @@ class Unit(units.FileUnit):
 			katana.locate_flags(self, str(response['stderr']))
 
 		katana.add_results(self, response)
+
+# Ensure the system has the required binaries installed. This will prevent the module from running on _all_ targets
+try:
+	subprocess.check_output(['which',dependancy_command])
+except (FileNotFoundError, subprocess.CalledProcessError) as e:
+	raise units.DependancyError(dependancy_command)
+

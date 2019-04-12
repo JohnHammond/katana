@@ -16,10 +16,16 @@ class Unit(units.raw.RawUnit):
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
+		katana.add_argument('--hex-threshold', default=5, type=int,
+			help="minimum number of hex characters for hex detection")
+
+		# Parse the arguments
+		katana.parse_args()	
+
 		if self.target.lower().startswith('0x'):
 			self.target = self.target[2:]
 
-		PATTERN = re.compile( '[abcdef1234567890]{3,}', flags=re.MULTILINE | \
+		PATTERN = re.compile( '[abcdef1234567890]{%d,}' % katana.config['hex_threshold'], flags=re.MULTILINE | \
 								re.DOTALL | re.IGNORECASE  )
 		hex_result = PATTERN.findall(str(self.target))
 

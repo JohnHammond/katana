@@ -16,7 +16,7 @@ class Unit(units.FileUnit):
 
 	def __init__(self, katana, parent, target):
 		# This ensures it is a JPG
-		super(Unit, self).__init__(katana, parent, target, keywords=['jpg', 'jpeg'])
+		super(Unit, self).__init__(katana, parent, target, keywords=['jpg image', 'jpeg image'])
 
 	def evaluate(self, katana, case):
 

@@ -33,7 +33,6 @@ class Unit(WebUnit):
         url = '{0}/{1}'.format(target, '.git/HEAD')
         r = requests.get(url)
 
-
         # If the response is anything other than a "Not Found",
         # we might have something here...
         if r.status_code == 404:

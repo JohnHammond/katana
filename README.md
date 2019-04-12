@@ -190,6 +190,11 @@ __Crypto__
 rm -r results/ ; ./katana.py --unit raw --unit crypto ../tests/welcome_crypto.txt -ff sun{.*?}
 ```
 
+__Brainfuck__
+
+```
+rm -r results/ ; ./katana.py --unit esoteric ../tests/brainmeat.txt 
+```
 
 __Pikalang__
 

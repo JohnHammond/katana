@@ -11,6 +11,8 @@ import os
 from units import NotApplicable
 from unit import BaseUnit
 
+dependancy_command = 'strings'
+
 class Unit(BaseUnit):
 
 	def __init__(self, katana, parent, target):
@@ -29,17 +31,11 @@ class Unit(BaseUnit):
 				help="minimum length of strings to return", default=4)
 		katana.parse_args()
 		
-
 	def evaluate(self, katana, case):
 
 		# Run the process.
-		try:
-			p = subprocess.Popen(['strings', self.target, '-n', str(katana.config['strings_length'])], 
-				stdout = subprocess.PIPE, stderr=subprocess.PIPE )
-		except FileNotFoundError as e:
-			if "No such file or directory: 'strings'" in e.args:
-				log.failure("strings is not in the PATH (not installed)? Cannot run the raw.strings unit!")
-				return None
+		p = subprocess.Popen([dependancy_command, self.target, '-n', str(katana.config['strings_length'])], 
+			stdout = subprocess.PIPE, stderr=subprocess.PIPE )
 
 		# Look for flags, if we found them...
 		response = utilities.process_output(p)
@@ -56,3 +52,9 @@ class Unit(BaseUnit):
 		katana.add_results(self, response)
 		
 		
+# Ensure the system has the required binaries installed. This will prevent the module from running on _all_ targets
+try:
+	subprocess.check_output(['which',dependancy_command])
+except (FileNotFoundError, subprocess.CalledProcessError) as e:
+	raise units.DependancyError(dependancy_command)
+

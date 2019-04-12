@@ -24,8 +24,8 @@ class Unit(WebUnit):
             for cookie_name, cookie_value in cookies.items():
 
                 # I cast this to a string because it may be a number or a bool
-                self.locate_flags(katana, str(cookie_value))
-                self.locate_flags(katana, cookie_name)
+                katana.locate_flags(self, str(cookie_value))
+                katana.locate_flags(self, cookie_name)
                 katana.recurse(self, str(cookie_value))
                 katana.recurse(self, cookie_name)
                 
