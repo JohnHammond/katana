@@ -110,17 +110,12 @@ class Katana(object):
 
 	def add_results(self, unit, d):
 		""" Update the results dict with the given dict """
+		parents = unit.family_tree
 		with self.results_lock:
-			parents = []
-			parent = unit.parent
-			# Are you my mother?
-			while parent is not None:
-				parents.append(parent)
-				parent = parent.parent
 			# Start at the global results
 			r = self.results
 			# Recurse through parent units
-			for p in parents[::-1]:
+			for p in parents:
 				# If we have not seen results from this parent,
 				# THAT'S FINE.... just be ready for it
 				if not p.unit_name in r:
@@ -129,8 +124,6 @@ class Katana(object):
 			if unit.unit_name not in r:
 				r[unit.unit_name] = { 'results': [], 'children': {} }
 			r[unit.unit_name]['results'].append(d)
-			idx = len(r[unit.unit_name]['results'])-1
-		return idx
 
 	def evaluate(self):
 		""" Start processing all units """
@@ -235,6 +228,7 @@ class Katana(object):
 		
 		if (data is None or data == "" ):
 			return
+		print('{0}: {1}'.format(unit.unit_name, data))
 		units = self.locate_units(data, parent=unit, recurse=True)
 		self.add_to_work(units)
 

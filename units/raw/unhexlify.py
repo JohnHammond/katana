@@ -36,4 +36,4 @@ class Unit(units.raw.RawUnit):
 		katana.recurse(self, result)
 
 		katana.locate_flags( result )
-		katana.add_result( self, 'result', result )
+		katana.add_results( self, result )

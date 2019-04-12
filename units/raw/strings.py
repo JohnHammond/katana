@@ -9,8 +9,9 @@ import units.raw
 import utilities
 import os
 from units import NotApplicable
+from unit import BaseUnit
 
-class Unit(units.raw.RawUnit):
+class Unit(BaseUnit):
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
@@ -49,10 +50,9 @@ class Unit(units.raw.RawUnit):
 				katana.locate_flags(line)
 				katana.recurse(self, line)
 
-			katana.add_result( self, 'stdout', response['stdout'] )
-
 		if 'stderr' in response:
 			katana.locate_flags(str(response['stderr']))
-			katana.add_result( self, 'stderr', response['stderr'] )
+
+		katana.add_results(self, response)
 		
 		

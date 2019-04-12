@@ -47,10 +47,7 @@ class Unit(units.raw.RawUnit):
 				katana.recurse(self, value)
 				katana.recurse(self, metadata)
 
-				katana.add_result( self, metadata, value )
-
-
-
 		if 'stderr' in response:
 			katana.locate_flags(str(response['stderr']))
-			katana.add_result( self, 'stderr', response['stderr'] )
+
+		katana.add_results(self, response)

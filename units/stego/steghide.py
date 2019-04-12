@@ -85,7 +85,8 @@ class Unit(units.stego.StegoUnit):
 			thing = f.read()
 
 		# Check if it matches the pattern
-		katana.locate_flags(thing)
+		if katana.locate_flags(thing) and katana.config['stop']:
+			self.completed = True
 
 		katana.recurse(self, output_path)
 

@@ -151,4 +151,4 @@ class Unit(units.raw.RawUnit):
 			katana.recurse(self, final_morse_code)
 
 			katana.locate_flags(final_morse_code)
-			katana.add_result( self, 'result', final_morse_code )
+			katana.add_results(self, final_morse_code)

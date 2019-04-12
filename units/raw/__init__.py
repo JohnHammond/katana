@@ -5,10 +5,10 @@
 # @Last Modified time: 2019-04-05 22:56:13
 
 from pwn import *
-from unit import BaseUnit
+from units import FileOrDataUnit
 import os
 
-class RawUnit(BaseUnit):
+class RawUnit(FileOrDataUnit):
 
     pass
 

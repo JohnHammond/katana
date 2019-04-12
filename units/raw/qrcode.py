@@ -41,8 +41,8 @@ class Unit(units.raw.RawUnit):
 				katana.recurse(self, line)
 
 			katana.locate_flags(str(response['stdout']))
-			katana.add_result( self, 'stdout', response['stdout'] )
 
 		if 'stderr' in response:
 			katana.locate_flags(str(response['stderr']))
-			katana.add_result( self, 'stderr', response['stderr'] )
+
+		katana.add_results(self, response)

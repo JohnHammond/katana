@@ -39,24 +39,42 @@ class BaseUnit(object):
 
 	def evaluate(self, case):
 		log.error('{0}: no evaluate implemented: bad unit'.format(self.unit_name))
+	
+	@property
+	def family_tree(self):
+		parents = []
+		parent = self.parent
+		# Are you my mother
+		while parent is not None:
+			parents.append(parent)
+			parent = parent.parent
+		return parents[::-1]
+
+	def get_artifact_path(self, katana, create=True):
+		directory = os.path.join(katana.config['outdir'], *[u.unit_name for u in self.family_tree], self.unit_name)
+		if os.path.exists(directory) and not os.path.isdir(directory):
+			log.error('{0}: name overlap between unit and result!'.format(directory))
+		elif not os.path.exists(directory) and create:
+			os.makedirs(directory, exist_ok=True)
+		return directory
 
 	# Create a new artifact for this target/unit and
 	def artifact(self, katana, name, mode='w', create=True):
-		path = os.path.join(katana.config['outdir'], name)
+		path = os.path.join(self.get_artifact_path(katana), name)
 		if not create:
 			return path
 		return open(path, mode), path
 
 	# Create an artifact directory
 	def artifact_dir(self, katana, name, create=True):
-		path = os.path.join(katana.config['outdir'], name)
+		path = os.path.join(self.get_artifact_path(katana), name)
 		if not create:
 				return path
 		try:
 			os.mkdir(path)
 		except OSError:
 			if ( "File exists" in e.args ):
-				log.error("Artifact directory '{0}' already exists!".format(path))
+				log.error("{0}: directory exists".format(path))
 			else:
 				# We don't know what went wrong yet.
 				# Raise this because it might be another bug to squash

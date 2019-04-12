@@ -10,22 +10,20 @@ import utilities
 import os
 import re
 from units import NotApplicable
+import units
 import base64
 
-class Unit(units.raw.RawUnit):
+class Unit(units.FileOrDataUnit):
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
-		base64_pattern = '[a-zA-Z0-9+/]+={0,2}'
-		base64_regex = re.compile(base64_pattern, flags=re.MULTILINE | \
-														re.DOTALL |    \
-														re.IGNORECASE  )
-
-		base64_result = base64_regex.search(str(self.target))
+		PATTERN = re.compile( '[a-zA-Z0-9+/]+={0,2}', flags=re.MULTILINE | \
+								re.DOTALL | re.IGNORECASE  )
+		base64_result = PATTERN.search(str(self.target))
 
 		if base64_result is None:
-			raise NotApplicable
+			raise NotApplicable()
 		else:
 			self.base64_result = base64_result
 
@@ -40,4 +38,4 @@ class Unit(units.raw.RawUnit):
 		katana.recurse(self, decoded)
 
 		katana.locate_flags( decoded )
-		katana.add_result( self, 'result', decoded )
+		katana.add_results( self, decoded )
