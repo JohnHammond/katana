@@ -20,6 +20,10 @@ class Unit(units.stego.StegoUnit):
 
 		if not os.path.isfile(target):
 			raise units.NotApplicable()
+		
+		t = magic.from_file(target).lower()
+		if not 'jpg' in t and not 'jpeg' in t:
+			raise units.NotApplicable()
 	
 		# Create a new katana argument parser
 		katana.add_argument('--dict', '-d', type=argparse.FileType('r', encoding='latin-1'),

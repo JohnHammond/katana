@@ -37,5 +37,5 @@ class Unit(units.FileOrDataUnit):
 
 		katana.recurse(self, decoded)
 
-		katana.locate_flags( decoded )
+		self.locate_flags(katana, decoded )
 		katana.add_results( self, decoded )

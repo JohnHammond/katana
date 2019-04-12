@@ -47,11 +47,11 @@ class Unit(BaseUnit):
 			
 			# If we see anything interesting in here... scan it again!
 			for line in response['stdout']:
-				katana.locate_flags(line)
+				self.locate_flags(katana, line)
 				katana.recurse(self, line)
 
 		if 'stderr' in response:
-			katana.locate_flags(str(response['stderr']))
+			self.locate_flags(katana, str(response['stderr']))
 
 		katana.add_results(self, response)
 		
