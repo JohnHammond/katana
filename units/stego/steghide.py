@@ -12,11 +12,11 @@ import units.stego
 import magic
 import units
 
-class Unit(units.stego.StegoUnit):
+class Unit(units.FileUnit):
 
 
 	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
+		super(Unit, self).__init__(katana, parent, target, keywords=['jpg', 'jpeg'])
 
 		if not os.path.isfile(target):
 			raise units.NotApplicable()
