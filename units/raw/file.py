@@ -26,5 +26,5 @@ class Unit(units.FileUnit):
 		
 		katana.recurse(self, response)
 
-		self.locate_flags(katana, response)
+		katana.locate_flags(self, response)
 		katana.add_results(self, response)
