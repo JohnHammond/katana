@@ -4,6 +4,8 @@
 # @Last Modified by:   John Hammond
 # @Last Modified time: 2019-03-24 16:01:22
 from unit import BaseUnit
+import os
+import magic
 
 class NotApplicable(Exception):
 	pass
@@ -25,4 +27,27 @@ class FileOrDataUnit(BaseUnit):
 
 		# We do that before super, so that self.target always refers to
 		# the correct target
-		super(FileOrDataUnit, self).__init__(katana, parent, target)			
+		super(FileOrDataUnit, self).__init__(katana, parent, target)
+	
+class FileUnit(BaseUnit):
+	
+	def __init__(self, katana, parent, target, keywords=[]):
+		super(FileUnit, self).__init__(katana, parent, target)
+		
+		# Ensure it's a file, and get it's mime type
+		try:
+			t = magic.from_file(target).lower()
+		except FileNotFoundError:
+			raise NotApplicable()
+		
+		# Check for the keywords
+		n = 0
+		for kw in keywords:
+			if kw not in t:
+				n += 1
+
+		# If no keywords were found, it doesn't match
+		if n == len(keywords) and n != 0:
+			raise NotApplicable()
+
+
