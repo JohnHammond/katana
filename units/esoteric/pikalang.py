@@ -5,7 +5,7 @@ import sys
 from io import StringIO
 import argparse
 import os
-from esoteric.brainfuck import Unit as brainfuck_unit
+from units.esoteric.brainfuck import evaluate_brainfuck
 from pwn import *
 
 '''
@@ -19,6 +19,9 @@ JOHN:
 
 	It is, quote Caleb, a "quite a hacky hack".
 '''
+
+class SyntaxError(Exception):
+	pass
 
 def syntax_error(lineNo):
 	"""Display information about syntax errors in the pikachu program then exit.
@@ -372,7 +375,7 @@ class Unit(EsotericUnit):
 				self.target = self.target.replace(p_mappings[i], r_mappings[i])
 			
 			self.target = self.target.replace(' ' ,'')
-			output = brainfuck_unit.evaluate(self, self.target, None)
+			output = evaluate_brainfuck(self.target, None)
 
 		katana.locate_flags(self,output)
 		katana.add_results(self,output)

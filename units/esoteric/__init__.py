@@ -10,13 +10,7 @@ import units
 import os
 
 # This could be either a file or just plain data...
-class EsotericUnit(units.FileOrDataUnit):
+class EsotericUnit(units.PrintableDataUnit):
 	
 	def __init__(self, katana, parent, target):
-
-		# We should ensure these are all printable characters.
-		if not target.isprintable():
-			raise NotApplicable
-
-		# We do this after to ensure that all the units are applicable first
 		super(EsotericUnit, self).__init__(katana, parent, target)
