@@ -11,13 +11,25 @@ A lot of the context and ideas from this stem from the living document at [https
 
 **Katana is written in Python3.**
 
+Virtual Environment
+-------------
+
+We recommend running this with the latest version of Python and inside of virtual environment.
+
+```
+python -m venv <your_environment>
+source <your_environment>/bin/activate
+```
+
+From there, you can safely install dependencies with the environment's `pip` (as in, **do not** use sudo).
+
 Dependencies 
 ---------------
 
 ```
-sudo apt install -y python3-pip libffi-dev libssl-dev pandoc
-sudo pip3 install -r requirements.txt
-sudo pip3 install git+https://github.com/arthaud/python3-pwntools.git
+sudo apt install -y libffi-dev libssl-dev pandoc
+pip install -r requirements.txt
+pip install git+https://github.com/arthaud/python3-pwntools.git
 ```
 
 Framework Methodology
