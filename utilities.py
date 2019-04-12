@@ -3,6 +3,8 @@ import importlib
 import argparse
 import pkgutil
 import sys
+from pwn import *
+import threading
 
 # This subclass of argparse will print the help whenever there
 # is a syntactic error in the options parsing
@@ -44,9 +46,10 @@ def GetFullyQualifiedClassName(o):
 
 def find_modules_recursively(path, prefix):
 	""" Locate all modules under a path """
+	log.warning('calling pkgutil.iter_modules({0},\'{1}\')'.format([path], prefix))
 	for importer, name, ispkg in pkgutil.iter_modules([path], prefix):
+		log.failure('looking at {0}'.format(name))
 		module_path = os.path.join(path, name.replace('.','/'))
-
 		if ispkg:
 			
 			for s in find_modules_recursively(module_path, name + '.'):

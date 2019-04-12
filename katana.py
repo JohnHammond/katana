@@ -251,8 +251,8 @@ class Katana(object):
 			# JOHN: This is what runs if just pass --unit ...
 			elif recurse:
 				# Load children, if there are any
-				for m in find_modules_recursively(os.path.dirname(module.__file__), module.__name__+'.'):
-					for unit in self.load_unit(target, m, required, True):
+				for importer, name, ispkg in pkgutil.walk_packages(module.__path__, module.__name__+'.'):
+					for unit in self.load_unit(target, name, required=False, recurse=False):
 						yield unit
 
 		except ImportError as e:
@@ -262,7 +262,8 @@ class Katana(object):
 				exit()
 
 		except units.NotApplicable as e:
-			raise e
+			if required:
+				raise e
 		except units.DependancyError as e:
 			log.failure('{0}: failed due to missing dependancy: {1}'.format(
 				name, e.dependancy
@@ -296,8 +297,7 @@ class Katana(object):
 			# Iterate through all `.py` files in the unitdir directory
 			# Grab everything that has a unit, and check if it's valid.
 			# if it is, add it to the unit list.
-
-			for name in find_modules_recursively(self.config['unitdir'], ''):
+			for importer,name,ispkg in pkgutil.walk_packages([self.config['unitdir']], ''):
 				try:
 					for current_unit in self.load_unit(target, name, required=False, recurse=False, parent=parent):
 						units_so_far.append(current_unit)
