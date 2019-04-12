@@ -12,14 +12,12 @@ import units
 
 dependancy_command = 'zsteg'
 
-class Unit(units.stego.StegoUnit):
+class Unit(units.stego.FileUnit):
 
 	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
+		# This ensures it is a JPG
+		super(Unit, self).__init__(katana, parent, target, keywords=['png image'])
 
-		# zsteg will only work on PNG images!
-		if 'PNG image' not in magic.from_file(target):
-			raise units.NotApplicable
 
 	def evaluate(self, katana, case):
 
