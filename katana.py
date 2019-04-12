@@ -228,7 +228,6 @@ class Katana(object):
 		
 		if (data is None or data == "" ):
 			return
-		print('{0}: {1}'.format(unit.unit_name, data))
 		units = self.locate_units(data, parent=unit, recurse=True)
 		self.add_to_work(units)
 

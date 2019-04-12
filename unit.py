@@ -67,11 +67,8 @@ class BaseUnit(object):
 		if v != True:
 			raise ValueError
 		parent = self.parent
-		log.warning('setting completed for {0} ({1})'.format(self.unit_name, id(self)))
 		while parent is not None:
-			log.warning('setting completed for {0} ({1})'.format(parent.unit_name, id(parent)))
 			parent._completed = True
-			log.failure(parent._completed)
 			parent = parent.parent
 		self._completed = True
 	
