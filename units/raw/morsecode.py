@@ -150,5 +150,5 @@ class Unit(units.raw.RawUnit):
 			# Who knows what this data may be. So scan it again!
 			katana.recurse(self, final_morse_code)
 
-			katana.locate_flags(final_morse_code)
+			self.locate_flags(katana, final_morse_code)
 			katana.add_results(self, final_morse_code)

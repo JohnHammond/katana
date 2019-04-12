@@ -8,7 +8,7 @@ class BaseUnit(object):
 
 	# Unit constructor (saves the config)
 	def __init__(self, katana, parent, target):
-		self.completed = False
+		self._completed = False
 		self.parent = parent
 		self.target = target
 
@@ -57,6 +57,28 @@ class BaseUnit(object):
 		elif not os.path.exists(directory) and create:
 			os.makedirs(directory, exist_ok=True)
 		return directory
+	
+	@property
+	def completed(self):
+		return self._completed
+
+	@completed.setter
+	def completed(self, v):
+		if v != True:
+			raise ValueError
+		parent = self.parent
+		while parent is not None:
+			parent._completed = True
+			parent = parent.parent
+		self._completed = True
+	
+	def locate_flags(self, katana, output, stop=True):
+		""" Locate flags within the output of this unit. If stop is true, then it will
+			also set the completed property when a flag is found. """
+		found = katana.locate_flags(output)
+		if found and stop:
+			self.completed = True
+		return found
 
 	# Create a new artifact for this target/unit and
 	def artifact(self, katana, name, mode='w', create=True):
