@@ -372,7 +372,7 @@ class Unit(EsotericUnit):
 				self.target = self.target.replace(p_mappings[i], r_mappings[i])
 			
 			self.target = self.target.replace(' ' ,'')
-			output = brainfuck_unit.evaluate(self, self.target)
+			output = brainfuck_unit.evaluate(self, self.target, None)
 
 		katana.locate_flags(self,output)
 		katana.add_results(self,output)
