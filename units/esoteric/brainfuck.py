@@ -77,9 +77,6 @@ def evaluate_brainfuck(code, input_file):
 class Unit(EsotericUnit):
 
     def __init__( self, katana, parent, target ):
-        # We do not need to include the constructor here because
-        # the WebUnit parent will already ensure this is a 
-        # URL beginning with either http:// or https://
         super(Unit, self).__init__(katana, parent, target)
 
         katana.add_argument('--bf-file',  action='store_true', default=False, help='target specifies a file name')
