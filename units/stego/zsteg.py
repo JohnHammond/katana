@@ -50,11 +50,11 @@ class Unit(units.stego.StegoUnit):
 			lines = [e+d for e in line.split(d) if e]
 			for temp_line in lines:
 				if (not temp_line.endswith(".. \r")):
-					katana.locate_flags(temp_line)
+					katana.locate_flags(self,temp_line)
 					result["stdout"].append(temp_line)
 		
 		for line in [ l.strip() for l in error.split('\n') if l ]:
-			katana.locate_flags(line)
+			katana.locate_flags(self,line)
 			result["stderr"].append(line)
 
 		if not len(result['stderr']):

@@ -37,8 +37,8 @@ class Unit(units.raw.RawUnit):
 
 				katana.recurse(self, result)
 
-				self.locate_flags(katana, result )
-				katana.add_results( self, result )
+				katana.locate_flags(self, result )
+				katana.add_results(self, result )
 			
 			except (binascii.Error, UnicodeDecodeError):
 				# This won't decode right... must not be right!

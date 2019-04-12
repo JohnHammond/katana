@@ -48,6 +48,7 @@ class Unit(units.FileUnit):
 
 		# Add all the passwords from the dictionary file
 		if 'dict' in katana.config and katana.config['dict'] is not None:
+			# CALEB: Possible race condition if two units use the 'dict' argument for the same purpose...
 			katana.config['dict'].seek(0)
 			for line in katana.config['dict']:
 				yield line.rstrip('\n')
@@ -89,7 +90,7 @@ class Unit(units.FileUnit):
 			thing = f.read()
 
 		# Check if it matches the pattern
-		if katana.locate_flags(thing) and katana.config['stop']:
+		if katana.locate_flags(self,thing) and katana.config['stop']:
 			self.completed = True
 
 		katana.recurse(self, output_path)

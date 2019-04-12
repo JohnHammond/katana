@@ -41,13 +41,13 @@ class Unit(units.FileUnit):
 				metadata = delimited[0]
 				value = ':'.join(delimited[1:]).strip()
 				
-				katana.locate_flags(value)
-				katana.locate_flags(metadata)
+				katana.locate_flags(self,value)
+				katana.locate_flags(self,metadata)
 			
 				katana.recurse(self, value)
 				katana.recurse(self, metadata)
 
 		if 'stderr' in response:
-			self.locate_flags(katana, str(response['stderr']))
+			katana.locate_flags(self, str(response['stderr']))
 
 		katana.add_results(self, response)

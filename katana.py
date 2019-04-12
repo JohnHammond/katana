@@ -200,7 +200,7 @@ class Katana(object):
 			if flag not in self.results['flags']:
 				self.results['flags'].append(flag)
 	
-	def locate_flags(self, output):
+	def locate_flags(self, unit, output, stop=True):
 		""" Look for flags in the given data/output """
 
 		# If the user didn't supply a pattern, there's nothing to do.
@@ -210,6 +210,11 @@ class Katana(object):
 		match = self.flag_pattern.search(output)
 		if match:
 			self.add_flag(match.group())
+			
+			# Stop the unit if they asked
+			if stop:
+				unit.completed = True
+
 			return True
 
 		return False

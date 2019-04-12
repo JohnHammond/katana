@@ -36,7 +36,7 @@ class Unit(units.FileOrDataUnit):
 
 				katana.recurse(self, decoded)
 
-				self.locate_flags(katana, decoded )
+				katana.locate_flags(self, decoded )
 				katana.add_results( self, decoded )
 
 			except:
