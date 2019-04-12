@@ -83,7 +83,7 @@ class Unit(units.web.WebUnit):
 
 		r = method(self.target + action, { username: payload, password : payload })
 		# Hunt for flags. If we found one, stop all other requests!
-		hit = self.locate_flags(katana, r.text)
+		hit = katana.locate_flags(self, r.text)
 
 		if hit:
 			self.completed = True
