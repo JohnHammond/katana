@@ -132,11 +132,12 @@ class Unit(units.FileOrDataUnit):
 
 		if ( count ):
 			
-			final_morse_code = ''.join(final_morse_code).upper()
+			final_morse_code = ''.join(final_morse_code).upper().strip()
 
+			# if this results in an emptry string, don't bother...
+			if final_morse_code:
+				# Who knows what this data may be. So scan it again!
+				katana.recurse(self, final_morse_code)
 
-			# Who knows what this data may be. So scan it again!
-			katana.recurse(self, final_morse_code)
-
-			self.locate_flags(katana, final_morse_code)
-			katana.add_results(self, final_morse_code)
+				self.locate_flags(katana, final_morse_code)
+				katana.add_results(self, final_morse_code)
