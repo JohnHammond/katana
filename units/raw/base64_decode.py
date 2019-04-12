@@ -20,22 +20,26 @@ class Unit(units.FileOrDataUnit):
 
 		PATTERN = re.compile( '[a-zA-Z0-9+/]+={0,2}', flags=re.MULTILINE | \
 								re.DOTALL | re.IGNORECASE  )
-		base64_result = PATTERN.search(str(self.target))
+		base64_result = PATTERN.findall(str(self.target))
 
-		if base64_result is None:
+		if base64_result is None or base64_result == []:
 			raise NotApplicable()
 		else:
 			self.base64_result = base64_result
 
 
 	def evaluate(self, katana, case):
-		try:
-			decoded = base64.b64decode(self.base64_result.group()).decode('utf-8')
-		except:
-			# This won't decode right... must not be right!
-			return
+		
+		for result in self.base64_result:
+			try:
+				decoded = base64.b64decode(result).decode('utf-8')
 
-		katana.recurse(self, decoded)
+				katana.recurse(self, decoded)
 
-		self.locate_flags(katana, decoded )
-		katana.add_results( self, decoded )
+				self.locate_flags(katana, decoded )
+				katana.add_results( self, decoded )
+
+			except:
+				# This won't decode right... must not be right! Ignore it.				
+				pass
+

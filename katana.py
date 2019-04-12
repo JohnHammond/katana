@@ -17,15 +17,6 @@ import binascii
 import base64
 import units
 
-'''
-JOHN: 12:27 AM Thursday April 11 2019
-
-The last place we left off was trying to change 
-how the add_result and add_results functions would keep track of
-recursive children results... we supplied an index parameter
-that needs to be fixed in all the units. 
-'''
-
 class Katana(object):
 
 	def __init__(self):
@@ -257,8 +248,10 @@ class Katana(object):
 
 				yield unit_class(self, parent, target)
 
+			# JOHN: This is what runs if just pass --unit ...
 			elif recurse:
 				# Load children, if there are any
+				print("MODULE CALL", os.path.dirname(module.__file__), module.__name__+'.')
 				for m in find_modules_recursively(os.path.dirname(module.__file__), module.__name__+'.'):
 					for unit in self.load_unit(target, m, required, True):
 						yield unit
@@ -286,6 +279,7 @@ class Katana(object):
 
 		units_so_far = []
 
+		# JOHN: This is what runs if you pass `-a`...
 		if not self.config['auto'] and not recurse:
 			# Load explicit units
 			for unit in self.config['unit']:
@@ -302,6 +296,7 @@ class Katana(object):
 			# Iterate through all `.py` files in the unitdir directory
 			# Grab everything that has a unit, and check if it's valid.
 			# if it is, add it to the unit list.
+			
 			for name in find_modules_recursively(self.config['unitdir'], ''):
 				try:
 					for current_unit in self.load_unit(target, name, required=False, recurse=False, parent=parent):

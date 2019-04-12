@@ -48,9 +48,11 @@ def find_modules_recursively(path, prefix):
 		module_path = os.path.join(path, name.replace('.','/'))
 
 		if ispkg:
+			print("ispg", module_path, name + '.')
 			for s in find_modules_recursively(module_path, name + '.'):
 				yield s
 		else:
+			print("looking at module", name)
 			yield name
 
 # -------------------------------------------------------------------
@@ -77,4 +79,5 @@ def process_output(popen_object):
 	if not len(result['stdout']):
 		result.pop('stdout')
 	
-	return result
+	if result != {}:
+		return result
