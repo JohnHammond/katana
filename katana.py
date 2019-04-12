@@ -60,6 +60,8 @@ class Katana(object):
 			help='regex pattern for output (e.g. "FLAG{.*}")')
 		self.parser.add_argument('--auto', '-a', default=False,
 			action='store_true', help='automatically search for matching units in unitdir')
+		self.parser.add_argument('--depth', '-d', type=int, default=5,
+				help='the maximum depth which the units may recurse')
 
 		# Parse initial arguments
 		self.parse_args()
@@ -226,6 +228,13 @@ class Katana(object):
 		
 		if (data is None or data == "" ):
 			return
+		
+		# Obey max depth input by user
+		if len(unit.family_tree) >= self.config['depth']:
+			log.warning('depth limit reached. if this is a recursive problem, consider increasing --depth')
+			# Stop the chain of events
+			unit.completed = True
+			return
 
 		units = self.locate_units(data, parent=unit, recurse=True)
 		self.add_to_work(units)
@@ -251,7 +260,14 @@ class Katana(object):
 					if required:
 						log.info('{0}: no Unit class found'.format(module.__name__))
 
-				yield unit_class(self, parent, target)
+				if unit_class.PROTECTED_RECURSE and parent is not None and parent.PROTECTED_RECURSE:
+					if required:
+						log.info('{0}: PROTECTED_RECURSE set. cannot recurse into {1}'.format(
+							parent.unit_name,
+							name
+						))
+				else:
+					yield unit_class(self, parent, target)
 
 			# JOHN: This is what runs if just pass --unit ...
 			elif recurse:
