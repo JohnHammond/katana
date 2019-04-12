@@ -10,7 +10,7 @@ import units.stego
 import magic
 import units
 
-dependancy_command = 'zsteg'
+DEPENDENCIES = [ 'zsteg' ]
 
 class Unit(units.stego.FileUnit):
 
@@ -21,15 +21,8 @@ class Unit(units.stego.FileUnit):
 
 	def evaluate(self, katana, case):
 
-		try:
-			p = subprocess.Popen([dependancy_command, '-a', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-		except FileNotFoundError as e:
-			if "No such file or directory: 'zsteg'" in e.args:
-				log.failure("zsteg is not in the PATH (not installed)? Cannot run the stego.zsteg unit!")
-				return
 
-		stdout = []
-		stderr = []
+		p = subprocess.Popen(['zsteg', '-a', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
 		result = {
 			"stdout": [],
@@ -61,9 +54,3 @@ class Unit(units.stego.FileUnit):
 			result.pop('stdout')
 		
 		katana.add_results(self, result)
-
-# Ensure the system has the required binaries installed. This will prevent the module from running on _all_ targets
-try:
-	subprocess.check_output(['which',dependancy_command])
-except (FileNotFoundError, subprocess.CalledProcessError) as e:
-	raise units.DependancyError(dependancy_command)

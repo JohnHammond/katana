@@ -11,7 +11,7 @@ import os
 from units import NotApplicable
 from unit import BaseUnit
 
-dependancy_command = 'strings'
+DEPENDENCIES = [ 'strings' ]
 
 class Unit(BaseUnit):
 
@@ -51,10 +51,3 @@ class Unit(BaseUnit):
 
 		katana.add_results(self, response)
 		
-		
-# Ensure the system has the required binaries installed. This will prevent the module from running on _all_ targets
-try:
-	subprocess.check_output(['which',dependancy_command])
-except (FileNotFoundError, subprocess.CalledProcessError) as e:
-	raise units.DependancyError(dependancy_command)
-

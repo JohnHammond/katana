@@ -12,6 +12,8 @@ import units.stego
 import magic
 import units
 
+DEPENDENCIES = [ 'steghide' ]
+
 class Unit(units.FileUnit):
 
 

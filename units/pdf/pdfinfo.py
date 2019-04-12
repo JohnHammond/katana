@@ -8,7 +8,7 @@ import subprocess
 import units.pdf
 import utilities
 
-dependancy_command = 'pdfinfo'
+DEPENDENCIES = [ 'pdfinfo' ]
 
 class Unit(units.pdf.PdfUnit):
 
@@ -22,7 +22,7 @@ class Unit(units.pdf.PdfUnit):
 
 	def evaluate(self, katana, case):
 
-		p = subprocess.Popen([dependancy_command, self.target, '-upw', katana.config['pdf_user_password'], '-opw', katana.config['pdf_owner_password'] ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		p = subprocess.Popen(['pdfinfo', self.target, '-upw', katana.config['pdf_user_password'], '-opw', katana.config['pdf_owner_password'] ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		
 		# Look for flags, if we found them...
 		response = utilities.process_output(p)
@@ -31,10 +31,3 @@ class Unit(units.pdf.PdfUnit):
 				katana.locate_flags(self, line)
 
 		katana.add_results(self, response)		
-
-# Ensure the system has the required binaries installed. This will prevent the module from running on _all_ targets
-try:
-	subprocess.check_output(['which',dependancy_command])
-except (FileNotFoundError, subprocess.CalledProcessError) as e:
-	raise units.DependancyError(dependancy_command)
-

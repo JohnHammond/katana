@@ -9,14 +9,14 @@ import units.stego
 import utilities
 from hashlib import md5
 
-dependancy_command = 'snow'
+DEPENDENCIES = [ 'snow' ]
 
 class Unit(units.FileUnit):
 
 
 	def evaluate(self, katana, case):
 
-		p = subprocess.Popen([dependancy_command, self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		p = subprocess.Popen(['snow', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
 		# Look for flags, if we found them...
 		try:
@@ -51,10 +51,3 @@ class Unit(units.FileUnit):
 				katana.locate_flags(self,str(response['stderr']))
 			
 			katana.add_results(self, response)
-
-
-# Ensure the system has the required binaries installed. This will prevent the module from running on _all_ targets
-try:
-	subprocess.check_output(['which',dependancy_command])
-except (FileNotFoundError, subprocess.CalledProcessError) as e:
-	raise units.DependancyError(dependancy_command)

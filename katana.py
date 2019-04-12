@@ -253,6 +253,19 @@ class Katana(object):
 			# We don't load units from packages
 			if module.__name__ != module.__package__:
 				unit_class = None
+
+				# Check if this module requires dependencies
+				try:
+					dependencies = module.DEPENDENCIES
+					for dependency in dependencies:
+						try:
+							subprocess.check_output(['which',dependency])
+						except (FileNotFoundError, subprocess.CalledProcessError): 
+							raise units.DependancyError(dependency)
+
+				except AttributeError:
+					pass
+
 				# Try to grab the unit class. Fail if it doesn't exit
 				try:
 					unit_class = module.Unit

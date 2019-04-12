@@ -11,7 +11,7 @@ import os
 import magic
 from units import NotApplicable
 
-dependancy_command = 'zbarimg'
+DEPENDENCIES = [ 'zbarimg' ]
 
 class Unit(units.raw.RawUnit):
 
@@ -40,9 +40,3 @@ class Unit(units.raw.RawUnit):
 			katana.locate_flags(self, str(response['stderr']))
 
 		katana.add_results(self, response)
-
-# Ensure the system has the required binaries installed. This will prevent the module from running on _all_ targets
-try:
-	subprocess.check_output(['which',dependancy_command])
-except (FileNotFoundError, subprocess.CalledProcessError) as e:
-	raise units.DependancyError(dependancy_command)

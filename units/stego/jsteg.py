@@ -10,7 +10,7 @@ import units.stego
 import utilities
 import units
 
-dependancy_command = 'jsteg'
+DEPENDENCIES = [ 'jsteg' ]
 
 class Unit(units.FileUnit):
 
@@ -21,7 +21,7 @@ class Unit(units.FileUnit):
 	def evaluate(self, katana, case):
 
 		try:
-			p = subprocess.Popen([dependancy_command, 'reveal', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+			p = subprocess.Popen(['jsteg', 'reveal', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		except FileNotFoundError as e:
 			if "No such file or directory: 'jsteg'" in e.args:
 				log.failure("jsteg is not in the PATH (not installed)? Cannot run the stego.jsteg unit!")
@@ -39,9 +39,3 @@ class Unit(units.FileUnit):
 			katana.locate_flags(self, str(response['stderr']))
 		
 		katana.add_results(self, response)
-
-# Ensure the system has the required binaries installed. This will prevent the module from running on _all_ targets
-try:
-	subprocess.check_output(['which',dependancy_command])
-except (FileNotFoundError, subprocess.CalledProcessError) as e:
-	raise units.DependancyError(dependancy_command)

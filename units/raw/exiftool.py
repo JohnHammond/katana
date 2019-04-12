@@ -9,7 +9,7 @@ import units.raw
 import utilities
 from units import NotApplicable
 
-dependancy_command = 'exiftool'
+DEPENDENCIES = [ 'exiftool' ]
 
 class Unit(units.FileUnit):
 
@@ -28,7 +28,7 @@ class Unit(units.FileUnit):
 	def evaluate(self, katana, case):
 
 	
-		p = subprocess.Popen([dependancy_command, self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		p = subprocess.Popen(['exiftool', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		
 		# Look for flags, if we found them...
 		response = utilities.process_output(p)
@@ -49,10 +49,3 @@ class Unit(units.FileUnit):
 			katana.locate_flags(self, str(response['stderr']))
 
 		katana.add_results(self, response)
-
-# Ensure the system has the required binaries installed. This will prevent the module from running on _all_ targets
-try:
-	subprocess.check_output(['which',dependancy_command])
-except (FileNotFoundError, subprocess.CalledProcessError) as e:
-	raise units.DependancyError(dependancy_command)
-
