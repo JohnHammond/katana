@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-03-24 16:01:22
+# @Last Modified time: 2019-04-11 23:05:05
 from unit import BaseUnit
 import os
 import magic
@@ -49,5 +49,3 @@ class FileUnit(BaseUnit):
 		# If no keywords were found, it doesn't match
 		if n == len(keywords) and n != 0:
 			raise NotApplicable()
-
-
