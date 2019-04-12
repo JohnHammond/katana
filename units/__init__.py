@@ -4,8 +4,10 @@
 # @Last Modified by:   John Hammond
 # @Last Modified time: 2019-04-11 23:05:05
 from unit import BaseUnit
+from pwn import *
 import os
 import magic
+import string
 
 class NotApplicable(Exception):
 	pass
@@ -49,3 +51,28 @@ class FileUnit(BaseUnit):
 		# If no keywords were found, it doesn't match
 		if n == len(keywords) and n != 0:
 			raise NotApplicable()
+
+class PrintableDataUnit(BaseUnit):
+	
+	def __init__(self, katana, parent, target):
+	
+		# Similar to FileOrDataUnit, use file if it exists
+		try:
+			target = open(target, 'r').read()
+		except:
+			pass
+
+		super(PrintableDataUnit, self).__init__(katana, parent, target)
+
+		# If this is a bytes object, attempt to decode it as utf-8
+		if type(self.target) is bytes:
+			try:
+				self.target = self.target.decode('utf-8')
+			except UnicodeError:
+				raise NotApplicable()
+		
+		# Ensure the string is printable
+		for c in self.target:
+			if c not in string.printable:
+				raise NotApplicable()
+

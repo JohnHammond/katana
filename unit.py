@@ -6,6 +6,10 @@ import binascii
 
 class BaseUnit(object):
 
+	# Set this to True to protect this unit from recursing into another
+	# protected unit
+	PROTECTED_RECURSE = False
+
 	# Unit constructor (saves the config)
 	def __init__(self, katana, parent, target):
 		self._completed = False
