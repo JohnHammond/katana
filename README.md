@@ -120,7 +120,7 @@ __exiftool__
 This detects the Base64 encoded flag.
 
 ```
-rm -r results/ ; ./katana.py --unit raw ../tests/woof64.jpg --flag-format USCGA{.*?}
+rm -r results/ ; ./katana.py --unit raw ../tests/woof64.jpg --flag-format 'USCGA{.*?}'
 ```
 
 __Morsecode__
@@ -128,13 +128,13 @@ __Morsecode__
 This detects the hex encoded flag
 
 ```
-rm -r results/ ; ./katana.py --unit raw ../tests/tamuctf_morsecode.txt --flag-format gigem{.*?}
+rm -r results/ ; ./katana.py --unit raw ../tests/tamuctf_morsecode.txt --flag-format 'gigem{.*?}'
 ```
 
 __QR code__
 
 ```
-rm -r results/ ; ./katana.py --unit raw ../tests/qrcode.png --flag-format USCGA{.*}
+rm -r results/ ; ./katana.py --unit raw ../tests/qrcode.png --flag-format 'USCGA{.*}'
 ```
 
 
