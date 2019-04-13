@@ -30,7 +30,6 @@ class Katana(object):
 		self.results = { }
 		self.results_lock = threading.RLock()
 		self.total_work = 0
-		self.blacklist = []
 		self.all_units = []
 		self.requested_units = []
 		self.recurse_queue = queue.Queue()
@@ -85,6 +84,9 @@ class Katana(object):
 		# Add the units directory the system path
 		sys.path.insert(0, self.config['unitdir'])
 
+		# CALEB: This is a hacky way to keep track of unit findings...
+		units_found = [False]*len(self.config['unit'])
+
 		# Load all units under the unit directory
 		for importer, name, ispkg in pkgutil.walk_packages([self.config['unitdir']], ''):
 
@@ -124,24 +126,24 @@ class Katana(object):
 
 			# Add any arguments we need
 			unit_class.add_arguments(self, parser)
-			
-			# Keep track of the units we asked for
-			try:
-				idx = self.config['unit'].index(name)
-				del self.config['unit'][idx]
-				self.requested_units.append(unit_class)
-			except ValueError:
-				pass
 
+			# Check if this was a requested unit
+			for i in range(len(self.config['unit'])):
+				if isinstance(self.config['unit'][i],str) and \
+					( name == self.config['unit'][i] or  name.startswith(self.config['unit'][i].rstrip('.') + '.') ):
+					units_found[i] = True
+					self.requested_units.append(unit_class)
+	
 			# Keep total list for blind recursion
 			self.all_units.append(unit_class)
 
 		# Notify user of failed unit loads
-		if len(self.config['unit']) > 0:
-			log.failure('the following units were not found: {0}'.format(self.config['unit']))
+		for i in range(len(self.config['unit'])):	
+			if not units_found[i]:
+				log.failure('{0}: unit not found'.format(u))
 
 		# Ensure we have something to do
-		if len(self.requested_units) == 0 and not self.config['auto']:
+		if len(self.config['unit']) != sum(units_found) and not self.config['auto']:
 			self.progress.failure('no units loaded. aborting.')
 			exit()
 
