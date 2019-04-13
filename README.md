@@ -194,12 +194,14 @@ __Brainfuck__
 
 ```
 rm -r results/ ; ./katana.py --unit esoteric.brainfuck ../tests/brainmeat.txt -ff sun{.*?}
+rm -r results/ ; ./katana.py -a ../tests/brainfuck.txt -ff USCGA{.*?}
 ```
 
 __Pikalang__
 
 ```
 rm -r results/ ; ./katana.py --unit esoteric ../tests/it.pokeball 
+rm -r results/ ; ./katana.py --unit esoteric ../tests/pikalang.pokeball 
 ```
 
 __Malbolge__

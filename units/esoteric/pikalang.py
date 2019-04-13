@@ -7,6 +7,7 @@ import argparse
 import os
 from units.esoteric.brainfuck import evaluate_brainfuck
 from pwn import *
+import traceback
 
 '''
 JOHN:
@@ -31,7 +32,7 @@ def syntax_error(lineNo):
 	"""
 	# log.failure("Pikalang Syntax Error on line: {}".format(lineNo))
 
-	raise ValueError("Not unique Pikalang") # This must not be proper Pikalang for this rendition.
+	raise SyntaxError # This must not be proper Pikalang for this rendition.
 
 class PikaStack():
 	"""Encapsulate Stack specific data and methods defined in the pikachu langeuage.
@@ -329,14 +330,12 @@ def run(fileName, args):
 					output.append(tStack.POP())
 				else:
 					pass
-					# print("undefined",end="")
 			elif command == "pikachu pikachu":
 				n = tStack.POP()
 				if n != None and type(n) == int:
 					output.append(chr(n))
 				else:
 					pass
-					# print("undefined",end="")
 			else:
 				tStack.PUSH(2)
 		else:
@@ -357,12 +356,14 @@ class Unit(EsotericUnit):
 
 	def evaluate(self, katana, case ):
 
+		output = None
+		
 		try:
 			output = run(self.target, katana.config['pikalang_args'])
 			katana.locate_flags(self, output)
 
-		except ValueError:
 
+		except SyntaxError:
 			p_mappings = ["pikachu", "pikapi", 'pichu', 'pika', 'pipi', 'chu', 'ka', 'pi']
 			r_mappings = [".",        ",",      '<',     '[',      '>',  ']',  '-',  '+']
 
@@ -370,9 +371,11 @@ class Unit(EsotericUnit):
 				self.target = self.target.replace(p_mappings[i], r_mappings[i])
 			
 			self.target = self.target.replace(' ' ,'')
-			output = evaluate_brainfuck(self.target, None)
+			try:
+				output = evaluate_brainfuck(self.target, None)
+			except (ValueError, TypeError):
+				return
 
-		katana.locate_flags(self,output)
-		katana.add_results(self,output)
-		
-		
+		if output:
+			katana.locate_flags(self,output)
+			katana.add_results(self,output)

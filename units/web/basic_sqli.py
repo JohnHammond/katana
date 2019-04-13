@@ -11,20 +11,22 @@ import re
 import units.web
 import requests
 import magic
+import units
 
 class Unit(units.web.WebUnit):
 
-    # We do not need to include the constructor here because
-    # the WebUnit parent will already ensure this is a 
-    # URL beginning with either http:// or https://
+	def __init__(self, katana, parent, target):
+
+		# Run the parent constructor, to ensure this is a valid URL
+		super(Unit, self).__init__(katana, parent, target)
+		if not katana.config['flag_format']:
+			raise units.NotApplicable
+
 
 	def enumerate(self, katana):
 		
 		# This should "yield 'name', (params,to,pass,to,evaluate)"
 		# evaluate will see this second argument as only one variable and you will need to parse them out
-		
-		if not katana.config['flag_format']:
-			log.warning('No flag format specified, basic_sqli will not be effective.')
 
 		r = requests.get(self.target)
 
@@ -73,7 +75,6 @@ class Unit(units.web.WebUnit):
 							yield (method, action, username, password, payload)
 
 		else:
-			log.failure("[web.basic_sqli] Could not find potential HTTP variables! Aborting!")
 			return # This will tell THE WHOLE UNIT to stop... it will no longer generate cases.
 
 

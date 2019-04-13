@@ -6,6 +6,8 @@ from io import StringIO
 import argparse
 import os
 from pwn import *
+import threading
+import time
 
 # JOHN: Below is part of Caleb's old code. I am keeping it here for
 #       preservation's sake.
@@ -33,7 +35,10 @@ def buildbracemap(code):
             bracemap[position] = start
     return bracemap
 
-def evaluate_brainfuck(code, input_file):
+
+def evaluate_brainfuck(code, input_file, timeout = 1):
+
+
     output = []
 
     try:
@@ -44,7 +49,9 @@ def evaluate_brainfuck(code, input_file):
 
     cells, codeptr, cellptr = [0], 0, 0
 
-    while codeptr < len(code):
+    start_time = time.time()
+
+    while codeptr < len(code) and time.time() < (start_time + timeout ):
         command = code[codeptr]
 
         if command == ">":
@@ -53,23 +60,27 @@ def evaluate_brainfuck(code, input_file):
 
         if command == "<":
             cellptr = 0 if cellptr <= 0 else cellptr - 1
+        try:
+            if command == "+":
+                cells[cellptr] = cells[cellptr] + 1 if cells[cellptr] < 255 else 0
 
-        if command == "+":
-            cells[cellptr] = cells[cellptr] + 1 if cells[cellptr] < 255 else 0
+            if command == "-":
+                cells[cellptr] = cells[cellptr] - 1 if cells[cellptr] > 0 else 255
 
-        if command == "-":
-            cells[cellptr] = cells[cellptr] - 1 if cells[cellptr] > 0 else 255
+            if command == "[" and cells[cellptr] == 0: codeptr = bracemap[codeptr]
+            if command == "]" and cells[cellptr] != 0: codeptr = bracemap[codeptr]
+            
+            if command == ".": output.append(chr(int(cells[cellptr])))
 
-        if command == "[" and cells[cellptr] == 0: codeptr = bracemap[codeptr]
-        if command == "]" and cells[cellptr] != 0: codeptr = bracemap[codeptr]
-        
-        if command == ".": output.append(chr(int(cells[cellptr])))
+            if command == ",": 
+                if input_file == None:
+                    cells[cellptr] = '\n'
 
-        if command == ",": 
-            if input_file == None:
-                cells[cellptr] = '\n'
-            else:
-                cells[cellptr] = input_file.read(1)
+                else:
+                    cells[cellptr] = input_file.read(1)
+
+        except KeyError:
+            return None
 
         codeptr += 1
     
@@ -81,16 +92,15 @@ class Unit(EsotericUnit):
     @classmethod
     def add_arguments(cls, katana, parser):
         parser.add_argument('--brainfuck-input',  action='store_true', default=None, help='file to be read as input to brainfuck program')
+        parser.add_argument('--brainfuck-timeout',  action='store_true', default=1, help='timeout in seconds to run brainfuck program')
 
     def evaluate(self, katana, case):
 
         try:
-            output = evaluate_brainfuck(self.target, katana.config['brainfuck_input'])
+            output = evaluate_brainfuck(self.target, katana.config['brainfuck_input'], katana.config['brainfuck_timeout'])
             # JOHN: Again, this is from Caleb's old code.
             # output = evaluate_brainfuck(target, self.config['bf_map'], self.config['bf_input'])
-
-        except ValueError:
-            log.warning('{0}: invalid brainfuck command detected')
+        except (ValueError, TypeError):
             return None
 
         if output:

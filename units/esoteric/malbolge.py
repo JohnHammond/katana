@@ -82,7 +82,11 @@ def execute_step(a, c, d, mem, inf=sys.stdin.buffer, outf=sys.stdout.buffer):
         # outf.write(bytes([ a % 256 ]))
         output.append(chr( a % 256 ))
     elif m == '/':
-        x = inf.read(1)
+        if inf == None:
+            x = "\n"
+        else:
+            x = inf.read(1)
+
         if x:
             a, = x
         else:
@@ -120,15 +124,14 @@ class Unit(EsotericUnit):
 
     @classmethod
     def add_arguments(cls, katana, parser):
-        parser.add_argument('--malbolge-input',  action='store_true', default=False, help='file to be read as input to malbolge program')
+        parser.add_argument('--malbolge-input',  action='store_true', default=None, help='file to be read as input to malbolge program')
 
     def evaluate(self, katana, case):
         
         try:
             output = execute(self.target, katana.config['malbolge_input'])
 
-        except ValueError:
-            log.warning('{0}: invalid malbolge command detected')
+        except (ValueError, AssertionError):
             return None
 
         if output:
