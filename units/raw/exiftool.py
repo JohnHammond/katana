@@ -13,20 +13,7 @@ DEPENDENCIES = [ 'exiftool' ]
 
 class Unit(units.FileUnit):
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
-
-		try:
-			if not os.path.isfile(target):
-				raise NotApplicable
-
-		# JOHN: These apparently happen in Python 3 if you pass
-		#       a filename that contains a null-byte... 
-		except ValueError:
-			raise NotApplicable
-
 	def evaluate(self, katana, case):
-
 	
 		p = subprocess.Popen(['exiftool', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		

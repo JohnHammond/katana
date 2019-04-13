@@ -2,11 +2,12 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-04-12 19:38:11
+# @Last Modified time: 2019-04-12 22:24:55
 from unit import BaseUnit
 from pwn import *
 import os
 import magic
+import traceback
 import string
 
 class NotApplicable(Exception):
@@ -23,9 +24,11 @@ class FileOrDataUnit(BaseUnit):
 		# Assume that if the target opens properly as a file, that it is 
 		# meant to be a file
 		try:
-			target = open(target, 'r').read()
-		except:
+			target = open(target, 'rb').read().decode('latin-1')
+		except FileNotFoundError:
 			pass
+		except:
+			traceback.print_exc()
 
 		# We do that before super, so that self.target always refers to
 		# the correct target
@@ -39,7 +42,7 @@ class FileUnit(BaseUnit):
 		# Ensure it's a file, and get it's mime type
 		try:
 			t = magic.from_file(target).lower()
-		except FileNotFoundError:
+		except (FileNotFoundError, IsADirectoryError, ValueError):
 			raise NotApplicable()
 		
 		# Check for the keywords
@@ -58,9 +61,11 @@ class PrintableDataUnit(BaseUnit):
 	
 		# Similar to FileOrDataUnit, use file if it exists
 		try:
-			target = open(target, 'r').read()
-		except:
+			target = open(target, 'rb').read().decode('latin-1')
+		except FileNotFoundError:
 			pass
+		except:
+			traceback.print_exc()
 
 		super(PrintableDataUnit, self).__init__(katana, parent, target)
 

@@ -11,7 +11,9 @@ import os
 import re
 from units import NotApplicable
 import units
+import traceback
 import base64
+import binascii
 
 class Unit(units.FileOrDataUnit):
 
@@ -38,8 +40,7 @@ class Unit(units.FileOrDataUnit):
 
 				katana.locate_flags(self, decoded )
 				katana.add_results( self, decoded )
-
-			except:
+			
+			except (UnicodeDecodeError, binascii.Error):
 				# This won't decode right... must not be right! Ignore it.				
 				pass
-

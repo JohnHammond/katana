@@ -34,7 +34,7 @@ class Unit(BaseUnit):
 	def evaluate(self, katana, case):
 
 		# Run the process.
-		p = subprocess.Popen([dependancy_command, self.target, '-n', str(katana.config['strings_length'])], 
+		p = subprocess.Popen(['strings', self.target, '-n', str(katana.config['strings_length'])], 
 			stdout = subprocess.PIPE, stderr=subprocess.PIPE )
 
 		# Look for flags, if we found them...

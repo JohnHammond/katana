@@ -10,7 +10,7 @@ class Unit(WebUnit):
 	def __init__(self, katana, parent, target):
 
 		# Run the parent constructor, to ensure this is a valid URL
-		super(WebUnit, self).__init__(katana, parent, target)
+		super(Unit, self).__init__(katana, parent, target)
 		
 		# Then check if robots.txt even exists.
 		# Assume that you are in fact the Google crawler.

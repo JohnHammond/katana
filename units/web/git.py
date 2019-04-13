@@ -15,7 +15,7 @@ class Unit(WebUnit):
     def __init__(self, katana, parent, target):
 
         # Run the parent constructor, to ensure this is a valid URL
-        super(WebUnit, self).__init__(katana, parent, target)
+        super(Unit, self).__init__(katana, parent, target)
         
         # Try to get see if there is a .git directory
         url = '{0}/{1}'.format(self.target, '.git/HEAD')

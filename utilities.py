@@ -69,8 +69,8 @@ def process_output(popen_object):
 		"stderr": [],
 	}
 
-	output = bytes.decode(popen_object.stdout.read(),'ascii')
-	error = bytes.decode(popen_object.stderr.read(),'ascii')
+	output = bytes.decode(popen_object.stdout.read(),'latin-1')
+	error = bytes.decode(popen_object.stderr.read(),'latin-1')
 	
 	for line in [ l.strip() for l in error.split('\n') if l ]:
 		result["stderr"].append(line)

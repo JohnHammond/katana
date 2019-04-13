@@ -13,18 +13,15 @@ from units import NotApplicable
 
 DEPENDENCIES = [ 'zbarimg' ]
 
-class Unit(units.raw.RawUnit):
+class Unit(units.FileUnit):
 
 	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
-		# We can only handle this if it is a file!
-		if not os.path.isfile(target) or 'image' not in magic.from_file(target):
-			raise NotApplicable
+		super(Unit, self).__init__(katana, parent, target, keywords = 'image')
 
 
 	def evaluate(self, katana, case):
 
-		p = subprocess.Popen([dependancy_command, self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		p = subprocess.Popen(['zbarimg', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
 		# Look for flags, if we found them...
 		response = utilities.process_output(p)

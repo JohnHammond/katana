@@ -12,7 +12,7 @@ import units
 
 DEPENDENCIES = [ 'zsteg' ]
 
-class Unit(units.stego.FileUnit):
+class Unit(units.FileUnit):
 
 	def __init__(self, katana, parent, target):
 		# This ensures it is a JPG

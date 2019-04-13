@@ -30,6 +30,11 @@ class Katana(object):
 		self.results_lock = threading.RLock()
 		self.total_work = 0
 		self.blacklist = []
+		self.all_units = []
+		self.requested_units = []
+		self.recurse_queue = []
+		self.recurse_lock = threading.Lock()
+		self.recurse_cond = threading.Condition(lock=self.recurse_lock)
 
 		# Initial parser is for unit directory. We need to process this argument first,
 		# so that the specified unit may be loaded
@@ -62,9 +67,16 @@ class Katana(object):
 			action='store_true', help='automatically search for matching units in unitdir')
 		self.parser.add_argument('--depth', '-d', type=int, default=5,
 				help='the maximum depth which the units may recurse')
+		self.parser.add_argument('--exclude', action='append',
+			required=False, default = [], help='units to exclude in a recursive case')
+		self.parser.add_argument('--verbose', '-v', action='store_true',
+			default=False, help='show the running threads')
 
 		# Parse initial arguments
 		self.parse_args()
+
+		# Remove the exclusions, if we have any set
+		self.blacklist += self.config['exclude']
 
 		# We want the "-" target to signify stdin
 		if len(self.original_target) == 1 and self.original_target[0] == '-':
@@ -92,6 +104,57 @@ class Katana(object):
 				os.mkdir(self.config['outdir'])
 			except:
 				log.error('{0}: unable to create directory'.format(self.config['outdir']))
+
+		for importer, name, ispkg in pkgutil.walk_packages([self.config['unitdir']], ''):
+			try:
+				module = importlib.import_module(name)
+			except ImportError:
+				log.failure('{0}: failed to load module')
+				traceback.print_exc()
+				exit()
+
+			# Check if this module requires dependencies
+			try:
+				dependencies = module.DEPENDENCIES
+			except AttributeError:
+				dependencies = []
+
+			# Ensure the dependencies exist
+			try:
+				for dependency in dependencies:
+					subprocess.check_output(['which',dependency])
+			except (FileNotFoundError, subprocess.CalledProcessError): 
+				pass
+			else:
+				# Dependencies are good, ensure the unit class exists
+				try:
+					unit_class = module.Unit
+				except AttributeError:
+					continue
+			
+			# Keep track of the units we asked for
+			try:
+				idx = self.config['unit'].index(name)
+				del self.config['unit'][idx]
+				self.requested_units.append(unit_class)
+			except ValueError:
+				pass
+
+			# Keep total list for blind recursion
+			self.all_units.append(unit_class)
+
+		# Notify user of failed unit loads
+		for unit in self.config['unit']:
+			log.failure('{0}: Unit not found or failed to import')
+
+		# Ensure we have something to do
+		if len(self.requested_units) == 0 and not self.config['auto']:
+			log.failure('no units loaded. aborting.')
+			exit()
+
+		# Notify the user if the requested units are overridden by recursion
+		if self.config['auto'] and len(self.requested_units) > 0 and not recurse:
+			log.warning('ignoring --unit options in favor of --auto')
 
 		# Find units which match this target
 		self.units = self.locate_units(self.config['target'])
@@ -181,18 +244,19 @@ class Katana(object):
 	def add_to_work(self, units):
 		# Add all the cases to the work queue
 		for unit in units:
-			if not self.completed:
-				case_no = 0
-				for case in unit.enumerate(self):
-					if not unit.completed:
-						#prog.status('adding {0}[{1}] to work queue (size: {2}, total: {3})'.format(
-						#	unit.unit_name, case_no, self.work.qsize(), self.total_work
-						#))
-						self.work.put((unit, case_no, case))
-						self.total_work += 1
-						case_no += 1
-					else:
-						break
+			self.work.put((unit,name,unit.enumerate(self)))
+			# if not self.completed:
+			# 	case_no = 0
+			# 	for case in unit.enumerate(self):
+			# 		if not unit.completed:
+			# 			#prog.status('adding {0}[{1}] to work queue (size: {2}, total: {3})'.format(
+			# 			#	unit.unit_name, case_no, self.work.qsize(), self.total_work
+			# 			#))
+			# 			self.work.put((unit, case_no, case))
+			# 			self.total_work += 1
+			# 			case_no += 1
+			# 		else:
+			# 			break
 
 
 	def add_flag(self, flag):
@@ -200,6 +264,7 @@ class Katana(object):
 			self.results['flags'] = []
 		with self.results_lock:
 			if flag not in self.results['flags']:
+				log.success('Found flag: {0}'.format(flag))
 				self.results['flags'].append(flag)
 	
 	def locate_flags(self, unit, output, stop=True):
@@ -230,18 +295,27 @@ class Katana(object):
 			return
 		
 		# Obey max depth input by user
+	
+
 		if len(unit.family_tree) >= self.config['depth']:
 			log.warning('depth limit reached. if this is a recursive problem, consider increasing --depth')
 			# Stop the chain of events
 			unit.completed = True
 			return
 
-		units = self.locate_units(data, parent=unit, recurse=True)
-		self.add_to_work(units)
+		try:
+			log.info('starting for {0}'.format(data))
+			units = self.locate_units(data, parent=unit, recurse=True)
+			self.add_to_work(units)
+			log.info('done for {0}'.format(data))
+		except:
+			traceback.print_exc()
 
 
 	def load_unit(self, target, name, required=True, recurse=True, parent=None):
 		
+		required = False
+
 		# This unit is not compatible with the system (previous dependancy error)
 		if name in self.blacklist:
 			return
@@ -273,14 +347,24 @@ class Katana(object):
 					if required:
 						log.info('{0}: no Unit class found'.format(module.__name__))
 
-				if unit_class.PROTECTED_RECURSE and parent is not None and parent.PROTECTED_RECURSE:
-					if required:
-						log.info('{0}: PROTECTED_RECURSE set. cannot recurse into {1}'.format(
-							parent.unit_name,
-							name
-						))
-				else:
-					yield unit_class(self, parent, target)
+				# Climb the family tree to see if ANY ancester is not allowed to recurse..
+				# If that is the case, don't bother with this unit
+				if unit_class.PROTECTED_RECURSE and parent is not None:
+					for p in ([ parent ] + parent.family_tree):
+						if p.PROTECTED_RECURSE:
+							if required:
+								log.info('{0}: PROTECTED_RECURSE set. cannot recurse into {1}'.format(
+									parent.unit_name,
+									name
+								))
+							raise units.NotApplicable
+
+				unit = unit_class(self, parent, target)
+				if parent is not None and unit.parent is None:
+					print("this should never happen")
+
+
+				yield unit
 
 			# JOHN: This is what runs if just pass --unit ...
 			elif recurse:
@@ -298,21 +382,45 @@ class Katana(object):
 		except units.NotApplicable as e:
 			if required:
 				raise e
+
 		except units.DependancyError as e:
 			log.failure('{0}: failed due to missing dependancy: {1}'.format(
 				name, e.dependancy
 			))
 			self.blacklist.append(name)
 		except Exception as e:
-			if required:
-				traceback.print_exc()
-				log.failure('unknown error when loading {0}: {1}'.format(name, e))
-				exit()
-		
+			# if required: # This should ALWAYS print....
+			traceback.print_exc()
+			log.failure('unknown error when loading {0}: {1}'.format(name, e))
+			exit()
+	
 
 	def locate_units(self, target, parent=None, recurse=False):
 
 		units_so_far = []
+
+		if not self.config['auto'] and not recurse:
+			for unit_class in self.requested_units:
+				try:
+					units_so_far.append(unit_class(self, parent, target))
+				except units.NotApplicable:
+					log.failure('{0}: unit not applicable to target'.format(
+						unit.__module__.__name__
+					))
+		else:
+			for unit_class in self.all_units:
+				try:
+					# Climb the family tree to see if ANY ancester is not allowed to recurse..
+					# If that is the case, don't bother with this unit
+					if unit_class.PROTECTED_RECURSE and parent is not None:
+						for p in ([ parent ] + parent.family_tree):
+							if p.PROTECTED_RECURSE:
+								raise units.NotApplicable
+					units_so_far.append(unit_class(self, parent, target))
+				except units.NotApplicable:
+					pass
+
+		return units_so_far
 
 		# JOHN: This is what runs if you pass `-a`...
 		if not self.config['auto'] and not recurse:
@@ -334,6 +442,7 @@ class Katana(object):
 			for importer,name,ispkg in pkgutil.walk_packages([self.config['unitdir']], ''):
 				try:
 					for current_unit in self.load_unit(target, name, required=False, recurse=False, parent=parent):
+						# print("adding unit", current_unit)
 						units_so_far.append(current_unit)
 				except units.NotApplicable as e:
 					# If this unit is NotApplicable, don't try it!
@@ -376,20 +485,46 @@ class Katana(object):
 
 	def worker(self):
 		""" Katana worker thread to process unit execution """
+
+		if self.config['verbose']:
+			progress = log.progress('thread-{0} '.format(threading.get_ident()))
+		else:
+			progress = None
+
 		while True:
 			# Grab the next item
-			unit,name,case = self.work.get()
+			unit,name,gen = self.work.get()
 
 			# The boss says NO. STAHP.
-			if unit is None and case is None and name is None:
+			if unit is None and gen is None and name is None:
 					break
 
-			if not unit.completed:
-				# Perform the evaluation
+			if unit.completed:
+				self.work.task_done()
+				continue
+
+			# Grab the next case
+			try:
+				case = next(gen)
+			except StopIteration:
+				continue
+
+			# Put that back, there may be more
+			self.work.put((unit,name,gen))
+
+			# Perform the evaluation
+			if progress is not None:
+				progress.status('entering {0}'.format(unit.unit_name))
+			try:
 				result = unit.evaluate(self, case)
-		
+			except:
+				traceback.print_exc()
+			if progress is not None:
+				progress.status('exiting {0}'.format(unit.unit_name))
+
 			# Notify boss that we are done
 			self.work.task_done()
+
 
 # Make sure we find the local packages (first current directory)
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
@@ -404,9 +539,11 @@ if __name__ == '__main__':
 	katana.evaluate()
 
 	# Cleanly display the results of each unit to the screen
-	print(json.dumps(katana.results, indent=4, sort_keys=True))
+	final_output = json.dumps(katana.results, indent=4, sort_keys=True)
+	print(final_output)
 
-	# Dump the flags we found
-	if 'flags' in katana.results:
-		for flag in katana.results['flags']:
-			log.success('Found flag: {0}'.format(flag))
+	if len(final_output) > 1000:
+		# Dump the flags we found
+		if 'flags' in katana.results:
+			for flag in katana.results['flags']:
+				log.success('Found flag: {0}'.format(flag))
