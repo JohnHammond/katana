@@ -10,9 +10,16 @@ import utilities
 import os
 import magic
 from units import NotApplicable
+
+import warnings
+warnings.simplefilter("ignore", UserWarning)
+
 from PIL import Image
 from pyzbar.pyzbar import decode
 import json
+
+
+
 
 class Unit(units.FileUnit):
 
@@ -29,9 +36,14 @@ class Unit(units.FileUnit):
 
 
 		for each_decoded_item in self.decoded:
+			
+			decoded_data = each_decoded_item.data.decode('latin-1')
+
 			result = {
 				'type': each_decoded_item.type,
-				'data' : each_decoded_item.data.decode('latin-1')
+				'data' : decoded_data
 			}
 			
+			katana.locate_flags(self, decoded_data)
+			katana.recurse(self, decoded_data)
 			katana.add_results(self, result)

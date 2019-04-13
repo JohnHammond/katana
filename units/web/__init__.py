@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-04-12 21:49:24
+# @Last Modified time: 2019-04-13 17:02:22
 
 from pwn import *
 from unit import BaseUnit
@@ -24,6 +24,3 @@ class WebUnit(BaseUnit):
 		# print(match)
 		if match is None:
 			raise NotApplicable
-		else:
-			print(match)
-			print("SHOIULD NTO HAPPEN")

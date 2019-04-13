@@ -193,7 +193,7 @@ rm -r results/ ; ./katana.py --unit raw --unit crypto ../tests/welcome_crypto.tx
 __Brainfuck__
 
 ```
-rm -r results/ ; ./katana.py --unit esoteric ../tests/brainmeat.txt 
+rm -r results/ ; ./katana.py --unit esoteric.brainfuck ../tests/brainmeat.txt -ff sun{.*?}
 ```
 
 __Pikalang__

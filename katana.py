@@ -272,6 +272,9 @@ class Katana(object):
 
 		log.success('wrote output summary to {0}, note minimum data length is {1}'.format(os.path.join(self.config['outdir'], 'katana.json'), self.config['data_length']))
 
+		if not self.config['flag_format']:
+			log.warn("no flag format was specified, advise looking at saved results")
+
 	def add_to_work(self, units):
 		# Add all the cases to the work queue
 		for unit in units:
@@ -349,7 +352,7 @@ class Katana(object):
 					units_so_far.append(unit_class(self, parent, target))
 				except units.NotApplicable:
 					log.failure('{0}: unit not applicable to target'.format(
-						unit.__module__.__name__
+						unit_class.__module__
 					))
 		else:
 			for unit_class in self.all_units:
@@ -424,4 +427,3 @@ if __name__ == '__main__':
 
 	# Run katana against all units
 	katana.evaluate()
-

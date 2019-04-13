@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-04-12 22:24:55
+# @Last Modified time: 2019-04-13 16:53:45
 from unit import BaseUnit
 from pwn import *
 import os
@@ -25,7 +25,7 @@ class FileOrDataUnit(BaseUnit):
 		# meant to be a file
 		try:
 			target = open(target, 'rb').read().decode('latin-1')
-		except (FileNotFoundError, IsADirectoryError, ValueError):
+		except (FileNotFoundError, IsADirectoryError, ValueError,OSError):
 			pass
 		except:
 			traceback.print_exc()
@@ -42,7 +42,7 @@ class FileUnit(BaseUnit):
 		# Ensure it's a file, and get it's mime type
 		try:
 			t = magic.from_file(target).lower()
-		except (FileNotFoundError, IsADirectoryError, ValueError):
+		except (FileNotFoundError, IsADirectoryError, ValueError, OSError):
 			raise NotApplicable()
 		
 		# Check for the keywords
@@ -62,7 +62,7 @@ class PrintableDataUnit(BaseUnit):
 		# Similar to FileOrDataUnit, use file if it exists
 		try:
 			target = open(target, 'rb').read().decode('latin-1')
-		except (FileNotFoundError, IsADirectoryError, ValueError):
+		except (FileNotFoundError, IsADirectoryError, ValueError, OSError):
 			pass
 		except:
 			traceback.print_exc()
