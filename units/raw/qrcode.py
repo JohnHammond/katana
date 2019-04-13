@@ -14,8 +14,6 @@ from PIL import Image
 from pyzbar.pyzbar import decode
 import json
 
-DEPENDENCIES = [ 'zbarimg' ]
-
 class Unit(units.FileUnit):
 
 	def __init__(self, katana, parent, target):
@@ -25,7 +23,7 @@ class Unit(units.FileUnit):
 	def evaluate(self, katana, case):
 
 		decoded = decode(Image.open(self.target))
-		
+
 		for each_decoded_item in decoded:
 			result = {
 				'type': each_decoded_item.type,
