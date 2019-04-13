@@ -50,14 +50,13 @@ class Unit(units.FileUnit):
 	def evaluate(self, katana, password):
 
 		# Grab the output path for this target and password
+		# CALEB: This is a race condition. Someone could create the file
+		#			before steghide does! We should pass create=True,
+		#			and then force steghide to overwrite
 		if ( password == "" ):
-			output_path = self.artifact(katana, "no_password", create=False)	
+			output_path, _ = katana.create_artifact(self, "no_password", create=False)	
 		else:
-			output_path = self.artifact(katana, password, create=False)
-
-		# This file exists, we already tried this password
-		if os.path.exists(output_path):
-			log.failure(output_path)
+			output_path, _ = katana.create_artifact(self, password, create=False)
 
 		# Run steghide
 		p = subprocess.Popen(
@@ -90,6 +89,5 @@ class Unit(units.FileUnit):
 
 		katana.add_results(self, {
 			'file': output_path,
-			'type': typ,
-			'content': thing
+			'type': typ
 		})

@@ -112,7 +112,7 @@ __strings__
 
 
 ```
-rm -r results/ ; ./katana.py --unit raw ../tests/orchestra
+rm -r results/ ; ./katana.py --unit raw ./tests/orchestra
 ```
 
 __exiftool__
@@ -120,7 +120,7 @@ __exiftool__
 This detects the Base64 encoded flag.
 
 ```
-rm -r results/ ; ./katana.py --unit raw ../tests/woof64.jpg --flag-format 'USCGA{.*?}'
+rm -r results/ ; ./katana.py --unit raw ./tests/woof64.jpg --flag-format 'USCGA{.*?}'
 ```
 
 __Morsecode__
@@ -128,13 +128,13 @@ __Morsecode__
 This detects the hex encoded flag
 
 ```
-rm -r results/ ; ./katana.py --unit raw ../tests/tamuctf_morsecode.txt --flag-format 'gigem{.*?}'
+rm -r results/ ; ./katana.py --unit raw ./tests/tamuctf_morsecode.txt --flag-format 'gigem{.*?}'
 ```
 
 __QR code__
 
 ```
-rm -r results/ ; ./katana.py --unit raw ../tests/qrcode.png --flag-format 'USCGA{.*}'
+rm -r results/ ; ./katana.py --unit raw ./tests/qrcode.png --flag-format 'USCGA{.*}'
 ```
 
 
@@ -143,25 +143,25 @@ __steghide__
 Without a password: 
 
 ```
-rm -r results/; ./katana.py --unit raw --unit stego ../tests/rubber_ducky.jpg -ff "USCGA{.*?}"
+rm -r results/; ./katana.py --unit raw --unit stego ./tests/rubber_ducky.jpg -ff "USCGA{.*?}"
 ```
 
 With a password:
 
 ```
-rm -r results/; ./katana.py --unit raw --unit stego ../tests/evil_ducky.jpg --dict /opt/rockyou.txt -ff "USCGA{.*?}"
+rm -r results/; ./katana.py --unit raw --unit stego ./tests/evil_ducky.jpg --dict /opt/rockyou.txt -ff "USCGA{.*?}"
 ```
 
 __snow__
 
 ```
-rm -r results/; ./katana.py --unit raw --unit stego ../tests/let_it_snow.txt -ff "USCGA{.*?}"
+rm -r results/; ./katana.py --unit raw --unit stego ./tests/let_it_snow.txt -ff "USCGA{.*?}"
 ```
 
 __zsteg__
 
 ```
-rm -r results/; ./katana.py --unit raw --unit stego ../tests/pierre.png -ff "USCGA{.*?}"
+rm -r results/; ./katana.py --unit raw --unit stego ./tests/pierre.png -ff "USCGA{.*?}"
 ```
 
 __robots.txt__
@@ -187,23 +187,23 @@ rm -r results/; ./katana.py --unit web.cookies "http://www.whatarecookies.com/"
 __Crypto__
 
 ```
-rm -r results/ ; ./katana.py --unit raw --unit crypto ../tests/welcome_crypto.txt -ff sun{.*?}
+rm -r results/ ; ./katana.py --unit raw --unit crypto ./tests/welcome_crypto.txt -ff sun{.*?}
 ```
 
 __Brainfuck__
 
 ```
-rm -r results/ ; ./katana.py --unit esoteric.brainfuck ../tests/brainmeat.txt -ff sun{.*?}
+rm -r results/ ; ./katana.py --unit esoteric.brainfuck ./tests/brainmeat.txt -ff sun{.*?}
 ```
 
 __Pikalang__
 
 ```
-rm -r results/ ; ./katana.py --unit esoteric ../tests/it.pokeball 
+rm -r results/ ; ./katana.py --unit esoteric ./tests/it.pokeball 
 ```
 
 __Malbolge__
 
 ```
-rm -r results/ ; ./katana.py --unit esoteric ../tests/malbolge.txt 
+rm -r results/ ; ./katana.py --unit esoteric ./tests/malbolge.txt 
 ```

@@ -60,14 +60,6 @@ class BaseUnit(object):
 			parents.append(parent)
 			parent = parent.parent
 		return parents[::-1]
-
-	def get_artifact_path(self, katana, create=True):
-		directory = os.path.join(katana.config['outdir'], *[u.unit_name for u in self.family_tree], self.unit_name)
-		if os.path.exists(directory) and not os.path.isdir(directory):
-			log.error('{0}: name overlap between unit and result!'.format(directory))
-		elif not os.path.exists(directory) and create:
-			os.makedirs(directory, exist_ok=True)
-		return directory
 	
 	@property
 	def completed(self):
@@ -82,27 +74,3 @@ class BaseUnit(object):
 			parent._completed = True
 			parent = parent.parent
 		self._completed = True
-	
-	# Create a new artifact for this target/unit and
-	def artifact(self, katana, name, mode='w', create=True):
-		path = os.path.join(self.get_artifact_path(katana), name)
-		if not create:
-			return path
-		return open(path, mode), path
-
-	# Create an artifact directory
-	def artifact_dir(self, katana, name, create=True):
-		path = os.path.join(self.get_artifact_path(katana), name)
-		if not create:
-				return path
-		try:
-			os.mkdir(path)
-		except OSError:
-			if ( "File exists" in e.args ):
-				log.error("{0}: directory exists".format(path))
-			else:
-				# We don't know what went wrong yet.
-				# Raise this because it might be another bug to squash
-				raise e
-
-		return path
