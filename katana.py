@@ -138,7 +138,8 @@ class Katana(object):
 			self.all_units.append(unit_class)
 
 		# Notify user of failed unit loads
-		log.failure('the following units were not found: {0}'.format(self.config['unit']))
+		if len(self.config['unit']) > 0:
+			log.failure('the following units were not found: {0}'.format(self.config['unit']))
 
 		# Ensure we have something to do
 		if len(self.requested_units) == 0 and not self.config['auto']:
