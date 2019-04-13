@@ -12,13 +12,13 @@ DEPENDENCIES = [ 'pdfinfo' ]
 
 class Unit(units.pdf.PdfUnit):
 
+	@classmethod
+	def add_arguments(cls, katana, parser):
+		parser.add_argument('--pdf-user-password', '-up', default="", type=str, help='user password for the given PDF')
+		parser.add_argument('--pdf-owner-password', '-op', default="", type=str, help='owner password for the given PDF')	
+
 	def __init__( self, katana, parent, target ):
 		super(Unit, self).__init__(katana, parent, target)
-
-		katana.add_argument('--pdf-user-password', '-up', default="", type=str, help='user password for the given PDF')
-		katana.add_argument('--pdf-owner-password', '-op', default="", type=str, help='owner password for the given PDF')
-
-		katana.parse_args()
 
 	def evaluate(self, katana, case):
 

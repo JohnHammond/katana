@@ -16,6 +16,11 @@ DEPENDENCIES = [ 'steghide' ]
 
 class Unit(units.FileUnit):
 
+	@classmethod
+	def add_arguments(cls, katana, parser):
+		parser.add_argument('--steghide-password', type=str,
+			help="A password to try on the file", action="append",
+			default=[])
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target, keywords=['jpg', 'jpeg'])
@@ -26,26 +31,13 @@ class Unit(units.FileUnit):
 		t = magic.from_file(target).lower()
 		if not 'jpg' in t and not 'jpeg' in t:
 			raise units.NotApplicable()
-	
-		# Create a new katana argument parser
-		katana.add_argument('--dict', '-d', type=argparse.FileType('r', encoding='latin-1'),
-			help="Dictionary for bruteforcing")
-		katana.add_argument('--password', '-p', type=str,
-			help="A password to try on the file", action="append",
-			default=[])
-		katana.add_argument('--stop', default=True,
-			help="Stop processing on matching password",
-			action="store_false")
-
-		# Parse the arguments
-		katana.parse_args()	
 
 	def enumerate(self, katana):
 		# The default is to check an empty password
 		yield ''
 
 		# Check other passwords specified explicitly
-		for p in katana.config['password']:
+		for p in katana.config['steghide_password']:
 			yield p
 
 		# Add all the passwords from the dictionary file
@@ -92,8 +84,7 @@ class Unit(units.FileUnit):
 			thing = f.read()
 
 		# Check if it matches the pattern
-		if katana.locate_flags(self,thing) and katana.config['stop']:
-			self.completed = True
+		katana.locate_flags(self,thing)
 
 		katana.recurse(self, output_path)
 

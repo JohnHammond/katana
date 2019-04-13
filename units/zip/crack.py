@@ -5,21 +5,20 @@ from pwn import *
 
 class Unit(ZipUnit):
 
-	def __init__( self, katana, parent, target ):
-		super(Unit, self).__init__(katana, parent, target)
-
-		katana.add_argument('--dict', '-d', type=argparse.FileType('r', encoding='latin-1'),
-					help='Dictionary for bruteforcing')
-		katana.add_argument('--password', '-p', type=str,
+	@classmethod
+	def add_arguments(cls, katana, parser):
+		parser.add_argument('--zip-password', type=str,
 					help='A password to try on the file', action='append',
 					default=[])
 
-		katana.parse_args()
+
+	def __init__( self, katana, parent, target ):
+		super(Unit, self).__init__(katana, parent, target)
 
 	def enumerate(self, katana):
 		yield ''
 		
-		for password in katana.config['password']:
+		for password in katana.config['zip_password']:
 			yield password
 
 		if 'dict' in katana.config and katana.config['dict'] is not None:
