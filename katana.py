@@ -213,6 +213,9 @@ class Katana(object):
 	def evaluate(self):
 		""" Start processing all units """
 
+		if not self.config['flag_format']:
+			log.warn("no flag format was specified, advise looking at saved results")
+
 		self.progress.status('starting threads')
 
 		# Create all the threads
@@ -273,9 +276,6 @@ class Katana(object):
 		self.progress.success('threads exited. evaluation complete')
 
 		log.success('wrote output summary to {0}, note minimum data length is {1}'.format(os.path.join(self.config['outdir'], 'katana.json'), self.config['data_length']))
-
-		if not self.config['flag_format']:
-			log.warn("no flag format was specified, advise looking at saved results")
 
 	def add_to_work(self, units):
 		# Add all the cases to the work queue
