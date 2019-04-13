@@ -70,7 +70,12 @@ class Katana(object):
 			default=False, help='show the running threads')
 		parser.add_argument('--dict', type=argparse.FileType('r'),
 				required=False, default=None, help='dictionary for brute forcing tasks')
+
+		parser.add_argument('--data-length', '-l', default=5, type=int,
+			help="minimum number of characters for units results to be displayed")
+
 		args, remaining = parser.parse_known_args()
+
 
 		# Add current arguments to the config
 		self.config.update(vars(args))
@@ -398,7 +403,8 @@ class Katana(object):
 			# Notify boss that we are done
 			self.work.task_done()
 
-		progress.success('thread completed. exiting')
+		if progress is not None:
+			progress.success('thread completed. exiting')
 
 
 # Make sure we find the local packages (first current directory)

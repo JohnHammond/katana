@@ -19,14 +19,19 @@ class Unit(units.FileUnit):
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target, keywords = 'image')
 
+		try:
+			self.decoded = decode(Image.open(self.target))
+		except OSError:
+			raise NotApplicable
+
 
 	def evaluate(self, katana, case):
 
-		decoded = decode(Image.open(self.target))
 
-		for each_decoded_item in decoded:
+		for each_decoded_item in self.decoded:
 			result = {
 				'type': each_decoded_item.type,
 				'data' : each_decoded_item.data.decode('latin-1')
 			}
+			
 			katana.add_results(self, result)
