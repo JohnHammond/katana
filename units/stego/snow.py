@@ -28,13 +28,9 @@ class Unit(units.FileUnit):
 			response = p.stdout.read()
 			
 			# So consider it is some binary output and try and handle it.
-			artifact, artifact_path = self.artifact(katana, 'output_%s' % md5(self.target).hexdigest() )
+			artifact_path, artifact = katana.artifact(self, 'output_%s' % md5(self.target).hexdigest() )
 			artifact.write(response)
 			artifact.close()
-
-			katana.add_results(self, {
-				'artifact': artifact_path
-			})
 
 			katana.recurse(self, artifact_path)
 

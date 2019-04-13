@@ -192,7 +192,74 @@ class Katana(object):
 	@property
 	def original_target(self):
 		""" Shorthand for grabbing the target """
-		return self.config['target']	
+		return self.config['target']
+
+	def create_artifact(self, unit, name, mode='w', create=True, asdir=False):
+		""" Create a new artifact for the given unit. The artifact will be
+			tracked in the results, so the unit doesn't need to dump that out.
+
+			NOTE: The created artifact may have a different name than provided. 
+				If the requested name already exists, the name will have a number
+				appended between the name and the extension. The actual path created
+				is returned along with the open file reference for created files.
+		"""
+
+		# Compute the correct directory for this unit based on the parent tree
+		path = os.path.join(self.config['outdir'], *[u.unit_name for u in unit.family_tree], unit.unit_name)
+
+		# Ensure it is a directory if it already exists
+		if os.path.exists(path) and not os.path.isdir(path):
+			log.error('{0}: name overlap between unit and result!'.format(path))
+
+		# Ensure the entire path chain exists
+		os.makedirs(path, exist_ok=True)
+
+		# Add the name of the artifact
+		path = os.path.join(path, name)
+
+		# Create the file if needed
+		file_handle = None
+		if create:
+			n = 0
+			name, ext = os.path.splitext(path)
+			# This will create a different file than requested, if needed by appending a 
+			# "-#" to the filename _BEFORE THE EXTENSION_. The returned path will be
+			# correct
+			while True:
+				try:
+					if asdir:
+						os.mkdir(path)
+					else:
+						file_handle = open(path, mode)
+				except OSError:
+					n += 1
+					path = '{0}-{1}{2}'.format(name, n, ext)
+
+		# Add the artifact to the results for tracking
+		r = self.get_unit_result(unit)
+		with self.results_lock:
+			if 'artifacts' not in r:
+				r['artifacts'] = []
+			r['artifacts'].append(path)
+		
+		return (path, file_handle)
+		
+	def get_unit_result(self, unit):
+		parents = unit.family_tree
+		with self.results_lock:
+			# Start at the global results
+			r = self.results
+			# Recurse through parent units
+			for p in parents:
+				# If we have not seen results from this parent,
+				# THAT'S FINE.... just be ready for it
+				if not p.unit_name in r:
+					r[p.unit_name] = { 'results': [] }	
+			if unit.unit_name not in r:
+				r[unit.unit_name] = { 'results': [] }
+			r = r[unit.unit_name]
+
+		return r
 
 	def add_results(self, unit, d):
 		""" Update the results dict with the given dict """
@@ -328,10 +395,10 @@ class Katana(object):
 		# JOHN: If this `recurse` is set to True, it will recurse 
 		#       WITH EVERYTHING even IF you specify a single unit.
 		#       This is the intent, but should be left to "False" for testing
-		
+	
 		if (data is None or data == "" ):
 			return
-		
+
 		# Obey max depth input by user
 		if len(unit.family_tree) >= self.config['depth']:
 			if self.depth_lock.acquire(blocking=False):
@@ -346,9 +413,10 @@ class Katana(object):
 		except ValueError:
 			pass
 
-		if verify_length:
-			if len(data) >= self.config['data_length']:
-				self.recurse_queue.put((unit,data))
+		if verify_length and len(data) < self.config['data_length']:
+			return
+		
+		self.recurse_queue.put((unit,data))
 
 	def locate_units(self, target, parent=None, recurse=False):
 
@@ -385,7 +453,7 @@ class Katana(object):
 				left = self.work.qsize()
 				done = self.total_work - left
 				self.progress.status('{0:.2f}% work queue utilization; {1} total items queued'.format((float(done)/float(self.total_work))*100, self.total_work, done))
-			time.sleep(0.01)
+			time.sleep(0.5)
 
 	def worker(self):
 		""" Katana worker thread to process unit execution """
@@ -399,10 +467,9 @@ class Katana(object):
 			# Grab the next item
 			unit,name,case = self.work.get()
 
-			# The boss says NO. STAHP.
-			if unit is None and case is None and name is None:
-					break
-
+			if unit is None and name is None and case is None:
+				break
+			
 			if unit.completed:
 				self.work.task_done()
 				continue
