@@ -74,6 +74,8 @@ class Unit(units.FileUnit):
 		# Check if it succeeded
 		if p.returncode != 0:
 			return None
+
+		katana.add_artifact(self, output_path)
 	
 		# Grab the file type
 		typ = magic.from_file(output_path)
