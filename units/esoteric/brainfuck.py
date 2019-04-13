@@ -98,7 +98,7 @@ class Unit(EsotericUnit):
 
         try:
             output = evaluate_brainfuck(self.target, katana.config['brainfuck_input'], katana.config['brainfuck_timeout'])
-            
+
             # JOHN: Again, this is from Caleb's old code.
             # output = evaluate_brainfuck(target, self.config['bf_map'], self.config['bf_input'])
         except (ValueError, TypeError):
