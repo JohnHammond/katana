@@ -351,19 +351,14 @@ def run(fileName, args):
 
 class Unit(EsotericUnit):
 
-	def __init__( self, katana, parent, target ):
-		super(Unit, self).__init__(katana, parent, target)
-
-		# JOHN: These are not implemented into the code execution yet
-		#       (I think, anyway... it's 1:37 AM, too lazy to read)
-		katana.add_argument('--pika-args', action='store_true', default=[], help='arguments for pikalang')
-
-		katana.parse_args()
+	@classmethod
+	def add_arguments(cls, katana, parser):
+		parser.add_argument('--pikalang-args',  action='store_true', default=[], help='arguments for pikalang')
 
 	def evaluate(self, katana, case ):
 
 		try:
-			output = run(self.target, katana.config['pika_args'])
+			output = run(self.target, katana.config['pikalang_args'])
 			katana.locate_flags(self, output)
 
 		except ValueError:
