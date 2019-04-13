@@ -193,13 +193,23 @@ rm -r results/ ; ./katana.py --unit raw --unit crypto ./tests/welcome_crypto.txt
 __Brainfuck__
 
 ```
+<<<<<<< HEAD
 rm -r results/ ; ./katana.py --unit esoteric.brainfuck ./tests/brainmeat.txt -ff sun{.*?}
+=======
+rm -r results/ ; ./katana.py --unit esoteric.brainfuck ../tests/brainmeat.txt -ff sun{.*?}
+rm -r results/ ; ./katana.py -a ../tests/brainfuck.txt -ff USCGA{.*?}
+>>>>>>> ca4979d0f4c9e1fbc3a1eb3bb018892b82456b54
 ```
 
 __Pikalang__
 
 ```
+<<<<<<< HEAD
 rm -r results/ ; ./katana.py --unit esoteric ./tests/it.pokeball 
+=======
+rm -r results/ ; ./katana.py --unit esoteric ../tests/it.pokeball 
+rm -r results/ ; ./katana.py --unit esoteric ../tests/pikalang.pokeball 
+>>>>>>> ca4979d0f4c9e1fbc3a1eb3bb018892b82456b54
 ```
 
 __Malbolge__

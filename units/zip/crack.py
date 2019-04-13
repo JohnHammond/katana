@@ -35,7 +35,7 @@ class Unit(ZipUnit):
 
 		with zipfile.ZipFile(self.target) as z:
 			name = z.namelist()[0]
-
+			self.artificate_dir()
 			# Try to extract the file
 			try:
 				with z.open(name, 'r', bytes(password, 'utf-8')) as f:

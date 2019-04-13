@@ -378,7 +378,10 @@ class Katana(object):
 
 		match = self.flag_pattern.search(output)
 		if match:
-			self.add_flag(match.group())
+			# JOHN: This test is here because we had an issue with esoteric languages.
+			#       We MORE THAN LIKELY will not have a flag without printable chars...
+			if match.group().isprintable():
+				self.add_flag(match.group())
 			
 			# Stop the unit if they asked
 			if stop:

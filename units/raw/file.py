@@ -25,6 +25,5 @@ class Unit(units.FileUnit):
 		response = magic.from_file(self.target)
 		
 		katana.recurse(self, response)
-
 		katana.locate_flags(self, response)
 		katana.add_results(self, response)
