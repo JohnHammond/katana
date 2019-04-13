@@ -69,7 +69,11 @@ class Katana(object):
 			default=False, help='show the running threads')
 		parser.add_argument('--dict', type=argparse.FileType('r'),
 				required=False, default=None, help='dictionary for brute forcing tasks')
+		parser.add_argument('--data-length', '-l', default=10, type=int,
+			help="minimum number of characters for units results to be displayed")
+
 		args, remaining = parser.parse_known_args()
+
 
 		# Add current arguments to the config
 		self.config.update(vars(args))
@@ -268,7 +272,10 @@ class Katana(object):
 
 		self.progress.success('threads exited. evaluation complete')
 
-		log.success('wrote output summary to {0}'.format(os.path.join(self.config['outdir'], 'katana.json')))
+		log.success('wrote output summary to {0}, note minimum data length is {1}'.format(os.path.join(self.config['outdir'], 'katana.json'), self.config['data_length']))
+
+		if not self.config['flag_format']:
+			log.warn("no flag format was specified, advise looking at saved results")
 
 	def add_to_work(self, units):
 		# Add all the cases to the work queue
@@ -289,7 +296,7 @@ class Katana(object):
 			self.results['flags'] = []
 		with self.results_lock:
 			if flag not in self.results['flags']:
-				log.success('Potential Flag: {0}'.format(flag))
+				log.success('potential flag found: {0}'.format('\u001b[32;1m' + flag + '\u001b[0m'))
 				self.results['flags'].append(flag)
 	
 	def locate_flags(self, unit, output, stop=True):
@@ -311,7 +318,7 @@ class Katana(object):
 
 		return False
 
-	def recurse(self, unit, data):
+	def recurse(self, unit, data, verify_length = True):
 		# JOHN: If this `recurse` is set to True, it will recurse 
 		#       WITH EVERYTHING even IF you specify a single unit.
 		#       This is the intent, but should be left to "False" for testing
@@ -320,8 +327,6 @@ class Katana(object):
 			return
 		
 		# Obey max depth input by user
-	
-
 		if len(unit.family_tree) >= self.config['depth']:
 			if self.depth_lock.acquire(blocking=False):
 				log.warning('depth limit reached. if this is a recursive problem, consider increasing --depth')
@@ -329,7 +334,15 @@ class Katana(object):
 			unit.completed = True
 			return
 
-		self.recurse_queue.put((unit,data))
+		try:
+			if os.path.isfile(data):
+				verify_length = False
+		except ValueError:
+			pass
+
+		if verify_length:
+			if len(data) >= self.config['data_length']:
+				self.recurse_queue.put((unit,data))
 
 	def locate_units(self, target, parent=None, recurse=False):
 
@@ -401,7 +414,8 @@ class Katana(object):
 			# Notify boss that we are done
 			self.work.task_done()
 
-		progress.success('thread completed. exiting')
+		if progress is not None:
+			progress.success('thread completed. exiting')
 
 
 # Make sure we find the local packages (first current directory)
@@ -415,4 +429,3 @@ if __name__ == '__main__':
 
 	# Run katana against all units
 	katana.evaluate()
-
