@@ -91,9 +91,12 @@ class Katana(object):
 		for importer, name, ispkg in pkgutil.walk_packages([self.config['unitdir']], ''):
 
 			# Exclude packages/units that were excluded from loading
-			for exclude in self.config['exclude']:
-				if name == exclude or name.startswith(exclude.rstrip('.') + '.'):
-					continue
+			try:
+				for exclude in self.config['exclude']:
+					if name == exclude or name.startswith(exclude.rstrip('.') + '.'):
+						raise Exception
+			except:
+				continue
 
 			self.progress.status('loading unit {0}'.format(name))
 		
