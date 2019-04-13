@@ -15,11 +15,12 @@ class Unit(units.PrintableDataUnit):
 
 	PROTECTED_RECURSE = True
 
+	@classmethod
+	def add_arguments(cls, katana, parser):
+		parser.add_argument('--caesar-shift', default=-1, type=int, help='number to shift by for caesar cipher')
+
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
-		katana.add_argument('--caesar-shift', default=-1, type=int, help='number to shift by for caesar cipher')
-		katana.parse_args()
-
 
 	def caesar(self, rotate_string, number_to_rotate_by):
 		upper = collections.deque(string.ascii_uppercase)

@@ -15,6 +15,11 @@ DEPENDENCIES = [ 'strings' ]
 
 class Unit(BaseUnit):
 
+	@classmethod
+	def add_arguments(cls, katana, parser):
+		parser.add_argument('--strings-length', '-sl', type=int,
+				help="minimum length of strings to return", default=4)
+
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
@@ -27,10 +32,6 @@ class Unit(BaseUnit):
 		except ValueError:
 			raise NotApplicable
 			
-		katana.add_argument('--strings-length', '-sl', type=int,
-				help="minimum length of strings to return", default=4)
-		katana.parse_args()
-		
 	def evaluate(self, katana, case):
 
 		# Run the process.

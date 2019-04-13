@@ -25,7 +25,7 @@ class FileOrDataUnit(BaseUnit):
 		# meant to be a file
 		try:
 			target = open(target, 'rb').read().decode('latin-1')
-		except FileNotFoundError:
+		except (FileNotFoundError, IsADirectoryError, ValueError):
 			pass
 		except:
 			traceback.print_exc()
@@ -62,7 +62,7 @@ class PrintableDataUnit(BaseUnit):
 		# Similar to FileOrDataUnit, use file if it exists
 		try:
 			target = open(target, 'rb').read().decode('latin-1')
-		except FileNotFoundError:
+		except (FileNotFoundError, IsADirectoryError, ValueError):
 			pass
 		except:
 			traceback.print_exc()

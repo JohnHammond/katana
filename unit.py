@@ -10,6 +10,13 @@ class BaseUnit(object):
 	# protected unit
 	PROTECTED_RECURSE = False
 
+	@classmethod
+	def add_arguments(cls, katana, parser):
+		""" Add whatever arguments are needed by this unit to the given
+			parser
+		"""
+		return
+
 	# Unit constructor (saves the config)
 	def __init__(self, katana, parent, target):
 		self._completed = False

@@ -10,17 +10,17 @@ import utilities
 import os
 from units import NotApplicable
 import binascii
+import traceback
 
 class Unit(units.raw.RawUnit):
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
-
-		katana.add_argument('--hex-threshold', default=5, type=int,
+	@classmethod
+	def add_arguments(cls, katana, parser):
+		parser.add_argument('--hex-threshold', default=5, type=int,
 			help="minimum number of hex characters for hex detection")
 
-		# Parse the arguments
-		katana.parse_args()	
+	def __init__(self, katana, parent, target):
+		super(Unit, self).__init__(katana, parent, target)
 
 		if self.target.lower().startswith('0x'):
 			self.target = self.target[2:]
