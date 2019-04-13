@@ -382,7 +382,7 @@ class Katana(object):
 				left = self.work.qsize()
 				done = self.total_work - left
 				self.progress.status('{0:.2f}% work queue utilization; {1} total items queued'.format((float(done)/float(self.total_work))*100, self.total_work, done))
-			time.sleep(0.01)
+			time.sleep(0.5)
 
 	def worker(self):
 		""" Katana worker thread to process unit execution """
