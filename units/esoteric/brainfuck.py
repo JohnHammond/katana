@@ -38,7 +38,6 @@ def buildbracemap(code):
 
 def evaluate_brainfuck(code, input_file, timeout = 1):
 
-
     output = []
 
     try:
@@ -51,7 +50,8 @@ def evaluate_brainfuck(code, input_file, timeout = 1):
 
     start_time = time.time()
 
-    while codeptr < len(code) and time.time() < (start_time + timeout ):
+    # while codeptr < len(code) and time.time() < (start_time + timeout ):
+    while codeptr < len(code):
         command = code[codeptr]
 
         if command == ">":
@@ -83,7 +83,7 @@ def evaluate_brainfuck(code, input_file, timeout = 1):
             return None
 
         codeptr += 1
-    
+
     return ''.join(output)
 
 
@@ -98,6 +98,7 @@ class Unit(EsotericUnit):
 
         try:
             output = evaluate_brainfuck(self.target, katana.config['brainfuck_input'], katana.config['brainfuck_timeout'])
+            
             # JOHN: Again, this is from Caleb's old code.
             # output = evaluate_brainfuck(target, self.config['bf_map'], self.config['bf_input'])
         except (ValueError, TypeError):

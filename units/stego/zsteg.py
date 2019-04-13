@@ -54,7 +54,7 @@ class Unit(units.FileUnit):
 
 		if not len(result['stderr']):
 			result.pop('stderr')
-		if not len(result['stdout']):
+		if not len(result['stdout']) or '[=] nothing :(\r' in result['stdout']:
 			result.pop('stdout')
 		
 		katana.add_results(self, result)
