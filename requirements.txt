@@ -1,3 +1,5 @@
 requests
 argparse
 python-magic
+pyzbar
+pillow

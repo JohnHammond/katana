@@ -10,6 +10,9 @@ import utilities
 import os
 import magic
 from units import NotApplicable
+from PIL import Image
+from pyzbar.pyzbar import decode
+import json
 
 DEPENDENCIES = [ 'zbarimg' ]
 
@@ -21,19 +24,11 @@ class Unit(units.FileUnit):
 
 	def evaluate(self, katana, case):
 
-		p = subprocess.Popen(['zbarimg', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-
-		# Look for flags, if we found them...
-		response = utilities.process_output(p)
-		if 'stdout' in response:
-			
-			# If we see anything interesting in here... scan it again!
-			for line in response['stdout']:
-				katana.recurse(self, line)
-
-			katana.locate_flags(self,str(response['stdout']))
-
-		if 'stderr' in response:
-			katana.locate_flags(self, str(response['stderr']))
-
-		katana.add_results(self, response)
+		decoded = decode(Image.open(self.target))
+		
+		for each_decoded_item in decoded:
+			result = {
+				'type': each_decoded_item.type,
+				'data' : each_decoded_item.data.decode('latin-1')
+			}
+			katana.add_results(self, result)
