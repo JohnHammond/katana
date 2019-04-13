@@ -80,7 +80,7 @@ class Unit(EsotericUnit):
 
     @classmethod
     def add_arguments(cls, katana, parser):
-        parser.add_argument('--brainfuck-input',  action='store_true', default=False, help='file to be read as input to brainfuck program')
+        parser.add_argument('--brainfuck-input',  action='store_true', default=None, help='file to be read as input to brainfuck program')
 
     def evaluate(self, katana, case):
 
