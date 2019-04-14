@@ -9,8 +9,9 @@ import units.forensics
 import os
 import utilities
 import glob
+from hashlib import md5
 
-dependancy_command = 'foremost'
+DEPENDENCIES = 'foremost'
 
 class Unit(units.forensics.ForensicsUnit):
 
@@ -18,29 +19,31 @@ class Unit(units.forensics.ForensicsUnit):
 	# because the ForensicsUnit parent will pull from FileUnit, 
 	# to ensure the target is in fact a file.
 
-	def evaluate(self, target):
+	def evaluate(self, katana, case):
 
-		foremost_directory = katana.artifact_dir(target, "extracted_files", False)
-		p = subprocess.Popen([dependancy_command, target, '-o', foremost_directory ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-		
+		# Find/create the output artifact directory
+		foremost_directory = katana.get_artifact_path(self)
+		# foremost_directory = katana.create_artifact(self, "extracted_files", False)
+		p = subprocess.Popen(['foremost', self.target, '-o', foremost_directory ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		p.wait()
+		
 		results = {
 			"extracted_files" : []
 		}
 
+		target_hash = md5(open(target, 'rb').read()).hexdigest()
+
 		for (directory, _, files) in os.walk(foremost_directory):
 			for each_file in files:
-				path = os.path.join(directory, each_file)[len(foremost_directory)+ 1 :] 
+				# Get the relative path
+				path = os.path.join(directory, each_file)[len(foremost_directory)+ 1 :]
 				
+				path_hash = md5(open(path, 'rb').read()).hexdigest()
+				print('target_hash', target_hash, 'path_hash',path_hash)
+
 				katana.recurse(self, path)
 				results["extracted_files"].append(path)
 
 		results['artifact_directory'] = foremost_directory
 
 		katana.add_results(self, results)
-
-# Ensure the system has the required binaries installed. This will prevent the module from running on _all_ targets
-try:
-	subprocess.check_output(['which',dependancy_command])
-except (FileNotFoundError, subprocess.CalledProcessError) as e:
-	raise units.DependancyError(dependancy_command)

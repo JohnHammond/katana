@@ -141,9 +141,9 @@ class Katana(object):
 			self.all_units.append(unit_class)
 
 		# Notify user of failed unit loads
-		for i in range(len(self.config['unit'])):	
+		for i in range(len(self.config['unit'])):
 			if not units_found[i]:
-				log.failure('{0}: unit not found'.format(u))
+				log.failure('{0}: unit not found'.format(name))
 
 		# Ensure we have something to do
 		if len(self.config['unit']) != sum(units_found) and not self.config['auto']:
