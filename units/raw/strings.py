@@ -40,15 +40,16 @@ class Unit(BaseUnit):
 
 		# Look for flags, if we found them...
 		response = utilities.process_output(p)
-		if 'stdout' in response:
+		if response:
+			if 'stdout' in response:
+				
+				# If we see anything interesting in here... scan it again!
+				for line in response['stdout']:
+					katana.locate_flags(self, line)
+					katana.recurse(self, line)
+
+			if 'stderr' in response:
+				katana.locate_flags(self, str(response['stderr']))
+
+			katana.add_results(self, response)
 			
-			# If we see anything interesting in here... scan it again!
-			for line in response['stdout']:
-				katana.locate_flags(self, line)
-				katana.recurse(self, line)
-
-		if 'stderr' in response:
-			katana.locate_flags(self, str(response['stderr']))
-
-		katana.add_results(self, response)
-		
