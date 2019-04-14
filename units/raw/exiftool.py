@@ -29,8 +29,10 @@ class Unit(units.FileUnit):
 				katana.locate_flags(self,value)
 				katana.locate_flags(self,metadata)
 			
+				# JOHN: We do NOT recurse on the metadata, because that is probably
+				#       NOT going to contain a flag
+				# katana.recurse(self, metadata)
 				katana.recurse(self, value)
-				katana.recurse(self, metadata)
 
 		if 'stderr' in response:
 			katana.locate_flags(self, str(response['stderr']))

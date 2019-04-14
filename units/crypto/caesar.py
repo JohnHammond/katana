@@ -59,10 +59,4 @@ class Unit(units.PrintableDataUnit):
 			katana.locate_flags(self, results)
 
 		katana.add_results(self, results)
-
-
-
-
-
-
-	
+		

@@ -24,6 +24,10 @@ class Unit(units.FileUnit):
 		# Look for flags, if we found them...
 		response = magic.from_file(self.target)
 		
-		katana.recurse(self, response)
+		# JOHN: We have the issue of recursing on this output, and potentially
+		#       caesar ciphering, reversing, atbashing, etc...
+		#       ... So, we do NOT recurse because we PROBABLY do not have a flag here.
+		# katana.recurse(self, response)
+
 		katana.locate_flags(self, response)
 		katana.add_results(self, response)
