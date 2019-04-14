@@ -6,7 +6,7 @@ import argparse
 from pwn import *
 import os
 import units.crypto
-
+from units import NotApplicable
 import string
 import collections
 
@@ -21,6 +21,15 @@ class Unit(units.PrintableDataUnit):
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
+
+		odd_characters = 0
+		for c in target:
+			if c not in string.ascii_uppercase + string.ascii_lowercase:
+				odd_characters += 1
+
+		if odd_characters == len(target):
+			raise NotApplicable
+
 
 	def caesar(self, rotate_string, number_to_rotate_by):
 		upper = collections.deque(string.ascii_uppercase)
