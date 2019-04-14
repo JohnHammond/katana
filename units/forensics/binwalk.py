@@ -15,7 +15,7 @@ DEPENDENCIES = [ 'binwalk' ]
 
 def md5sum(path):
 	md5 = hashlib.md5()
-	with open(path) as f:
+	with open(path, 'rb') as f:
 		for chunk in iter(lambda: f.read(4096), b""):
 			md5.update(chunk)
 	return md5
@@ -31,12 +31,13 @@ class Unit(units.forensics.ForensicsUnit):
 		)
 
 		# Run binwalk on the target
-		p = subprocess.Popen(['binwalk', '-e', self.target, '--directory', binwalk_directory ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		parms = ['binwalk', '-e', self.target, '--directory', binwalk_directory, '--dd=.*' ]
+		p = subprocess.Popen(parms, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
 		results = utilities.process_output(p)
 
 		# The call failed. We have no results.
-		if p.returncode != 0:
+		if p.wait() != 0:
 			shutil.rmtree(binwalk_directory)
 			return
 
@@ -54,4 +55,4 @@ class Unit(units.forensics.ForensicsUnit):
 					katana.add_artifact(self, path)
 					katana.recurse(self, path)
 
-		return results
+		katana.add_results(self, results)
