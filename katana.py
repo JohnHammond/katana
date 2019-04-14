@@ -194,7 +194,7 @@ class Katana(object):
 		""" Shorthand for grabbing the target """
 		return self.config['target']
 
-	def get_artifact_dir(self, unit):
+	def get_artifact_path(self, unit):
 		# Compute the correct directory for this unit based on the parent tree
 		path = os.path.join(self.config['outdir'], *[u.unit_name for u in unit.family_tree], unit.unit_name)
 
