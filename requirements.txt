@@ -3,3 +3,4 @@ argparse
 python-magic
 pyzbar
 pillow
+clipboard

@@ -17,6 +17,7 @@ import re
 import binascii
 import base64
 import units
+import clipboard
 
 class Katana(object):
 
@@ -387,6 +388,10 @@ class Katana(object):
 
 		# Make sure we can create the results file
 		results = json.dumps(self.results, indent=4, sort_keys=True)
+
+		if 'flags' in self.results:
+			log.success('placing first possible flag on clipboard')
+			clipboard.copy(self.results['flags'][0])
 
 		if results != "{}":
 			with open(os.path.join(self.config['outdir'], 'katana.json'), 'w') as f:
