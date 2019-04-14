@@ -71,6 +71,8 @@ class Katana(object):
 				required=False, default=None, help='dictionary for brute forcing tasks')
 		parser.add_argument('--data-length', '-l', default=10, type=int,
 			help="minimum number of characters for units results to be displayed")
+		parser.add_argument('--show', '-s', default=False, action="store_true",
+			help="print the results on stdout as well as save to file")
 
 		args, remaining = parser.parse_known_args()
 
@@ -389,6 +391,8 @@ class Katana(object):
 		if results != "{}":
 			with open(os.path.join(self.config['outdir'], 'katana.json'), 'w') as f:
 				f.write(results)
+			if self.config['show']:
+				print(results)
 
 			log.success('wrote output summary to {0}, note minimum data length is {1}'.format(os.path.join(self.config['outdir'], 'katana.json'), self.config['data_length']))
 		else:
