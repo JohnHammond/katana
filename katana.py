@@ -414,13 +414,15 @@ class Katana(object):
 
 
 	def add_flag(self, flag):
-		if 'flags' not in self.results:
-			self.results['flags'] = []
+
 		with self.results_lock:
+			if 'flags' not in self.results:
+				self.results['flags'] = []
+
 			if flag not in self.results['flags']:
-				log.success('potential flag found: {0}'.format('\u001b[32;1m' + flag + '\u001b[0m'))
+				log.success(str('potential flag found '+ '(copied)' *bool(not len(self.results['flags']))+': {0}').format('\u001b[32;1m' + flag + '\u001b[0m') )
+
 				if len(self.results['flags']) == 0:
-					log.success('adding flag to clipboard')
 					clipboard.copy(flag)
 				self.results['flags'].append(flag)
 	
