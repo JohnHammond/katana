@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-04-13 16:53:45
+# @Last Modified time: 2019-04-14 13:20:36
 from unit import BaseUnit
 from pwn import *
 import os
@@ -54,6 +54,9 @@ class FileUnit(BaseUnit):
 		# If no keywords were found, it doesn't match
 		if n == len(keywords) and n != 0:
 			raise NotApplicable()
+
+		if ' image ' in t:
+			katana.add_image(os.path.abspath(target))
 
 class PrintableDataUnit(BaseUnit):
 	

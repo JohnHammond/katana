@@ -395,7 +395,10 @@ class Katana(object):
 			if self.config['show']:
 				print(results)
 
-			log.success('wrote output summary to {0}, note minimum data length is {1}'.format(os.path.join(self.config['outdir'], 'katana.json'), self.config['data_length']))
+			# Use the raw json to process out HTML 
+			utilities.render_html_to_file(self.results, os.path.join(self.config['outdir'], 'katana.html'))
+
+			log.success('wrote output to {0}, note minimum data length is {1}'.format(os.path.join(self.config['outdir'], 'katana.json and html'), self.config['data_length']))
 		else:
 			log.failure("no units returned results")
 
@@ -425,6 +428,15 @@ class Katana(object):
 				if len(self.results['flags']) == 0:
 					clipboard.copy(flag)
 				self.results['flags'].append(flag)
+
+	def add_image(self, image):
+
+		with self.results_lock:
+			if 'images' not in self.results:
+				self.results['images'] = []
+
+			if image not in self.results['images']:
+				self.results['images'].append(image)
 	
 	def locate_flags(self, unit, output, stop=True, strict=False):
 		""" Look for flags in the given data/output """
