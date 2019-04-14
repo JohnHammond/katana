@@ -121,7 +121,6 @@ class Katana(object):
 				for dependency in dependencies:
 					subprocess.check_output(['which',dependency])
 			except (FileNotFoundError, subprocess.CalledProcessError): 
-				traceback.print_exc()
 				continue
 			else:
 				# Dependencies are good, ensure the unit class exists
