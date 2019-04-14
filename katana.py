@@ -234,15 +234,18 @@ class Katana(object):
 				except OSError:
 					n += 1
 					path = '{0}-{1}{2}'.format(name, n, ext)
+			
+			self.add_artifact(unit, path)
+		
+		return (path, file_handle)
 
+	def add_artifact(self, unit, path):
 		# Add the artifact to the results for tracking
 		r = self.get_unit_result(unit)
 		with self.results_lock:
 			if 'artifacts' not in r:
 				r['artifacts'] = []
 			r['artifacts'].append(path)
-		
-		return (path, file_handle)
 		
 	def get_unit_result(self, unit):
 		parents = unit.family_tree
@@ -261,8 +264,39 @@ class Katana(object):
 
 		return r
 
+	def clean_result(self, d):
+		if isinstance(d, str):
+			if len(d) < self.config['data_length']:
+				return None
+			return d
+		elif isinstance(d, list) or isinstance(d, tuple):
+			r = []
+			for i in d:
+				x = self.clean_result(i)
+				if x is not None:
+					r.append(x)
+			if len(r) == 0:
+				r = None
+		elif isinstance(d, dict):
+			r = {}
+			for name in d:
+				x = self.clean_result(d[name])
+				if x is not None:
+					r[name] = x
+			if len(r) == 0:
+				r = None
+		else:
+			r = d
+		return r
+
 	def add_results(self, unit, d):
 		""" Update the results dict with the given dict """
+
+		# Strip out results which don't meet the threshold
+		d = self.clean_result(d)
+		if d is None:
+			return
+
 		parents = unit.family_tree
 		with self.results_lock:
 			# Start at the global results
