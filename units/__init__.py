@@ -81,3 +81,26 @@ class PrintableDataUnit(BaseUnit):
 			if c not in string.printable:
 				raise NotApplicable()
 
+class BruteforcePasswordUnit(object):
+
+	@classmethod
+	def add_arguments(cls, katana, parser):
+		parser.add_argument('--{0}-password'.format(cls.BRUTEFORCE_NAME), type=str,
+			action='append', help='a password for {0} files'.format(cls.BRUTEFORCE_NAME),
+			default=[]
+		)
+		return
+	
+	def enumerate(self, katana):
+		# Default case of no password
+		yield ''
+
+		# Check each given password
+		for p in katana.config['{0}_password'.format(self.BRUTEFORCE_NAME)]:
+			yield p
+
+		# Add all passwords from the dictionary file
+		if 'dict' in katana.config and katana.config['dict'] is not None:
+			katana.config['dict'].seek(0)
+			for line in katana.config['dict']:
+				yield line.rstrip('\n')

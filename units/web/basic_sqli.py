@@ -27,8 +27,11 @@ class Unit(units.web.WebUnit):
 		
 		# This should "yield 'name', (params,to,pass,to,evaluate)"
 		# evaluate will see this second argument as only one variable and you will need to parse them out
-
-		r = requests.get(self.target)
+		
+		try:
+			r = requests.get(self.target)
+		except requests.exceptions.ConnectionError:
+			return
 
 		action = re.findall(r"<\s*form.*action\s*=\s*('|\")(.+?)('|\")", r.text, flags=re.IGNORECASE)
 		method = re.findall(r"<\s*form.*method\s*=\s*('|\")(.+?)('|\")", r.text, flags=re.IGNORECASE)
