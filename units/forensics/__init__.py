@@ -13,4 +13,4 @@ class ForensicsUnit(units.FileUnit):
 	
 	def __init__(self, katana, parent, target):
 		# This ensures that it is a file
-		super(PdfUnit, self).__init__(katana, parent, target)
+		super(ForensicsUnit, self).__init__(katana, parent, target)
