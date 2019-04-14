@@ -6,16 +6,29 @@ import argparse
 from pwn import *
 import os
 import units.crypto
-
+from units import NotApplicable
 import string
 import collections
 
 
-class Unit(units.crypto.CryptoUnit):
+class Unit(units.PrintableDataUnit):
+
+	PROTECTED_RECURSE = True
 
 	@classmethod
-	def prepare_parser(cls, config, parser):
-		parser.add_argument('--shift', default=-1, type=int, help='number to shift by for caesar cipher')
+	def add_arguments(cls, katana, parser):
+		parser.add_argument('--caesar-shift', default=-1, type=int, help='number to shift by for caesar cipher')
+
+	def __init__(self, katana, parent, target):
+		super(Unit, self).__init__(katana, parent, target)
+
+		odd_characters = 0
+		for c in target:
+			if c not in string.ascii_uppercase + string.ascii_lowercase:
+				odd_characters += 1
+
+		if odd_characters == len(target):
+			raise NotApplicable
 
 
 	def caesar(self, rotate_string, number_to_rotate_by):
@@ -30,31 +43,20 @@ class Unit(units.crypto.CryptoUnit):
 
 		return rotate_string.translate(rotate_string.maketrans(string.ascii_uppercase, upper)).translate(rotate_string.maketrans(string.ascii_lowercase, lower))
 
-	def evaluate(self, target):
+	def evaluate(self, katana, case):
 
-		if os.path.isfile(target):
-			try:
-				source = open(target).read()
-
-			# If this is a binary object, we probably can't read it...
-			except UnicodeDecodeError:
-				return None
-		else:
-			source = target
-
-		if ( self.config['shift'] == -1 ):
-			results = []
+		if ( katana.config['caesar_shift'] == -1 ):
+			results = { }
 
 			for shift_value in range(len(string.ascii_lowercase)):
-				results.append( self.caesar(source, shift_value) )
+				results[shift_value] = self.caesar(self.target, shift_value)
+				katana.recurse(self, results[shift_value])
+				katana.locate_flags(self, results[shift_value])
 
-			return results
 		else:
-			return self.caesar(source, self.config['shift'])
+			results = self.caesar(source, katana.config['caesar_shift'])
+			katana.recurse(self, results)
+			katana.locate_flags(self, results)
 
-
-
-
-
-
-	
+		katana.add_results(self, results)
+		

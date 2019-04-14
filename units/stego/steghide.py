@@ -10,60 +10,57 @@ import units.raw
 import re
 import units.stego
 import magic
+import units
 
-class Unit(units.stego.StegoUnit):
+DEPENDENCIES = [ 'steghide' ]
+
+class Unit(units.FileUnit):
 
 	@classmethod
-	def prepare_parser(cls, config, parser):
-		parser.add_argument('--dict', '-d', type=argparse.FileType('r', encoding='latin-1'),
-			help="Dictionary for bruteforcing")
-		parser.add_argument('--password', '-p', type=str,
-		help="A password to try on the file", action="append",
+	def add_arguments(cls, katana, parser):
+		parser.add_argument('--steghide-password', type=str,
+			help="A password to try on the file", action="append",
 			default=[])
-		parser.add_argument('--stop', default=True,
-			help="Stop processing on matching password",
-			action="store_false")
-		return
 
-	def __init__(self, config):
-		super(Unit, self).__init__(config)
-	
-	def check(self, target):
-		return super(Unit, self).check(target[0])
+	def __init__(self, katana, parent, target):
+		super(Unit, self).__init__(katana, parent, target, keywords=['jpg', 'jpeg'])
 
-	def get_cases(self, target):
+		if not os.path.isfile(target):
+			raise units.NotApplicable()
+		
+		t = magic.from_file(target).lower()
+		if not 'jpg' in t and not 'jpeg' in t:
+			raise units.NotApplicable()
+
+	def enumerate(self, katana):
 		# The default is to check an empty password
-		yield 'empty password',(target, '')
+		yield ''
 
 		# Check other passwords specified explicitly
-		for p in self.config['password']:
-			yield p,(target,p)
+		for p in katana.config['steghide_password']:
+			yield p
 
 		# Add all the passwords from the dictionary file
-		if 'dict' in self.config and self.config['dict'] is not None:
-			self.config['dict'].seek(0)
-			for line in self.config['dict']:
-				yield line.rstrip('\n'),(target, line.rstrip('\n'))
+		if 'dict' in katana.config and katana.config['dict'] is not None:
+			# CALEB: Possible race condition if two units use the 'dict' argument for the same purpose...
+			katana.config['dict'].seek(0)
+			for line in katana.config['dict']:
+				yield line.rstrip('\n')
 
-	def evaluate(self, target):
-		# Split up the target (see get_cases)
-		target_file, password = target
+	def evaluate(self, katana, password):
 
 		# Grab the output path for this target and password
+		# CALEB: This is a race condition. Someone could create the file
+		#			before steghide does! We should pass create=True,
+		#			and then force steghide to overwrite
 		if ( password == "" ):
-			output_path = self.artifact(target_file, "no_password", create=False)	
+			output_path, _ = katana.create_artifact(self, "no_password", create=False)	
 		else:
-			output_path = self.artifact(target_file, password, create=False)
-
-		# This file exists, we already tried this password
-		if os.path.exists(output_path):
-			log.failure(output_path)
-			return None
-			
+			output_path, _ = katana.create_artifact(self, password, create=False)
 
 		# Run steghide
 		p = subprocess.Popen(
-			['steghide', 'extract', '-sf', target_file, '-p', password, '-xf', output_path],
+			['steghide', 'extract', '-sf', self.target, '-p', password, '-xf', output_path],
 			stdout = subprocess.PIPE, stderr = subprocess.PIPE
 		)
 
@@ -77,25 +74,22 @@ class Unit(units.stego.StegoUnit):
 		# Check if it succeeded
 		if p.returncode != 0:
 			return None
+
+		katana.add_artifact(self, output_path)
 	
 		# Grab the file type
 		typ = magic.from_file(output_path)
 		thing = '<BINARY_DATA>'
 		
-		# If the type is text, then we can display it in katana.json
-		if typ == 'text/plain' or 'ASCII text' in typ:
-			with open(output_path, 'r') as f:
-				thing = f.read()
+		with open(output_path, 'r') as f:
+			thing = f.read()
 
 		# Check if it matches the pattern
-		self.find_flags(thing)
+		katana.locate_flags(self,thing)
 
-		# Stop processing this unit if we only expect on success
-		if self.config['stop']:
-			self.completed = True
-	
-		return {
+		katana.recurse(self, output_path)
+
+		katana.add_results(self, {
 			'file': output_path,
-			'type': typ,
-			'content': thing
-		}
+			'type': typ
+		})

@@ -7,27 +7,43 @@ from pwn import *
 import subprocess
 import units.raw
 import utilities
+import os
+import magic
+from units import NotApplicable
 
-class Unit(units.raw.RawUnit):
+import warnings
+warnings.simplefilter("ignore", UserWarning)
 
-	@classmethod
-	def prepare_parser(cls, config, parser):
-		pass
+from PIL import Image
+from pyzbar.pyzbar import decode
+import json
 
-	def evaluate(self, target):
+
+
+
+class Unit(units.FileUnit):
+
+	def __init__(self, katana, parent, target):
+		super(Unit, self).__init__(katana, parent, target, keywords = 'image')
 
 		try:
-			p = subprocess.Popen(['zbarimg', target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-		except FileNotFoundError as e:
-			if "No such file or directory: 'zbarimg'" in e.args:
-				log.failure("zbarimg is not in the PATH (not installed)? Cannot run the stego.qrcode unit!")
-				return None
+			self.decoded = decode(Image.open(self.target))
+		except OSError:
+			raise NotApplicable
 
-		# Look for flags, if we found them...
-		response = utilities.process_output(p)
-		if 'stdout' in response:
-			self.find_flags(str(response['stdout']))
-		if 'stderr' in response:
-			self.find_flags(str(response['stderr']))
-		
-		return response
+
+	def evaluate(self, katana, case):
+
+
+		for each_decoded_item in self.decoded:
+			
+			decoded_data = each_decoded_item.data.decode('latin-1')
+
+			result = {
+				'type': each_decoded_item.type,
+				'data' : decoded_data
+			}
+			
+			katana.locate_flags(self, decoded_data)
+			katana.recurse(self, decoded_data)
+			katana.add_results(self, result)

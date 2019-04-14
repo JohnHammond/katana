@@ -11,13 +11,9 @@ import string
 import collections
 
 
-class Unit(units.crypto.CryptoUnit):
+class Unit(units.PrintableDataUnit):
 
-	@classmethod
-	def prepare_parser(cls, config, parser):
-		# Nothing to do in this case...
-		pass		
-
+	PROTECTED_RECURSE = True
 
 	# Shamelessly stolen from https://rot47.net/_py/rot47.txt
 	def do_rot47(self, s):
@@ -30,22 +26,12 @@ class Unit(units.crypto.CryptoUnit):
 				x.append(s[i])
 		return ''.join(x)
 
-	def evaluate(self, target):
+	def evaluate(self, katana, case):
 
-		if os.path.isfile(target):
-			try:
-				source = open(target).read()
-
-			# If this is a binary object, we probably can't read it...
-			except UnicodeDecodeError:
-				return None
-		else:
-			source = target
-
-		content = self.do_rot47(source)
-		self.find_flags(content)
-
-		return content
+		content = self.do_rot47(self.target)
+		katana.recurse(self,content)
+		katana.locate_flags(self, content)
+		katana.add_results(self, content)
 
 
 

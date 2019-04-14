@@ -8,22 +8,26 @@ import subprocess
 import os
 import units.raw
 import utilities
+import magic
+from units import NotApplicable
 
-class Unit(units.raw.RawUnit):
+class Unit(units.FileUnit):
 
-	@classmethod
-	def prepare_parser(cls, config, parser):
-		pass
+	def __init__(self, katana, parent, target):
+		super(Unit, self).__init__(katana, parent, target)
+		# We can only handle this if it is a file!
+		if not os.path.isfile(target):
+			raise NotApplicable()
 
-	def evaluate(self, target):
+	def evaluate(self, katana, case):
 
-		p = subprocess.Popen(['file', target], stdout = subprocess.PIPE, stderr = subprocess.PIPE)		
-		
 		# Look for flags, if we found them...
-		response = utilities.process_output(p)
-		if 'stdout' in response:
-			self.find_flags(str(response['stdout']))
-		if 'stderr' in response:
-			self.find_flags(str(response['stderr']))
+		response = magic.from_file(self.target)
 		
-		return response
+		# JOHN: We have the issue of recursing on this output, and potentially
+		#       caesar ciphering, reversing, atbashing, etc...
+		#       ... So, we do NOT recurse because we PROBABLY do not have a flag here.
+		# katana.recurse(self, response)
+
+		katana.locate_flags(self, response)
+		katana.add_results(self, response)

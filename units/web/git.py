@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from pwn import *
 import requests
+from units import NotApplicable
 from web import WebUnit
 
 # JOHN: March 24th
@@ -11,36 +12,26 @@ from web import WebUnit
 
 class Unit(WebUnit):
 
-    def __init__(self, config):
-        super(Unit, self).__init__(config)
+    def __init__(self, katana, parent, target):
 
-    # def prepare_parser(config, parser):
-    #     pass
-
-    def check(self, target):
-        try:
-            self.explode_url(target)
-        except:
-            return False
-        return True
-    
-    def evaluate(self, target):
-
-        # Strip trailing slashes
-        target = target.rstrip('/').rstrip('\\')
-
+        # Run the parent constructor, to ensure this is a valid URL
+        super(Unit, self).__init__(katana, parent, target)
+        
         # Try to get see if there is a .git directory
-        url = '{0}/{1}'.format(target, '.git/HEAD')
+        url = '{0}/{1}'.format(self.target, '.git/HEAD')
         r = requests.get(url)
-
 
         # If the response is anything other than a "Not Found",
         # we might have something here...
         if r.status_code == 404:
-            return None
+            raise NotApplicable
         else:
-            result = {
-                'git_repo': url,
-            }
+            self.response = r
     
-            return result
+    def evaluate(self, katana, case):
+
+        # JOHN: I do still need to add the functionality to download
+        #       the repo. Right now, if it sees that it exists, though
+        #       just tell the user.
+
+        katana.add_results( self,  self.target + '/.git' )

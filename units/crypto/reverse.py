@@ -11,28 +11,16 @@ import string
 import collections
 
 
-class Unit(units.crypto.CryptoUnit):
+class Unit(units.PrintableDataUnit):
 
-	@classmethod
-	def prepare_parser(cls, config, parser):
-		pass
+	PROTECTED_RECURSE = True
 
-	def evaluate(self, target):
+	def evaluate(self, katana, case):
 
-		if os.path.isfile(target):
-			try:
-				source = open(target).read()
-			# If this is a binary object, we probably can't read it...
-			except UnicodeDecodeError:
-				return None
-		else:
-			source = target
-
-		return source[::-1]
-
-
-
-
-
+		result = self.target[::-1]
+		katana.locate_flags(self, result)
+		katana.recurse(self, result)
+		katana.add_results(self, result)
 
 	
+

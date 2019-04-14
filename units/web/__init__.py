@@ -1,44 +1,26 @@
+# -*- coding: utf-8 -*-
+# @Author: John Hammond
+# @Date:   2019-02-28 22:33:18
+# @Last Modified by:   John Hammond
+# @Last Modified time: 2019-04-13 18:08:50
+
 from pwn import *
 from unit import BaseUnit
-import socket
-import re
+import units
+import os
+from units import NotApplicable
+
+
+ADDRESS_PATTERN = r'^((http|https):\/\/)(?P<host>[a-zA-Z0-9][a-zA-Z0-9\-_.]*)(:(?P<port>[0-9]{1,5}))?(\/(?P<uri>[^?]*))?(\?(?P<query>.*))?$'
 
 class WebUnit(BaseUnit):
+	
+	def __init__(self, katana, parent, target):
 
-    ADDRESS_PATTERN = r'^((?P<proto>[a-zA-Z][a-zA-Z0-9]*):\/\/)?(?P<host>[a-zA-Z0-9][a-zA-Z0-9\-_.]*)(:(?P<port>[0-9]{1,5}))?(\/(?P<uri>[^?]*))?(\?(?P<query>.*))?$'
-    @classmethod
-    def prepare_parser(cls, config, parser):
-        try:
-            parser.add_argument('--proxy', default=None, help='proxy (host:port) to use for web connections')
-            parser.add_argument('--dns', default=None, help='custom dns server to use')
-        except:
-            # These arguments will be inherited by the Units...
-            # So it may repeatedly conflict. We'll just have to ignore these
-            pass
-
-
-    def __init__(self, config):
-        super(WebUnit, self).__init__(config)
-        self.regex = re.compile(WebUnit.ADDRESS_PATTERN)
-
-    # Explode a URL into it's protocol, host, port, uri, and query string
-    def explode_url(self, target):
-        match = self.regex.match(target)
-        
-        if match is None:
-            log.failure('{0}: not a valid url'.format(target))
-            return False
-
-        return match.groupdict(default='')
-
-    # Check that the target is a web address of some kind
-    def check(self, target):
-        # It appears to be okay
-        return bool(self.explode_url(target))
-
-    # The sub-class should define this...
-    #  def evaluate(self, target):
-    #     pass  
-    #
-    # If you do not include this function, the main unit.py
-    # will properly display its name.
+		super(WebUnit, self).__init__(katana, parent, target)
+		
+		self.regex = re.compile(ADDRESS_PATTERN)
+		match = self.regex.match(target)
+		
+		if match is None:
+			raise NotApplicable

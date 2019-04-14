@@ -1,32 +1,16 @@
+# -*- coding: utf-8 -*-
+# @Author: John Hammond
+# @Date:   2019-02-28 22:33:18
+# @Last Modified by:   John Hammond
+# @Last Modified time: 2019-04-12 01:53:13
+
 from pwn import *
 from unit import BaseUnit
-import socket
-import re
+import units
+import os
 
-class PdfUnit(BaseUnit):
-
-    @classmethod
-    def prepare_parser(cls, config, parser):
-        try:
-            # Add potential argument parsers in here.
-            # parser.add_argument('--proxy', default=None, help='proxy (host:port) to use for web connections')
-            pass
-        except:
-            # These arguments will be inherited by the Units...
-            # So it may repeatedly conflict. We'll just have to ignore these
-            pass
-
-    def __init__(self, config):
-        super(PdfUnit, self).__init__(config)
-
-    # The sub-class should define this to ensure it is actually a feasible attack...
-    def check(self, target):
-        # It appears to be okay
-        return True
-
-    # The sub-class should define this...
-    #  def evaluate(self, target):
-    #     pass  
-    #
-    # If you do not include this function, the main unit.py
-    # will properly display its name.
+class PdfUnit(units.FileUnit):
+	
+	def __init__(self, katana, parent, target):
+		# This ensures it is a PDF
+		super(PdfUnit, self).__init__(katana, parent, target, keywords=['pdf document'])

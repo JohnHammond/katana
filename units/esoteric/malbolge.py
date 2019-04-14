@@ -68,7 +68,7 @@ def initial_memory(code, allow_not_isprint=False):
 def execute_step(a, c, d, mem, inf=sys.stdin.buffer, outf=sys.stdout.buffer):
     output = []
     if not (32 < mem[c] < 127):
-        raise # loop
+        raise StopIteration # loop
     m = crypt1(c, chr(mem[c]))
     if   m == 'j':
         d = mem[d]
@@ -82,7 +82,11 @@ def execute_step(a, c, d, mem, inf=sys.stdin.buffer, outf=sys.stdout.buffer):
         # outf.write(bytes([ a % 256 ]))
         output.append(chr( a % 256 ))
     elif m == '/':
-        x = inf.read(1)
+        if inf == None:
+            x = "\n"
+        else:
+            x = inf.read(1)
+
         if x:
             a, = x
         else:
@@ -96,13 +100,12 @@ def execute_step(a, c, d, mem, inf=sys.stdin.buffer, outf=sys.stdout.buffer):
     return a, c, d, mem, output
 def execute(code, inf=sys.stdin.buffer, allow_not_isprint=False, debug=False):
     output = []
-
     try:
         mem = initial_memory(code, allow_not_isprint=allow_not_isprint)
     except:
         # If this fails, it is probably not Malbolge. Stop trying.
         return None
-
+        pass
     a, c, d = 0, 0, 0
     while True:
         if debug:
@@ -118,31 +121,20 @@ def execute(code, inf=sys.stdin.buffer, allow_not_isprint=False, debug=False):
     
 class Unit(EsotericUnit):
 
+
     @classmethod
-    def prepare_parser(cls, config, parser):
-        pass
+    def add_arguments(cls, katana, parser):
+        parser.add_argument('--malbolge-input',  action='store_true', default=None, help='file to be read as input to malbolge program')
 
-        # JOHN: Below is Caleb's code.
-        #       I did not get these to work with the new interpreter
-        parser.add_argument('--mal-file', action='store_true', default=False, help='target specifies a file name')
-        # parser.add_argument('--bf-map', default='><+-.,[]', type=BrainfuckMap, help='the mapping for brainfuck commands')
-        parser.add_argument('--mal-input', default=sys.stdin, type=argparse.FileType('r'), help='the file to use for input')
-
-    def evaluate(self, target):
-
-        if self.config['mal_file'] or os.path.isfile(target):
-            with open(target, 'r') as f:
-                target = f.read()
-        else:
-            target = target.lstrip()
-
+    def evaluate(self, katana, case):
+        
         try:
-            output = execute(target,self.config['mal_input'])
+            output = execute(self.target, katana.config['malbolge_input'])
 
-        except ValueError:
-            log.warning('{0}: invalid malbolge command detected')
+        except (ValueError, AssertionError):
             return None
 
         if output:
-            self.find_flags(output)
-        return output
+            katana.locate_flags(self, output)
+            katana.recurse(self, output)
+            katana.add_results(self, output)

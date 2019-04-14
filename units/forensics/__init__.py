@@ -1,32 +1,16 @@
+# -*- coding: utf-8 -*-
+# @Author: John Hammond
+# @Date:   2019-02-28 22:33:18
+# @Last Modified by:   John Hammond
+# @Last Modified time: 2019-04-12 19:32:11
+
 from pwn import *
 from unit import BaseUnit
-import socket
-import re
+import units
+import os
 
-class ForensicsUnit(BaseUnit):
-
-    @classmethod
-    def prepare_parser(cls, config, parser):
-        try:
-            # Add potential argument parsers in here.
-            # parser.add_argument('--proxy', default=None, help='proxy (host:port) to use for web connections')
-            pass
-        except:
-            # These arguments will be inherited by the Units...
-            # So it may repeatedly conflict. We'll just have to ignore these
-            pass
-
-    def __init__(self, config):
-        super(ForensicsUnit, self).__init__(config)
-
-    # The sub-class should define this...
-    def check(self, target):
-        return True
-
-    # The sub-class should define this...
-    #  def evaluate(self, target):
-    #     pass  
-    #
-    # If you do not include this function, the main unit.py
-    # will properly display its name.
-    
+class ForensicsUnit(units.FileUnit):
+	
+	def __init__(self, katana, parent, target):
+		# This ensures that it is a file
+		super(ForensicsUnit, self).__init__(katana, parent, target)

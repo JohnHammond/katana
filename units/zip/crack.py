@@ -6,47 +6,42 @@ from pwn import *
 class Unit(ZipUnit):
 
 	@classmethod
-	def prepare_parser(cls, config, parser):
-		#try:
-		parser.add_argument('--dict', '-d', type=argparse.FileType('r', encoding='latin-1'),
-					help='Dictionary for bruteforcing')
-		parser.add_argument('--password', '-p', type=str,
+	def add_arguments(cls, katana, parser):
+		parser.add_argument('--zip-password', type=str,
 					help='A password to try on the file', action='append',
 					default=[])
-		#except:
-		#	pass
-		return
 
-	def check(self, target):
-		return super(Unit, self).check(target[0])
 
-	def get_cases(self, target):
-		yield 'no password',(target, '')
+	def __init__( self, katana, parent, target ):
+		super(Unit, self).__init__(katana, parent, target)
+
+	def enumerate(self, katana):
+		yield ''
 		
-		for p in self.config['password']:
-			yield p,(target, p)
+		for password in katana.config['zip_password']:
+			yield password
 
-		if 'dict' in self.config and self.config['dict'] is not None:
-			self.config['dict'].seek(0)
-			for line in self.config['dict']:
-				yield line.rstrip('\n'), (target, line.rstrip('\n'))
+		if 'dict' in katana.config and katana.config['dict'] is not None:
+			katana.config['dict'].seek(0)
+			for line in katana.config['dict']:
+				yield line.rstrip('\n')
 
-	def evaluate(self, target):
-		zipname, password = target
+	def evaluate(self, katana, case):
+		password = case
 		result = {
 			'password': '',
 			'namelist': []
 		}
 
-		with zipfile.ZipFile(zipname) as z:
+		with zipfile.ZipFile(self.target) as z:
 			name = z.namelist()[0]
-
+			self.artificate_dir()
 			# Try to extract the file
 			try:
 				with z.open(name, 'r', bytes(password, 'utf-8')) as f:
 					pass
 			except RuntimeError:
-				# Pw didn't work
+				# Password didn't work
 				return None
 
 			# We found the password
@@ -55,7 +50,9 @@ class Unit(ZipUnit):
 			# Look for flags in the extracted data
 			for info in z.infolist():
 				data = z.read(info, bytes(password, 'utf-8')).decode('utf-8')
-				self.find_flags(data)
+
+				katana.locate_flags(self, data)
+				katana.add_results(self, data)
 
 			return True
 

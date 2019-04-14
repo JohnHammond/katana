@@ -5,18 +5,26 @@ import base64
 import binascii
 
 class BaseUnit(object):
+
+	# Set this to True to protect this unit from recursing into another
+	# protected unit
+	PROTECTED_RECURSE = False
+
+	@classmethod
+	def add_arguments(cls, katana, parser):
+		""" Add whatever arguments are needed by this unit to the given
+			parser
+		"""
+		return
+
 	# Unit constructor (saves the config)
-	def __init__(self, config):
-		self.config = config
-		self.completed = False
-		if config['flag_format'] == None:
-			self.pattern = None
-		else:
-			self.pattern = re.compile('('+config['flag_format']+')', flags=re.MULTILINE | re.DOTALL | re.IGNORECASE )
-		self.flags = []
+	def __init__(self, katana, parent, target):
+		self._completed = False
+		self.parent = parent
+		self.target = target
 
 	# By default, the only test case is the target itself
-	def get_cases(self, target):
+	def enumerate(self, katana):
 		"""
 			This function yields the test cases needed for this
 			unit. This is how we inform the parent how many test cases we have
@@ -34,7 +42,7 @@ class BaseUnit(object):
 			of the target for simple tests.
 		"""
 		
-		yield 'default',target
+		yield None
 
 	@property
 	def unit_name(self):
@@ -42,134 +50,27 @@ class BaseUnit(object):
 
 	def evaluate(self, case):
 		log.error('{0}: no evaluate implemented: bad unit'.format(self.unit_name))
+	
+	@property
+	def family_tree(self):
+		parents = []
+		parent = self.parent
+		# Are you my mother
+		while parent is not None:
+			parents.append(parent)
+			parent = parent.parent
+		return parents[::-1]
+	
+	@property
+	def completed(self):
+		return self._completed
 
-	def find_flags(self, output):
-		# If the user didn't supply a pattern, there's nothing to do.
-		if self.pattern == None:
-			return False
-
-		
-		# JOHN: Below is my attempt to search for Base64 encoded flag formats
-		special_regex_characters = [
-			"\\d", "\\w", '\\s', "\\D", "\\W", '\\S',
-			"+", "{", '}', "*", "?", '.', '|', '(', ')', '[', ']',
-		]
-
-		# In case someone for some reason includes this...
-		# And the 'pattern' is a compiled regex... the 'pattern.pattern' 
-		#                                          is the raw regex string
-		# Also, we remove the surrounding () parentheses
-		raw_flag = self.pattern.pattern.replace('^', '')[1:-1]
-
-		found_regex = 0
-		for index in range(len(raw_flag)):
-			character = raw_flag[index]
-			if character in special_regex_characters:
-				# This is as far as we can go in the flag pattern.
-				found_regex = 1
-				break
-		
-		index -= 1*found_regex  
-		
-		# Plus one because this the index is zero-based and slicing is not...
-		raw_flag = raw_flag[:index+1]
-		
-		hex_flag = binascii.hexlify(bytes(raw_flag,'utf-8')).decode('utf-8')
-
-		base64_flag = base64.b64encode(bytes(raw_flag, 'utf-8')).decode('utf-8')
-		padding = base64_flag.count('=')
-		trustworthy_base64 = base64_flag.replace('=','')[:-padding]
-		
-
-		base64_regex = '[a-zA-Z0-9+/]+={0,2}'
-		hex_regex = '[a-fA-F0-9]*'
-
-
-		# Look for the pattern in the output
-		result = self.pattern.search(str(output))
-
-		# Only actually search for these if there is something to work with!
-		if hex_flag:
-			hex_pattern = re.compile(hex_flag + hex_regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
-			hex_result = hex_pattern.search(str(output))
-		else:
-			hex_result = None
-		if trustworthy_base64:
-			base64_pattern = re.compile(trustworthy_base64 + base64_regex, flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
-			base64_result = base64_pattern.search(str(output))
-		else:
-			base64_result = None
-		
-		# No match
-		if result is None and base64_result is None and hex_result is None:
-		# if result is None:
-			return False
-
-		# add the flag
-		for match in [ result, base64_result, hex_result ]:
-			if match:
-				# We will use this approach, to show the original base64 finding
-				self.flags.append(match.group())
-				if match == base64_result:
-					try:
-						# This tries to decode too often. If it tries and fails, it must not be Base64
-						b64_decoded = base64.b64decode(match.group()).decode('utf-8')
-					except:
-						b64_decoded = None
-					if b64_decoded:
-
-						self.flags.append(b64_decoded)
-
-				if match == hex_result:
-					self.flags.append(binascii.unhexlify(match.group()).decode('utf-8'))
-
-		return True
-
-	# Create a new artifact for this target/unit and
-	def artifact(self, target, name, mode='w', create=True):
-		path = os.path.join(self.get_output_dir(target), name)
-		if not create:
-			return path
-		return open(path, mode), path
-
-	# Create an artifact directory
-	def artifact_dir(self, target, name, create=True):
-		path = os.path.join(self.get_output_dir(target), name)
-		if not create:
-				return path
-		try:
-			os.mkdir(path)
-		except OSError:
-			if ( "File exists" in e.args ):
-				log.error("Artifact directory '{0}' already exists!".format(path))
-			else:
-				# We don't know what went wrong yet.
-				# Raise this because it might be another bug to squash
-				raise e
-
-		return path
-
-	def get_output_dir(self, target):
-		# If there's only one target, we don't deal with sha256 sums.
-		# Otherwise, the artifacts will be in:
-		# $OUTDIR/artifacts/$SHA256(target)/module/unit/artifact_name
-		outdir = os.path.join(
-			self.config['outdir'],
-			'artifacts',
-			hashlib.sha256(target.encode('utf-8')).hexdigest()[-8:],
-			*self.unit_name.split('.')
-		)
-
-		# If this directory doesn't exist, create it
-		if not os.path.exists(outdir):
-			try:
-				os.makedirs(outdir)
-			except FileExistsError:
-				pass
-			except:
-				log.error('{0}: failed to create artifact directory'.format(
-					self.unit_name
-				))
-
-		return outdir
-
+	@completed.setter
+	def completed(self, v):
+		if v != True:
+			raise ValueError
+		parent = self.parent
+		while parent is not None:
+			parent._completed = True
+			parent = parent.parent
+		self._completed = True

@@ -9,24 +9,12 @@ from pwn import *
 import subprocess
 import units.raw
 import utilities
+from units import NotApplicable
+import units
 
-class Unit(units.raw.RawUnit):
+class Unit(units.FileOrDataUnit):
 
-	@classmethod
-	def prepare_parser(cls, config, parser):
-		pass
-
-	def evaluate(self, target):
-
-		if os.path.isfile(target):
-			try:
-				source = open(target).read()
-
-			# If this is a binary object, we probably can't read it...
-			except UnicodeDecodeError:
-				return None
-		else:
-			source = target
+	def evaluate(self, katana, case):
 
 		international_morse_code_mapping = {
 			"di-dah":"A",
@@ -134,7 +122,7 @@ class Unit(units.raw.RawUnit):
 		inverse_morse_alphabet = dict((v, k) for (k, v) in morse_alphabet.items())
 
 		count = 0
-		for x in source.split():
+		for x in self.target.split():
 			if x in international_morse_code_mapping:
 				count += 1
 				final_morse_code.append(international_morse_code_mapping[x])
@@ -144,9 +132,12 @@ class Unit(units.raw.RawUnit):
 
 		if ( count ):
 			
-			final = ''.join(final_morse_code).upper()
-			self.find_flags(final)
+			final_morse_code = ''.join(final_morse_code).upper().strip()
 
-			return final
-		else:
-			return None
+			# if this results in an emptry string, don't bother...
+			if final_morse_code:
+				# Who knows what this data may be. So scan it again!
+				katana.recurse(self, final_morse_code)
+
+				katana.locate_flags(self, final_morse_code)
+				katana.add_results(self, final_morse_code)

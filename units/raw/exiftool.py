@@ -7,27 +7,34 @@ from pwn import *
 import subprocess
 import units.raw
 import utilities
+from units import NotApplicable
 
-class Unit(units.raw.RawUnit):
+DEPENDENCIES = [ 'exiftool' ]
 
-	@classmethod
-	def prepare_parser(cls, config, parser):
-		pass
+class Unit(units.FileUnit):
 
-	def evaluate(self, target):
-
-		try:
-			p = subprocess.Popen(['exiftool', target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-		except FileNotFoundError as e:
-			if "No such file or directory: 'exiftool'" in e.args:
-				log.failure("exiftool is not in the PATH (not installed)? Cannot run the stego.exiftool unit!")
-				return None
-
+	def evaluate(self, katana, case):
+	
+		p = subprocess.Popen(['exiftool', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		
 		# Look for flags, if we found them...
 		response = utilities.process_output(p)
 		if 'stdout' in response:
-			self.find_flags(str(response['stdout']))
+			# katana.locate_flags(str(response['stdout']))
+			for line in response['stdout']:
+				delimited = line.split(':')
+				metadata = delimited[0]
+				value = ':'.join(delimited[1:]).strip()
+				
+				katana.locate_flags(self,value)
+				katana.locate_flags(self,metadata)
+			
+				# JOHN: We do NOT recurse on the metadata, because that is probably
+				#       NOT going to contain a flag
+				# katana.recurse(self, metadata)
+				katana.recurse(self, value)
+
 		if 'stderr' in response:
-			self.find_flags(str(response['stderr']))
-		
-		return response
+			katana.locate_flags(self, str(response['stderr']))
+
+		katana.add_results(self, response)

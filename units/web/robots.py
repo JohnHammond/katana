@@ -2,82 +2,86 @@
 from pwn import *
 import requests
 from web import WebUnit
-from katana import RESULTS 
+from units import NotApplicable
+from hashlib import md5
 
 class Unit(WebUnit):
 
-    def __init__(self, config):
-        super(Unit, self).__init__(config)
+	def __init__(self, katana, parent, target):
 
-    def check(self, target):
-        try:
-            self.explode_url(target)
-        except:
-            return False
-        return True
+		# Run the parent constructor, to ensure this is a valid URL
+		super(Unit, self).__init__(katana, parent, target)
+		
+		# Then check if robots.txt even exists.
+		# Assume that you are in fact the Google crawler.
+		headers = { 'User-Agent': 'Googlebot/2.1' }
 
-    # def prepare_parser(config, parser):
-    #     pass
+		# Try to get the robots.txt file
+		r = requests.get('{0}/{1}'.format(target, 'robots.txt'), headers = headers)
 
-    def get_cases(self, target):
+		# Check if the request succeeded
+		if r.status_code != 200:
+			# Completely fail if there is nothing there.
+			raise NotApplicable
 
-        # This should "yield 'name', (params,to,pass,to,evaluate)"
-        # evaluate will see this second argument as only one variable and you will need to parse them out
+		self.response = r
 
-        stripped_target = target.rstrip('/').rstrip('\\')
 
-        # Assume that you are in fact the Google crawler.
-        headers = { 'User-Agent': 'Googlebot/2.1' }
+	# ''' ##############################################
+	# JOHN:
+	#       This code used to 'enumerate' on each result.
+	#       This way it would check every page listed in the robots.txt
+	#       At the time of writing (11:27 PM April 11th, 2019)
+	#       ... I have not yet put this functionality back in
+	# ''' ##############################################
 
-        # Try to get the robots.txt file
-        r = requests.get('{0}/{1}'.format(stripped_target, 'robots.txt'), headers = headers)
 
-        # Check if the request succeeded
-        if r.status_code != 200:
-            # Completely fail if there is nothing there.
-            return None
+	# def enumerate(self, katana):
 
-        f,name = self.artifact(target, 'robots.txt')
-        self.find_flags(r.text)
-        with f:
-            f.write(r.text)
+	# 	# The default is to FIRST check all of robots.txt...
+	# 	yield '/robots.txt'
 
-        RESULTS.update({ target : {} })
-        
-        RESULTS[target][self.unit_name] = {
-            'findings': [],
-            'artifact': name
-        }
+	#     artifact_handle, artifact_path = self.artifact(katana, 'robots_%s' % md5(self.target).hexdigest())
+	   
+	#     self.find_flags(r.text)
+	#     with f:
+	#         f.write(r.text)
 
-        # Look for disallow entries and add them to the findings
-        for line in r.text.split('\n'):
-            line = line.strip().split(':')
-            if line[0].strip().startswith('#'):
-                # This is a comma
-                continue
-            elif len(line) == 1:
-                # This line is empty for some reason
-                continue
-            
-            RESULTS[target][self.unit_name]['findings'].append(':'.join(line))
+	#     RESULTS.update({ target : {} })
+		
+	#     RESULTS[target][self.unit_name] = {
+	#         'findings': [],
+	#         'artifact': name
+	#     }
 
-            # Yield each link, so we can retrieve it and hunt for flags inside of evaluate()
-            yield line[1], '{0}/{1}'.format(stripped_target, line[1]) 
-    
-    def evaluate(self, target):
+		# Look for disallow entries and add them to the findings
+		# for line in r.text.split('\n'):
+		#     line = line.strip().split(':')
+		#     if line[0].strip().startswith('#'):
+		#         # This is a comma
+		#         continue
+		#     elif len(line) == 1:
+		#         # This line is empty for some reason
+		#         continue
+			
+		#     RESULTS[target][self.unit_name]['findings'].append(':'.join(line))
 
-        # Assume that you are in fact the Google crawler.
-        headers = { 'User-Agent': 'Googlebot/2.1' }
+			# Yield each link, so we can retrieve it and hunt for flags inside of evaluate()
+			# yield line[1], '{0}/{1}'.format(stripped_target, line[1]) 
+	
+	def evaluate(self, katana, case):
 
-        # Retrieve the listed location and hunt for flags.
-        r = requests.get(target, headers = headers)
-        
-        # Hunt!
-        self.find_flags(r.text)
+		disallowed_entries = {}
+		# Look for disallow entries and add them to the findings
+		for line in self.response.text.split('\n'):
+			pieces = line.strip().split(':')
+			if pieces[0].strip().startswith('#'):
+				# This is a comment
+				continue
+			elif len(pieces) == 1:
+				# This line is empty for some reason
+				continue
 
-        # We've been doing weird stuff with the RESULTS dictionary...
-        # So if twe
-        try:
-            return RESULTS[target][self.unit_name]
-        except KeyError:
-            pass
+			katana.locate_flags(self, line)
+			katana.recurse(self, line)
+			katana.add_results(self, line)
