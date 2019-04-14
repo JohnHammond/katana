@@ -68,7 +68,7 @@ def initial_memory(code, allow_not_isprint=False):
 def execute_step(a, c, d, mem, inf=sys.stdin.buffer, outf=sys.stdout.buffer):
     output = []
     if not (32 < mem[c] < 127):
-        raise # loop
+        raise StopIteration # loop
     m = crypt1(c, chr(mem[c]))
     if   m == 'j':
         d = mem[d]
