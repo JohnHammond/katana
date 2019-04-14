@@ -47,7 +47,10 @@ class Unit(units.FileUnit):
 		parser.add_argument('--stegsolve-channel', type=str,
 			help="a channel to scrape out in stegsolve, R, G, B, or A", action="append",
 			default=None)
-		parser.add_argument('--stegsolve-plane', type=str,
+		parser.add_argument('--stegsolve-max', type=int,
+			help="maximum number of bits to bruteforce (without specifying --stegsolve-plane), default 3", action="append",
+			default=2)
+		parser.add_argument('--stegsolve-plane', type=int,
 			help="a bit number to scrape out in stegsolve, in range 0 to 7.", action="append",
 			default=None)
 
@@ -71,14 +74,14 @@ class Unit(units.FileUnit):
 				yield ( katana.config['stegsolve_channel'], katana.config['stegsolve_plane'] )
 
 			else:
-				for plane in range(8):
+				for plane in range(katana.config['stegsolve_max']):
 					yield (katana.config['stegsolve_channel'], plane)
 		else:
 			if katana.config['stegsolve_plane'] is not None:
 				for channel in [ 'R', 'G', 'B', 'A' ]:
 					yield (channel, katana.config['stegsolve_plane'])
 			else:
-				for plane in range(8):
+				for plane in range(katana.config['stegsolve_max']):
 					for channel in [ 'R', 'G', 'B', 'A' ]:
 						yield ( channel, plane )
 
