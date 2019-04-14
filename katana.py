@@ -237,6 +237,8 @@ class Katana(object):
 				except OSError:
 					n += 1
 					path = '{0}-{1}{2}'.format(name, n, ext)
+				else:
+					break
 			
 			self.add_artifact(unit, path)
 		
