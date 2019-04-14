@@ -7,24 +7,25 @@ from pwn import *
 import subprocess
 import units.forensics
 import utilities
+import os
+
+DEPENDENCIES = [ 'binwalk' ]
 
 class Unit(units.forensics.ForensicsUnit):
 
-	@classmethod
-	def prepare_parser(cls, config, parser):
-		pass
-
 	def evaluate(self, target):
 
-		binwalk_directory = self.artifact_dir(target, "extracted_files" )
-		try:
-			p = subprocess.Popen(['binwalk', '-e', target, '--directory', binwalk_directory ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-		except FileNotFoundError as e:
-			if "No such file or directory: 'binwalk'" in e.args:
-				log.failure("binwalk is not in the PATH (not installed)? Cannot run the forensics.binwalk unit!")
-				return None
+		# Find/create the output artifact directory
+		binwalk_directory = katana.get_artifact_path(self)
+
+		# Run binwalk on the target
+		p = subprocess.Popen(['binwalk', '-e', target, '--directory', binwalk_directory ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
 		results = utilities.process_output(p)
 		results['artifact'] = binwalk_directory
+
+		# Inspect all the resulting files
+		for root, dirs, files in os.walk(binwalk_directory):
+
 
 		return results

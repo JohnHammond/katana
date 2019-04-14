@@ -194,16 +194,7 @@ class Katana(object):
 		""" Shorthand for grabbing the target """
 		return self.config['target']
 
-	def create_artifact(self, unit, name, mode='w', create=True, asdir=False):
-		""" Create a new artifact for the given unit. The artifact will be
-			tracked in the results, so the unit doesn't need to dump that out.
-
-			NOTE: The created artifact may have a different name than provided. 
-				If the requested name already exists, the name will have a number
-				appended between the name and the extension. The actual path created
-				is returned along with the open file reference for created files.
-		"""
-
+	def get_artifact_dir(self, unit):
 		# Compute the correct directory for this unit based on the parent tree
 		path = os.path.join(self.config['outdir'], *[u.unit_name for u in unit.family_tree], unit.unit_name)
 
@@ -214,8 +205,20 @@ class Katana(object):
 		# Ensure the entire path chain exists
 		os.makedirs(path, exist_ok=True)
 
+		return path
+
+	def create_artifact(self, unit, name, mode='w', create=True, asdir=False):
+		""" Create a new artifact for the given unit. The artifact will be
+			tracked in the results, so the unit doesn't need to dump that out.
+
+			NOTE: The created artifact may have a different name than provided. 
+				If the requested name already exists, the name will have a number
+				appended between the name and the extension. The actual path created
+				is returned along with the open file reference for created files.
+		"""
+
 		# Add the name of the artifact
-		path = os.path.join(path, name)
+		path = os.path.join(self.get_artifact_path(unit), name)
 
 		# Create the file if needed
 		file_handle = None
