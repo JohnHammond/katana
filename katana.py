@@ -389,10 +389,6 @@ class Katana(object):
 		# Make sure we can create the results file
 		results = json.dumps(self.results, indent=4, sort_keys=True)
 
-		if 'flags' in self.results:
-			log.success('placing first possible flag on clipboard')
-			clipboard.copy(self.results['flags'][0])
-
 		if results != "{}":
 			with open(os.path.join(self.config['outdir'], 'katana.json'), 'w') as f:
 				f.write(results)
@@ -423,6 +419,9 @@ class Katana(object):
 		with self.results_lock:
 			if flag not in self.results['flags']:
 				log.success('potential flag found: {0}'.format('\u001b[32;1m' + flag + '\u001b[0m'))
+				if len(self.results['flags']) == 0:
+					log.success('adding flag to clipboard')
+					clipboard.copy(flag)
 				self.results['flags'].append(flag)
 	
 	def locate_flags(self, unit, output, stop=True, strict=False):
