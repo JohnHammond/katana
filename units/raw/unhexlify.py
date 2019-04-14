@@ -34,14 +34,35 @@ class Unit(units.raw.RawUnit):
 		
 		for result in self.hex_result:
 			try:
-				result = binascii.unhexlify(result).decode('utf-8')
+				new_result = binascii.unhexlify(result).decode('utf-8')
 
-				katana.recurse(self, result)
+				katana.recurse(self, new_result)
+				katana.locate_flags(self, new_result )
+				katana.add_results(self, new_result )
 
-				katana.locate_flags(self, result )
-				katana.add_results(self, result )
-			
-			except (binascii.Error, UnicodeDecodeError):
+			except binascii.Error:
+
+				# We may have an "odd-length string" in the way...
+				# try to clean up the ends to see if we get anything
+				try:
+					new_result = binascii.unhexlify(result[:-1]).decode('utf-8')
+
+					katana.recurse(self, new_result)
+					katana.locate_flags(self, new_result )
+					katana.add_results(self, new_result )
+
+					new_result = binascii.unhexlify(result[1:]).decode('utf-8')
+
+					katana.recurse(self, new_result)
+					katana.locate_flags(self, new_result )
+					katana.add_results(self, new_result )	
+
+				except UnicodeDecodeError:
+					# This won't decode right... must not be right!
+					pass
+
+
+			except UnicodeDecodeError:
 				# This won't decode right... must not be right!
 				pass
 
