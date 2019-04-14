@@ -103,7 +103,7 @@ class Katana(object):
 			# Attempt to load the module
 			try:
 				module = importlib.import_module(name)
-			except ImportError:
+			except:
 				self.progress.failure('{0}: failed to load module'.format(name))
 				traceback.print_exc()
 				exit()
@@ -111,14 +111,17 @@ class Katana(object):
 			# Check if this module requires dependencies
 			try:
 				dependencies = module.DEPENDENCIES
+				assert isinstance(dependencies, list), "Dependencies must be given as a list!" 
 			except AttributeError:
 				dependencies = []
+
 
 			# Ensure the dependencies exist
 			try:
 				for dependency in dependencies:
 					subprocess.check_output(['which',dependency])
 			except (FileNotFoundError, subprocess.CalledProcessError): 
+				traceback.print_exc()
 				continue
 			else:
 				# Dependencies are good, ensure the unit class exists
@@ -143,7 +146,7 @@ class Katana(object):
 		# Notify user of failed unit loads
 		for i in range(len(self.config['unit'])):
 			if not units_found[i]:
-				log.failure('{0}: unit not found'.format(name))
+				log.failure('{0}: unit not found'.format(self.config['unit'][i]))
 
 		# Ensure we have something to do
 		if len(self.config['unit']) != sum(units_found) and not self.config['auto']:
@@ -376,13 +379,19 @@ class Katana(object):
 		for t in self.threads:
 			t.join()
 
-		# Make sure we can create the results file
-		with open(os.path.join(self.config['outdir'], 'katana.json'), 'w') as f:
-			json.dump(self.results, f, indent=4, sort_keys=True)
 
 		self.progress.success('threads exited. evaluation complete')
 
-		log.success('wrote output summary to {0}, note minimum data length is {1}'.format(os.path.join(self.config['outdir'], 'katana.json'), self.config['data_length']))
+		# Make sure we can create the results file
+		results = json.dumps(self.results, indent=4, sort_keys=True)
+
+		if results != "{}":
+			with open(os.path.join(self.config['outdir'], 'katana.json'), 'w') as f:
+				f.write(results)
+
+			log.success('wrote output summary to {0}, note minimum data length is {1}'.format(os.path.join(self.config['outdir'], 'katana.json'), self.config['data_length']))
+		else:
+			log.failure("no units returned results")
 
 	def add_to_work(self, units):
 		# Add all the cases to the work queue

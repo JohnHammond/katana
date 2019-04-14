@@ -11,7 +11,7 @@ import utilities
 import glob
 from hashlib import md5
 
-DEPENDENCIES = 'foremost'
+DEPENDENCIES = [ 'foremost' ]
 
 class Unit(units.forensics.ForensicsUnit):
 
@@ -31,19 +31,21 @@ class Unit(units.forensics.ForensicsUnit):
 			"extracted_files" : []
 		}
 
-		target_hash = md5(open(target, 'rb').read()).hexdigest()
+		target_hash = md5(open(self.target, 'rb').read()).hexdigest()
 
 		for (directory, _, files) in os.walk(foremost_directory):
-			for each_file in files:
+			for filename in files:
+
 				# Get the relative path
-				path = os.path.join(directory, each_file)[len(foremost_directory)+ 1 :]
-				
-				path_hash = md5(open(path, 'rb').read()).hexdigest()
-				print('target_hash', target_hash, 'path_hash',path_hash)
+				file_path = os.path.join(directory, filename)
+				path_hash = md5(open(file_path, 'rb').read()).hexdigest()
 
-				katana.recurse(self, path)
-				results["extracted_files"].append(path)
+				# Don't recurse on the same file, or the foremost report
+				if filename != 'audit.txt' and target_hash != path_hash:
+					katana.recurse(self, file_path)
+					results["extracted_files"].append(filename)
 
-		results['artifact_directory'] = foremost_directory
 
-		katana.add_results(self, results)
+		if results['extracted_files']:
+			results['artifact_directory'] = foremost_directory
+			katana.add_results(self, results)
