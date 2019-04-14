@@ -150,6 +150,7 @@ With a password:
 
 ```
 rm -r results/; ./katana.py --unit raw --unit stego ./tests/evil_ducky.jpg --dict /opt/rockyou.txt -ff "USCGA{.*?}"
+
 ```
 
 __snow__

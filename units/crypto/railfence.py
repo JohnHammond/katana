@@ -117,7 +117,11 @@ class Unit(units.PrintableDataUnit):
 
 			plaintext = decryptFence(self.target, i, offset=0, debug=False)
 			if plaintext not in seen_plaintext:
+
 				seen_plaintext.append(plaintext)
+
 				katana.recurse(self, plaintext)
-				katana.locate_flags(self, plaintext)
+
+				# Only look for flags if it is a flag match, END TO END..
+				katana.locate_flags(self, plaintext, strict = True)
 				katana.add_results(self, plaintext)
