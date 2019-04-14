@@ -425,7 +425,7 @@ class Katana(object):
 				log.success('potential flag found: {0}'.format('\u001b[32;1m' + flag + '\u001b[0m'))
 				self.results['flags'].append(flag)
 	
-	def locate_flags(self, unit, output, stop=True):
+	def locate_flags(self, unit, output, stop=True, strict=False):
 		""" Look for flags in the given data/output """
 
 		# If the user didn't supply a pattern, there's nothing to do.
@@ -439,10 +439,18 @@ class Katana(object):
 
 		match = self.flag_pattern.search(output)
 		if match:
+
 			# JOHN: This test is here because we had an issue with esoteric languages.
 			#       We MORE THAN LIKELY will not have a flag without printable chars...
-			if match.group().isprintable():
-				self.add_flag(match.group())
+			found = match.group()
+			if found.isprintable():
+
+				# JOHN:
+				if strict:
+					if len(found) == len(output):
+						self.add_flag(found)
+				else:
+					self.add_flag(found)
 			
 			# Stop the unit if they asked
 			if stop:
