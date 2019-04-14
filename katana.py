@@ -18,6 +18,9 @@ import binascii
 import base64
 import units
 import clipboard
+import jinja2
+import shutil
+import uuid
 
 class Katana(object):
 
@@ -74,9 +77,10 @@ class Katana(object):
 			help="minimum number of characters for units results to be displayed")
 		parser.add_argument('--show', '-s', default=False, action="store_true",
 			help="print the results on stdout as well as save to file")
+		parser.add_argument('--template', default='default',
+				help='Jinja2 template for html results output')
 
 		args, remaining = parser.parse_known_args()
-
 
 		# Add current arguments to the config
 		self.config.update(vars(args))
@@ -262,15 +266,21 @@ class Katana(object):
 		with self.results_lock:
 			# Start at the global results
 			r = self.results
-			# Recurse through parent units
-			for p in parents:
-				# If we have not seen results from this parent,
-				# THAT'S FINE.... just be ready for it
-				if not p.unit_name in r:
-					r[p.unit_name] = { 'results': [] }	
-			if unit.unit_name not in r:
-				r[unit.unit_name] = { 'results': [] }
-			r = r[unit.unit_name]
+			if len(parents) > 0:
+				if parents[0].unit_name not in r:
+					r[parents[0].unit_name] = { 'uuid': str(uuid.uuid4()), 'results': [] }
+				r = r[parents[0].unit_name]
+				for p in parents[1:]:
+					if not 'children' in r:
+						r['children'] = { p.unit_name: { 'uuid': str(uuid.uuid4()), 'results': [] } }
+					elif p.unit_name not in r['children']:
+						r['children'][p.unit_name] = { 'uuid': str(uuid.uuid4()), 'results': [] }
+					r = r['children'][p.unit_name]
+			if 'children' not in r:
+				r['children'] = { unit.unit_name: { 'uuid': str(uuid.uuid4()), 'results': [] } }
+			elif unit.unit_name not in r['children']:
+				r['children'][unit.unit_name] = {'uuid': str(uuid.uuid4()), 'results': []}
+			r = r['children'][unit.unit_name]
 
 		return r
 
@@ -304,8 +314,13 @@ class Katana(object):
 
 		# Strip out results which don't meet the threshold
 		d = self.clean_result(d)
-		if d is None:
+		if d is None or d == {}:
 			return
+
+		r = self.get_unit_result(unit)
+		r['results'].append(d)
+
+		return
 
 		parents = unit.family_tree
 		with self.results_lock:
@@ -323,6 +338,14 @@ class Katana(object):
 			if d != {}:
 				r[unit.unit_name]['results'].append(d)
 
+	def render(self):
+		""" Normalize and render results using the specified jinja2 template """
+		env = jinja2.Environment(loader=jinja2.FileSystemLoader('./templates'),
+				autoescape=jinja2.select_autoescape(['html', 'xml'])
+			)
+		template = env.get_template(self.config['template']+'.html')
+		shutil.copyfile(os.path.join('./templates', self.config['template']+'.css'), os.path.join(self.config['outdir'], self.config['template']+'.css'))
+		template.stream(results=self.results, target=self.original_target).dump(os.path.join(self.config['outdir'], 'katana.html'))
 
 	def evaluate(self):
 		""" Start processing all units """
@@ -396,7 +419,8 @@ class Katana(object):
 				print(results)
 
 			# Use the raw json to process out HTML 
-			utilities.render_html_to_file(self.results, os.path.join(self.config['outdir'], 'katana.html'))
+			#utilities.render_html_to_file(self.results, os.path.join(self.config['outdir'], 'katana.html'))
+			self.render()
 
 			log.success('wrote output to {0}, note minimum data length is {1}'.format(os.path.join(self.config['outdir'], 'katana.json and html'), self.config['data_length']))
 		else:
