@@ -17,7 +17,10 @@ class Unit(WebUnit):
 		headers = { 'User-Agent': 'Googlebot/2.1' }
 
 		# Try to get the robots.txt file
-		r = requests.get('{0}/{1}'.format(target, 'robots.txt'), headers = headers)
+		try:
+			r = requests.get('{0}/{1}'.format(target, 'robots.txt'), headers = headers)
+		except requests.exceptions.ConnectionError:
+			raise NotApplicable
 
 		# Check if the request succeeded
 		if r.status_code != 200:

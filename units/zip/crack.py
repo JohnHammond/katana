@@ -3,6 +3,8 @@ import zipfile
 import argparse
 from pwn import *
 
+DEPENDENCIES = [ 'unzip' ]
+
 class Unit(ZipUnit):
 
 	@classmethod
@@ -33,9 +35,25 @@ class Unit(ZipUnit):
 			'namelist': []
 		}
 
-		with zipfile.ZipFile(self.target) as z:
+		directory_path, _ = katana.create_artifact(self, os.path.basename(self.target), create=True, asdir=True)
+
+		p = subprocess.Popen(['unzip', '-P', password, self.target], cwd=directory_path, 
+				stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+		
+		p.wait()
+
+		for root, dirs, files in os.walk(directory_path):
+			for name in files:
+				path = os.path.join(root, name)
+				katana.add_artifact(self, path)
+				katana.recurse(self, path)
+				self._completed = True
+
+		return
+
+		with zipfile.ZipFile(self.target, allowZip64=True) as z:
 			name = z.namelist()[0]
-			self.artificate_dir()
+			#self.artificate_dir()
 			# Try to extract the file
 			try:
 				with z.open(name, 'r', bytes(password, 'utf-8')) as f:
@@ -49,10 +67,13 @@ class Unit(ZipUnit):
 			
 			# Look for flags in the extracted data
 			for info in z.infolist():
-				data = z.read(info, bytes(password, 'utf-8')).decode('utf-8')
+				name, f = katana.create_artifact(self, name)
+				with f:
+					with z.read(info, bytes(password, 'utf-8')) as zf:
+						for chunk in iter(lambda: zf.read(4096), b""):
+							f.write(chunk)
 
-				katana.locate_flags(self, data)
-				katana.add_results(self, data)
+				katana.recurse(self, name)
 
 			return True
 

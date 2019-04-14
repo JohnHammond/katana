@@ -427,6 +427,11 @@ class Katana(object):
 		if self.flag_pattern == None:
 			return False
 
+		# CALEB: this is a hack to remove XML from flags, and check that as well
+		no_xml = re.sub('<[^<]+>', '', output)
+		if no_xml != output:
+			self.locate_flags(unit, no_xml, stop=stop)
+
 		match = self.flag_pattern.search(output)
 		if match:
 

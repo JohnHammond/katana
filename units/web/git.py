@@ -12,26 +12,29 @@ from web import WebUnit
 
 class Unit(WebUnit):
 
-    def __init__(self, katana, parent, target):
+	def __init__(self, katana, parent, target):
 
-        # Run the parent constructor, to ensure this is a valid URL
-        super(Unit, self).__init__(katana, parent, target)
-        
-        # Try to get see if there is a .git directory
-        url = '{0}/{1}'.format(self.target, '.git/HEAD')
-        r = requests.get(url)
+		# Run the parent constructor, to ensure this is a valid URL
+		super(Unit, self).__init__(katana, parent, target)
+		
+		# Try to get see if there is a .git directory
+		url = '{0}/{1}'.format(self.target, '.git/HEAD')
+		try:
+			r = requests.get(url)
+		except (requests.exceptions.ConnectionError,):
+			raise NotApplicable
 
-        # If the response is anything other than a "Not Found",
-        # we might have something here...
-        if r.status_code == 404:
-            raise NotApplicable
-        else:
-            self.response = r
-    
-    def evaluate(self, katana, case):
+		# If the response is anything other than a "Not Found",
+		# we might have something here...
+		if r.status_code == 404:
+			raise NotApplicable
+		else:
+			self.response = r
+	
+	def evaluate(self, katana, case):
 
-        # JOHN: I do still need to add the functionality to download
-        #       the repo. Right now, if it sees that it exists, though
-        #       just tell the user.
+		# JOHN: I do still need to add the functionality to download
+		#	   the repo. Right now, if it sees that it exists, though
+		#	   just tell the user.
 
-        katana.add_results( self,  self.target + '/.git' )
+		katana.add_results( self,  self.target + '/.git' )
