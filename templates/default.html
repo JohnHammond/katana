@@ -18,6 +18,8 @@
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
 		<!-- Our Custom CSS -->
 		<link rel="stylesheet" href="default.css">
+		<!-- Scrollbar Custom CSS -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.min.css"
 
 		<!-- Font Awesome JS -->
 		<script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js" integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ" crossorigin="anonymous"></script>
@@ -39,8 +41,8 @@
 						<li>
 							{% if value['children'] | length > 0 %}
 								{% set uniq_id = random_int(10) %}
-								<a href="#{{value['uuid']}}" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">{{name}}</a>
-								<ul id="{{value['uuid']}}" class="collapse list-unstyled">
+								<a href="#menu-{{value['uuid']}}" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">{{name}}</a>
+								<ul id="menu-{{value['uuid']}}" class="collapse list-unstyled">
 									{{ loop(value['children'].items()) }}
 								</ul>
 							{% else %}
@@ -52,28 +54,99 @@
 			</div>
 
 			<div id="content">
-				<a href="" id="sidebarCollapse">Open/Close Sidebar</a>
-				This is a bunch of content
+				<h1>Katana Analysis Results for "{{ target }}"</h1>
+				<hr>
+				<div class="accordion" id="content-accordion">
+					<div class="card">
+						<div class="card-header" id="card-flags">
+							<h2 class="mb-0">
+								<button class="btn btn-lnk" type="button" data-toggle="collapse" data-target="#collapse-flags" aria-expanded="false" aria-controls="collapse-flags">
+									Potential Flags
+								</button>
+							</h2>
+						</div>
+
+						<div id="collapse-flags" class="collapse" aria-labelledby="card-flags" data-parent="content-accordion">
+							<div class="accordion-body">
+								<ul>
+									{% for flag in results['flags'] %}
+										<li>{{flag}}</li>
+									{% endfor %}
+								</ul>
+							</div>
+						</div>
+					</div>
+
+					{% for name, value in results.items() if name is not in ["images","flags","children"] recursive %}
+						<div class="card" id="{{value['uuid']}}">
+							<div class="card-header" id="header-{{value['uuid']}}">
+								<h2 class="mb-0">
+									<button class="btn btn-lnk" type="button" data-toggle="collapse" data-target="#collapse-{{value['uuid']}}" aria-expanded="false" aria-controls="collapse-flags">
+										{{ name }}
+									</button>
+								</h2>
+							</div>
+
+							<div id="collapse-{{value['uuid']}}" class="collapse" aria-labelledby="header-{{value['uuid']}}">
+								<div class="accordion-body">
+									{% if value['results'] | length > 0 %}
+										<h3>Results</h3>
+										<p>{{ value['results'] | string }}</p>
+									{% endif %}
+									{% if value['images'] | length > 0 %}
+										<h3>Images</h3>
+										{% for image in value['images'] %}
+											<figure class="figure">
+												<img src="{{image}}" class="figure-img img-fluid"/>
+												<figcaption class="figure-caption">{{image}}</figcaption>
+											</figure>
+										{% endfor %}
+									{% endif %}
+									{% if value['artifacts'] | length > 0 %}
+										<h3>Artifacts</h3>
+										<ul>
+											{% for artifact in value['artifacts'] %}
+												<li>{{artifact}}</li>
+											{% endfor %}
+										</ul>
+									{% endif %}
+									{% if value['children'] | length > 0 %}
+										<div class="accordion" id="children-{{value['uuid']}}">
+											{{ loop( value['children'].items() ) }}
+										</div>
+									{% endif %}
+								</div>
+							</div>
+						</div>
+					{% endfor %}
+
+				</div>
 			</div>
 
 		</div>
 
 
-		<!-- jQuery CDN - Slim version (=without AJAX) -->
-		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-		<!-- Popper.JS -->
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
-		<!-- Bootstrap JS -->
-		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
-		<script>
-			$(document).ready(function () {
+    <!-- jQuery CDN - Slim version (=without AJAX) -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <!-- Popper.JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+    <!-- jQuery Custom Scroller CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.concat.min.js"></script>
+	<script>
+		$(document).ready(function () {
 
-				$('#sidebarCollapse').on('click', function () {
-					$('#sidebar').toggleClass('active');
-				});
-
+			$("#sidebar").mCustomScrollbar({
+				 theme: "minimal"
 			});
-		</script>
+
+			$('#sidebarCollapse').on('click', function () {
+				$('#sidebar').toggleClass('active');
+			});
+
+		});
+	</script>
 
 	</body>
 
