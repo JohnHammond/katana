@@ -5,6 +5,10 @@ from web import WebUnit
 from units import NotApplicable
 from hashlib import md5
 
+# Assume that you are in fact the Google crawler.
+headers = { 'User-Agent': 'Googlebot/2.1' }
+
+
 class Unit(WebUnit):
 
 	def __init__(self, katana, parent, target):
@@ -13,8 +17,6 @@ class Unit(WebUnit):
 		super(Unit, self).__init__(katana, parent, target)
 		
 		# Then check if robots.txt even exists.
-		# Assume that you are in fact the Google crawler.
-		headers = { 'User-Agent': 'Googlebot/2.1' }
 
 		# Try to get the robots.txt file
 		try:
@@ -29,62 +31,32 @@ class Unit(WebUnit):
 
 		self.response = r
 
+	def enumerate(self, katana):
 
-	# ''' ##############################################
-	# JOHN:
-	#       This code used to 'enumerate' on each result.
-	#       This way it would check every page listed in the robots.txt
-	#       At the time of writing (11:27 PM April 11th, 2019)
-	#       ... I have not yet put this functionality back in
-	# ''' ##############################################
-
-
-	# def enumerate(self, katana):
-
-	# 	# The default is to FIRST check all of robots.txt...
-	# 	yield '/robots.txt'
-
-	#     artifact_handle, artifact_path = self.artifact(katana, 'robots_%s' % md5(self.target).hexdigest())
-	   
-	#     self.find_flags(r.text)
-	#     with f:
-	#         f.write(r.text)
-
-	#     RESULTS.update({ target : {} })
-		
-	#     RESULTS[target][self.unit_name] = {
-	#         'findings': [],
-	#         'artifact': name
-	#     }
-
-		# Look for disallow entries and add them to the findings
-		# for line in r.text.split('\n'):
-		#     line = line.strip().split(':')
-		#     if line[0].strip().startswith('#'):
-		#         # This is a comma
-		#         continue
-		#     elif len(line) == 1:
-		#         # This line is empty for some reason
-		#         continue
-			
-		#     RESULTS[target][self.unit_name]['findings'].append(':'.join(line))
-
-			# Yield each link, so we can retrieve it and hunt for flags inside of evaluate()
-			# yield line[1], '{0}/{1}'.format(stripped_target, line[1]) 
-	
-	def evaluate(self, katana, case):
-
+		robots_data = self.response.text
 		disallowed_entries = {}
 		# Look for disallow entries and add them to the findings
-		for line in self.response.text.split('\n'):
+		for line in robots_data.split('\n'):
 			pieces = line.strip().split(':')
-			if pieces[0].strip().startswith('#'):
-				# This is a comment
-				continue
-			elif len(pieces) == 1:
-				# This line is empty for some reason
-				continue
+			action, url = pieces[0], ':'.join(pieces[1:]).strip()
 
-			katana.locate_flags(self, line)
-			katana.recurse(self, line)
+			# Ignore comments and empty lines
+			if action.strip().startswith('#') or len(pieces) == 1: continue
+						
 			katana.add_results(self, line)
+			if action.lower().startswith('disallow'):
+				yield url
+	
+	def evaluate(self, katana, url):
+
+		new_url = '{0}/{1}'.format(self.target.rstrip('/'), url.lstrip('/'))
+		r = requests.get(new_url, headers = headers)
+		print(new_url)
+
+		katana.locate_flags(self, r.text)
+
+		# JOHN: I do not recurse in here, because this is a whole new page I am retrieving...
+		#       And I do not add results, because that is done in the `enumerate` function
+		#       in this case, interestingly enough.
+		# katana.recurse(self, line)
+		# katana.add_results(self, line)

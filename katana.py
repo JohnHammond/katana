@@ -13,6 +13,10 @@ import os
 import utilities
 from utilities import ArgumentParserWithHelp, find_modules_recursively
 import pkgutil
+import requests
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+import tempfile
 import re
 import binascii
 import base64
@@ -65,7 +69,7 @@ class Katana(object):
 			help='regex pattern for output (e.g. "FLAG{.*}")')
 		parser.add_argument('--auto', '-a', default=False,
 			action='store_true', help='automatically search for matching units in unitdir')
-		parser.add_argument('--depth', '-d', type=int, default=5,
+		parser.add_argument('--recurse', '-r', type=int, default=5,
 				help='the maximum depth which the units may recurse')
 		parser.add_argument('--exclude', action='append',
 			required=False, default = [], help='units to exclude in a recursive case')
@@ -77,6 +81,8 @@ class Katana(object):
 			help="minimum number of characters for units results to be displayed")
 		parser.add_argument('--show', '-s', default=False, action="store_true",
 			help="print the results on stdout as well as save to file")
+		parser.add_argument('--download', '-d', action="store_true", default=False,
+				help='consider the argument to be a download link and pull it down')
 		parser.add_argument('--template', default='default',
 				help='Jinja2 template for html results output')
 
@@ -166,6 +172,20 @@ class Katana(object):
 		# Final argument parsing. This includes all unit arguments
 		args = parser.parse_args()
 		self.config.update(vars(args))
+
+		# Download the target, if that is specified
+		if self.config['download']:
+			temp_filename = self.config['target'].rsplit('/', 1)[1]
+			temp_folder = tempfile.gettempdir()
+			temp_path = os.path.join(temp_folder, temp_filename)
+
+			self.progress.status(f'downloading and setting target to {temp_path}...')
+
+			r = requests.get(self.config['target'], verify = False)
+			with open(temp_path, 'wb') as f:
+				f.write(r.content)
+
+			self.config['target'] = temp_path
 
 		# We want the "-" target to signify stdin
 		if len(self.original_target) == 1 and self.original_target[0] == '-':
@@ -506,7 +526,7 @@ class Katana(object):
 			return
 
 		# Obey max depth input by user
-		if len(unit.family_tree) >= self.config['depth']:
+		if len(unit.family_tree) >= self.config['recurse']:
 			if self.depth_lock.acquire(blocking=False):
 				log.warning('depth limit reached. if this is a recursive problem, consider increasing --depth')
 			# Stop the chain of events
