@@ -27,7 +27,11 @@ def decrypt(table, numbers):
 	for index in range(0, len(numbers), 2):
 		x = int(numbers[index]) - 1
 		y = int(numbers[index + 1]) - 1
-		text += table[y][x]
+		try:
+			text += table[y][x]
+		except:
+			# Not an issue if we can't find it... just don't add the text.
+			pass
 	return text
 
 class Unit(units.PrintableDataUnit):

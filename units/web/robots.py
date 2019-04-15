@@ -51,7 +51,6 @@ class Unit(WebUnit):
 
 		new_url = '{0}/{1}'.format(self.target.rstrip('/'), url.lstrip('/'))
 		r = requests.get(new_url, headers = headers)
-		print(new_url)
 
 		katana.locate_flags(self, r.text)
 
