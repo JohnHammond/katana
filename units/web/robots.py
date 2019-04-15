@@ -54,5 +54,9 @@ class Unit(WebUnit):
 		print(new_url)
 
 		katana.locate_flags(self, r.text)
+
+		# JOHN: I do not recurse in here, because this is a whole new page I am retrieving...
+		#       And I do not add results, because that is done in the `enumerate` function
+		#       in this case, interestingly enough.
 		# katana.recurse(self, line)
 		# katana.add_results(self, line)
