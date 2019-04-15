@@ -100,4 +100,4 @@ class Unit(units.FileUnit):
 			image.save(output_path)
 
 			# JOHN:  Because this is our generated image. we will NOT recurse and NOT hunt for flags! 
-			katana.add_image(os.path.abspath(output_path))
+			katana.add_image(self, os.path.abspath(output_path))

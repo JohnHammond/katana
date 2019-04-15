@@ -56,7 +56,7 @@ class FileUnit(BaseUnit):
 			raise NotApplicable()
 
 		if ' image ' in t:
-			katana.add_image(os.path.abspath(target))
+			katana.add_image(self, os.path.abspath(target))
 
 class PrintableDataUnit(BaseUnit):
 	

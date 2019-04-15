@@ -286,16 +286,12 @@ class Katana(object):
 		with self.results_lock:
 			# Start at the global results
 			r = self.results
-			if len(parents) > 0:
-				if parents[0].unit_name not in r:
-					r[parents[0].unit_name] = { 'uuid': str(uuid.uuid4()), 'results': [] }
-				r = r[parents[0].unit_name]
-				for p in parents[1:]:
-					if not 'children' in r:
-						r['children'] = { p.unit_name: { 'uuid': str(uuid.uuid4()), 'results': [] } }
-					elif p.unit_name not in r['children']:
-						r['children'][p.unit_name] = { 'uuid': str(uuid.uuid4()), 'results': [] }
-					r = r['children'][p.unit_name]
+			for p in parents:
+				if not 'children' in r:
+					r['children'] = { p.unit_name: { 'uuid': str(uuid.uuid4()), 'results': [] } }
+				elif p.unit_name not in r['children']:
+					r['children'][p.unit_name] = { 'uuid': str(uuid.uuid4()), 'results': [] }
+				r = r['children'][p.unit_name]
 			if 'children' not in r:
 				r['children'] = { unit.unit_name: { 'uuid': str(uuid.uuid4()), 'results': [] } }
 			elif unit.unit_name not in r['children']:
@@ -363,6 +359,7 @@ class Katana(object):
 		env = jinja2.Environment(loader=jinja2.FileSystemLoader('./templates'),
 				autoescape=jinja2.select_autoescape(['html', 'xml'])
 			)
+		env.filters['pretty_json'] = utilities.jinja_pretty_json
 		template = env.get_template(self.config['template']+'.html')
 		shutil.copyfile(os.path.join('./templates', self.config['template']+'.css'), os.path.join(self.config['outdir'], self.config['template']+'.css'))
 		template.stream(results=self.results, target=self.original_target).dump(os.path.join(self.config['outdir'], 'katana.html'))
@@ -473,14 +470,16 @@ class Katana(object):
 					clipboard.copy(flag)
 				self.results['flags'].append(flag)
 
-	def add_image(self, image):
+	def add_image(self, unit, image):
 
 		with self.results_lock:
-			if 'images' not in self.results:
-				self.results['images'] = []
-
-			if image not in self.results['images']:
-				self.results['images'].append(image)
+			r = self.get_unit_result(unit)
+			
+			if 'images' not in r:
+				r['images'] = [ image ]
+			else:
+				if image not in r['images']:
+					r['images'].append(image)
 	
 	def locate_flags(self, unit, output, stop=True, strict=False):
 		""" Look for flags in the given data/output """

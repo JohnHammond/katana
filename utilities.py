@@ -205,6 +205,9 @@ def render_html_to_file(json_data, file):
 	html_output = '\n'.join(html_output)
 	open(file,'w').write(html_output)
 
+def jinja_pretty_json(value):
+	return json.dumps(value, sort_keys=True, indent=4, separators=(',', ': '))
+
 # -------------------------------------------------------------------
 
 # These are utility functions that may be used in more than one module.

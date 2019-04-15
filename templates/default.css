@@ -126,3 +126,11 @@ ul ul a {
 #content.active {
     width: 100%;
 }
+
+.accordion-body {
+	margin: 2em;
+}
+
+.accordion-link {
+
+}
