@@ -60,10 +60,16 @@ class Unit(units.FileUnit):
 
 		try:
 			self.img = Image.open(target)
-		except:
-			# JOHN: I don't know what errors this could produce... but it COULD!
-			traceback_exc()
+			
+		# If we don't know what this is, don't bother with it.
+		except OSError:
 			raise units.NotApplicable
+
+		except Exception:
+			# JOHN: I don't know what errors this could produce... but it COULD!
+			traceback.print_exc()
+			raise units.NotApplicable
+
 
 	def enumerate(self, katana):
 		
