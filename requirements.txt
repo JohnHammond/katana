@@ -4,3 +4,4 @@ python-magic
 pyzbar
 pillow
 clipboard
+jinja2
