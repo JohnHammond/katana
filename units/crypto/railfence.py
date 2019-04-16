@@ -86,7 +86,8 @@ def decryptFence(cipher, rails, offset=0, debug=False):
 	return plain
 
 
-class Unit(units.PrintableDataUnit):
+# class Unit(units.PrintableDataUnit):
+class Unit(units.NotEnglishUnit):
 
 	PROTECTED_RECURSE = True
 

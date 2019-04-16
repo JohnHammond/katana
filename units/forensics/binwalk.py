@@ -12,6 +12,7 @@ import hashlib
 import shutil
 
 DEPENDENCIES = [ 'binwalk' ]
+PROTECTED_RECURSE = True
 
 def md5sum(path):
 	md5 = hashlib.md5()

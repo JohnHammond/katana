@@ -11,7 +11,8 @@ import string
 import collections
 
 
-class Unit(units.PrintableDataUnit):
+# class Unit(units.PrintableDataUnit):
+class Unit(units.NotEnglishUnit):
 
 	PROTECTED_RECURSE = True
 
@@ -22,9 +23,10 @@ class Unit(units.PrintableDataUnit):
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
+		# DO NOT run this if the string does not contain any letters.
 		odd_characters = 0
 		for c in target:
-			if c not in string.ascii_uppercase + string.ascii_lowercase:
+			if c not in string.ascii_letters:
 				odd_characters += 1
 
 		if odd_characters == len(target):

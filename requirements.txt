@@ -5,3 +5,4 @@ pyzbar
 pillow
 clipboard
 jinja2
+pyenchant

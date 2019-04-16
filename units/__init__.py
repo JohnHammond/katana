@@ -2,13 +2,17 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-04-14 13:20:36
+# @Last Modified time: 2019-04-15 21:45:43
 from unit import BaseUnit
 from pwn import *
 import os
 import magic
 import traceback
 import string
+import enchant
+
+dictionary = enchant.Dict()
+english_words_threshold = 2
 
 class NotApplicable(Exception):
 	pass
@@ -25,7 +29,9 @@ class FileOrDataUnit(BaseUnit):
 		# meant to be a file
 		try:
 			target = open(target, 'rb').read().decode('latin-1')
-		except (FileNotFoundError, IsADirectoryError, ValueError,OSError):
+		except IsADirectoryError:
+			raise NotApplicable # JOHN: This triggers too oftem on artifacts... 
+		except (FileNotFoundError, ValueError,OSError):
 			pass
 		except:
 			traceback.print_exc()
@@ -42,7 +48,9 @@ class FileUnit(BaseUnit):
 		# Ensure it's a file, and get it's mime type
 		try:
 			t = magic.from_file(target).lower()
-		except (FileNotFoundError, IsADirectoryError, ValueError, OSError):
+		except IsADirectoryError:
+			raise NotApplicable # JOHN: This triggers too oftem on artifacts... 
+		except (FileNotFoundError, ValueError, OSError):
 			raise NotApplicable()
 		
 		# Check for the keywords
@@ -65,7 +73,9 @@ class PrintableDataUnit(BaseUnit):
 		# Similar to FileOrDataUnit, use file if it exists
 		try:
 			target = open(target, 'rb').read().decode('latin-1')
-		except (FileNotFoundError, IsADirectoryError, ValueError, OSError):
+		except IsADirectoryError:
+			raise NotApplicable # JOHN: This triggers too oftem on artifacts... 
+		except (FileNotFoundError, ValueError, OSError):
 			pass
 		except:
 			traceback.print_exc()
@@ -83,6 +93,79 @@ class PrintableDataUnit(BaseUnit):
 		for c in self.target:
 			if c not in string.printable:
 				raise NotApplicable()
+
+class ContainsLettersUnit(BaseUnit):
+	
+	def __init__(self, katana, parent, target):
+	
+		# Similar to FileOrDataUnit, use file if it exists
+		try:
+			target = open(target, 'rb').read().decode('latin-1')
+		except IsADirectoryError:
+			raise NotApplicable # JOHN: This triggers too oftem on artifacts... 
+		except (FileNotFoundError, ValueError, OSError):
+			pass
+		except:
+			traceback.print_exc()
+
+		super(ContainsLettersUnit, self).__init__(katana, parent, target)
+
+		# If this is a bytes object, attempt to decode it as utf-8
+		if type(self.target) is bytes:
+			try:
+				self.target = self.target.decode('utf-8')
+			except UnicodeError:
+				raise NotApplicable()
+		
+		# Ensure the string is printable
+		for c in self.target:
+			if c not in string.printable:
+				raise NotApplicable()
+
+		# DO NOT run this if the string does not contain any letters.
+		odd_characters = 0
+		for c in target:
+			if c not in string.ascii_letters:
+				odd_characters += 1
+
+		if odd_characters == len(target):
+			raise NotApplicable
+
+class NotEnglishUnit(BaseUnit):
+	
+	def __init__(self, katana, parent, target):
+	
+		# Similar to FileOrDataUnit, use file if it exists
+		try:
+			target = open(target, 'rb').read().decode('latin-1')
+		except IsADirectoryError:
+			raise NotApplicable # JOHN: This triggers too oftem on artifacts... 
+		except (FileNotFoundError, ValueError, OSError):
+			pass
+		except:
+			traceback.print_exc()
+
+		super(NotEnglishUnit, self).__init__(katana, parent, target)
+
+		# If this is a bytes object, attempt to decode it as utf-8
+		if type(self.target) is bytes:
+			try:
+				self.target = self.target.decode('utf-8')
+			except UnicodeError:
+				raise NotApplicable()
+		
+		# Ensure the string is printable
+		for c in self.target:
+			if c not in string.printable:
+				raise NotApplicable()
+
+		all_words = re.findall('[\w]+', self.target)
+		
+		english_words = [ word for word in all_words if dictionary.check(word) ]
+
+		# This has a majority of English letters... it might be English!!
+		if len(english_words) >= (len(all_words) - english_words_threshold):
+			raise NotApplicable()
 
 class BruteforcePasswordUnit(object):
 

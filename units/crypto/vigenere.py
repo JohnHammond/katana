@@ -1,6 +1,7 @@
 from unit import BaseUnit
 from units import NotApplicable
 from units import PrintableDataUnit
+from units import NotEnglishUnit
 import string
 
 def vigenere(plaintext, key):
@@ -25,7 +26,8 @@ def vigenere(plaintext, key):
 
         return ciphertext
 
-class Unit(PrintableDataUnit):
+# class Unit(PrintableDataUnit):
+class Unit(NotEnglishUnit):
 
 	PROTECTED_RECURSE = True
 

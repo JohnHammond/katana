@@ -36,6 +36,6 @@ class Unit(units.FileUnit):
 				katana.locate_flags(self, str(response['stdout']))
 				
 		if 'stderr' in response:
-			katana.locate_flags(self, str(response['stderr']))
+			return
 		
 		katana.add_results(self, response)

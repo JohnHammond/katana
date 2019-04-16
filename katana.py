@@ -330,11 +330,12 @@ class Katana(object):
 
 		# Strip out results which don't meet the threshold
 		d = self.clean_result(d)
-		if d is None or d == {}:
+		if d is None or not(d):
 			return
 
 		r = self.get_unit_result(unit)
-		r['results'].append(d)
+		if d not in r['results']:
+			r['results'].append(d)
 
 		return
 
@@ -351,7 +352,7 @@ class Katana(object):
 			if unit.unit_name not in r:
 				r[unit.unit_name] = { 'results': [] }
 
-			if d != {}:
+			if d != {} and d not in r[unit.unit_name]['results']:
 				r[unit.unit_name]['results'].append(d)
 
 	def render(self):

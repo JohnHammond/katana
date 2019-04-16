@@ -12,6 +12,7 @@ import glob
 from hashlib import md5
 
 DEPENDENCIES = [ 'foremost' ]
+PROTECTED_RECURSE = True
 
 class Unit(units.forensics.ForensicsUnit):
 

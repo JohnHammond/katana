@@ -44,6 +44,6 @@ class Unit(units.FileUnit):
 					katana.recurse(self, line)
 
 			if 'stderr' in response:
-				katana.locate_flags(self,str(response['stderr']))
+				return
 			
 			katana.add_results(self, response)
