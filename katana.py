@@ -85,6 +85,10 @@ class Katana(object):
 				help='consider the argument to be a download link and pull it down')
 		parser.add_argument('--template', default='default',
 				help='Jinja2 template for html results output')
+		parser.add_argument('--functions', default='win,get_flag,print_flag,show_flag,flag',
+				help='comma separated list of function name that may print a flag')
+		parser.add_argument('--timeout', default=0.1, type=float, 
+				help='suggested timeout for long running unit tests')
 
 		args, remaining = parser.parse_known_args()
 
@@ -102,7 +106,7 @@ class Katana(object):
 
 		# Load all units under the unit directory
 		for importer, name, ispkg in pkgutil.walk_packages([self.config['unitdir']], ''):
-
+			
 			# Exclude packages/units that were excluded from loading
 			try:
 				for exclude in self.config['exclude']:
