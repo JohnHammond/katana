@@ -30,6 +30,7 @@ class Unit(WebUnit):
 			raise NotApplicable
 
 		self.response = r
+		katana.locate_flags(self, r.text)
 
 	def enumerate(self, katana):
 
