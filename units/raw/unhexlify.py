@@ -36,6 +36,11 @@ class Unit(units.raw.RawUnit):
 			try:
 				new_result = binascii.unhexlify(result).decode('utf-8')
 
+				# JOHN: The question of whether or not we should only handle
+				#       printables came up when we worked on XOR...
+				#       ... but we left it raw, because what if it uncovers a file?
+				# if new_result.replace('\n', '').isprintable():
+
 				katana.recurse(self, new_result)
 				katana.locate_flags(self, new_result )
 				katana.add_results(self, new_result )
@@ -47,12 +52,20 @@ class Unit(units.raw.RawUnit):
 				try:
 					new_result = binascii.unhexlify(result[:-1]).decode('utf-8')
 
+					# JOHN: The question of whether or not we should only handle
+					#       printables came up when we worked on XOR...
+					#       ... but we left it raw, because what if it uncovers a file?
+					# if new_result.replace('\n', '').isprintable():
 					katana.recurse(self, new_result)
 					katana.locate_flags(self, new_result )
 					katana.add_results(self, new_result )
 
 					new_result = binascii.unhexlify(result[1:]).decode('utf-8')
 
+					# JOHN: The question of whether or not we should only handle
+					#       printables came up when we worked on XOR...
+					#       ... but we left it raw, because what if it uncovers a file?
+					# if new_result.replace('\n', '').isprintable():
 					katana.recurse(self, new_result)
 					katana.locate_flags(self, new_result )
 					katana.add_results(self, new_result )	

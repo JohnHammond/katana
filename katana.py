@@ -581,11 +581,15 @@ class Katana(object):
 				try:
 					# Run this if we HAVE NOT seen it before...
 					unit = unit_class(self, parent, target)
-					unit_hash = md5(unit.target.encode('latin-1')).hexdigest()
+					try:
+						unit_hash = md5(unit.target.encode('latin-1')).hexdigest()
+					except UnicodeEncodeError:
+						# This can't hash. Just deal with it.
+						unit_hash = None
 					if unit_hash not in self.target_hashes or just_added:
 						units_so_far.append(unit)
 						just_added = True
-						self.target_hashes.append(unit_hash)
+						if unit_hash: self.target_hashes.append(unit_hash)
 
 				except units.NotApplicable:
 					log.failure('{0}: unit not applicable to target'.format(
@@ -605,11 +609,16 @@ class Katana(object):
 #								raise units.NotApplicable
 					# Run this if we HAVE NOT seen it before...
 					unit = unit_class(self, parent, target)
-					unit_hash = md5(unit.target.encode('latin-1')).hexdigest()
+					try:
+						unit_hash = md5(unit.target.encode('latin-1')).hexdigest()
+					except UnicodeEncodeError:
+						# This can't hash. Just deal with it.
+						unit_hash = None
+						
 					if unit_hash not in self.target_hashes or just_added:
 						units_so_far.append(unit)
 						just_added = True
-						self.target_hashes.append(unit_hash)
+						if unit_hash: self.target_hashes.append(unit_hash)
 				except units.NotApplicable:
 					pass
 
