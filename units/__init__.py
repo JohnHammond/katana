@@ -56,6 +56,8 @@ class FileUnit(BaseUnit):
 			raise NotApplicable # JOHN: This triggers too oftem on artifacts... 
 		except (FileNotFoundError, ValueError, OSError):
 			raise NotApplicable()
+
+		self.mime_type = t
 		
 		# Check for the keywords
 		n = 0
