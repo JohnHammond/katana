@@ -1,8 +1,8 @@
 from pwn import *
-import units.binexp
+import units.pwnage
 import subprocess
 
-class Unit(units.binexp.BasicBufferOverflowUnit):
+class Unit(units.pwnage.BasicBufferOverflowUnit):
 
 	# read /dev/kmsg to find the address that the given pid segfault'd
 	def get_segfault_address(self, pid):
