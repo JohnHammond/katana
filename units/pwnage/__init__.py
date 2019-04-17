@@ -15,7 +15,7 @@ class ElfUnit(units.FileUnit):
 		try:
 			self.elf = ELF(self.target)
 		except:
-			raise NotApplicable
+			raise units.NotApplicable
 
 class BasicBufferOverflowUnit(ElfUnit):
 

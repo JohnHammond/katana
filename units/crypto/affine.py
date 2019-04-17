@@ -10,6 +10,7 @@ from units import NotApplicable
 import string
 import collections
 import traceback
+from math import gcd
 
 from string import ascii_uppercase as alphabet
 from Crypto.Util.number import inverse
@@ -61,24 +62,29 @@ class Unit(units.NotEnglishUnit):
 		if ( katana.config['affine_a'] == -1 and katana.config['affine_b'] == -1 ):
 			for a in range(len(katana.config['affine_alphabet'])):
 				for b in range(len(katana.config['affine_alphabet'])):
-					yield (a, b)
+					if gcd(a, len(katana.config['affine_alphabet'])):
+						yield (a, b)
 		elif ( katana.config['affine_a'] != -1 and katana.config['affine_b'] == -1 ):
 			for b in range(len(katana.config['affine_alphabet'])):
-				yield (katana.config['affine_a'] % len(katana.config['affine_alphabet']), b)
+				if gcd(a, len(katana.config['affine_alphabet'])):
+					yield (katana.config['affine_a'] % len(katana.config['affine_alphabet']), b)
 		elif ( katana.config['affine_b'] != -1 and katana.config['affine_a'] == -1 ):
 			for a in range(len(katana.config['affine_alphabet'])):
-				yield (a, katana.config['affine_b'] % len(katana.config['affine_alphabet']))
+				if gcd(a, len(katana.config['affine_alphabet'])):
+					yield (a, katana.config['affine_b'] % len(katana.config['affine_alphabet']))
 		else:
 			if ( katana.config['affine_a'] != -1 and katana.config['affine_b'] != -1 ):
-				yield katana.config['affine_a'], katana.config['affine_b']
+				if gcd(a, len(katana.config['affine_alphabet'])):
+					yield katana.config['affine_a'], katana.config['affine_b']
 
 	def evaluate(self, katana, case):
 		a, b = case
 		try:
 			plaintext = decrypt( self.target, a, b, katana.config['affine_alphabet'] )
-			katana.recurse(self, plaintext)
-			katana.locate_flags(self, plaintext)
-			katana.add_results(self, plaintext)
+			if plaintext != self.target.upper():
+				katana.recurse(self, plaintext)
+				katana.locate_flags(self, plaintext)
+				katana.add_results(self, plaintext)
 		except Exception:
 			# JOHN: I don't know if or when or why this will error, but when IT DOES... we 
 			#       we should see it so we can support it.

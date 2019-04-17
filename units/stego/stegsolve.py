@@ -59,15 +59,19 @@ class Unit(units.FileUnit):
 		# Call the parent constructor to ensure that this an image file!
 		super(Unit, self).__init__(katana, parent, target, keywords=[' image '])
 
+
 		try:
 			self.img = Image.open(target)
+
 			
 		# If we don't know what this is, don't bother with it.
 		except OSError:
+			print('wy we die')
 			raise units.NotApplicable
 
 		except Exception:
 			# JOHN: I don't know what errors this could produce... but it COULD!
+
 			traceback.print_exc()
 			raise units.NotApplicable
 

@@ -39,19 +39,21 @@
 					<p>Contents</p>
 					<li><a href="#card-flags">Potential Flags</a></li>
 					<li><a href="#card-images">Found Images</a></li>
-					{% for name,value in results['children'].items() if name is not in ["flags","children"] recursive %}
-						<li>
-							{% if value['children'] | length > 0 %}
-								{% set uniq_id = random_int(10) %}
-								<a href="#menu-{{value['uuid']}}" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">{{name}}</a>
-								<ul id="menu-{{value['uuid']}}" class="collapse list-unstyled">
-									{{ loop(value['children'].items()) }}
-								</ul>
-							{% else %}
-							<a class="accordion-link" href="#{{value['uuid']}}" data-target="{{value['uuid']}}">{{name}}</a>
-							{% endif %}
-						</li>
-					{% endfor %}
+					{% if 'children' in results %}
+						{% for name,value in results['children'].items() if name is not in ["flags","children"] recursive %}
+							<li>
+								{% if value['children'] | length > 0 %}
+									{% set uniq_id = random_int(10) %}
+									<a href="#menu-{{value['uuid']}}" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">{{name}}</a>
+									<ul id="menu-{{value['uuid']}}" class="collapse list-unstyled">
+										{{ loop(value['children'].items()) }}
+									</ul>
+								{% else %}
+								<a class="accordion-link" href="#{{value['uuid']}}" data-target="{{value['uuid']}}">{{name}}</a>
+								{% endif %}
+							</li>
+						{% endfor %}
+					{% endif %}
 				</ul>
 			</div>
 
@@ -90,58 +92,62 @@
 
 						<div id="collapse-images" class="collapse show" aria-labelledby="card-images" data-parent="content-accordion">
 							<div class="accordion-body">
-								{% for image, hash in results['images'].items() %}
-									<figure class="figure">
-										<img src="{{image}}" class="figure-img img-fluid"/>
-										<figcaption class="figure-caption">{{image}}</figcaption>
-									</figure>
-								{% endfor %}
+								{% if 'images' in results %}
+									{% for image, hash in results['images'].items() %}
+										<figure class="figure">
+											<img src="{{image}}" class="figure-img img-fluid"/>
+											<figcaption class="figure-caption">{{image}}</figcaption>
+										</figure>
+									{% endfor %}
+								{% endif %}
 							</div>
 						</div>
 					</div>
 
-					{% for name, value in results['children'].items() if name not in ["flags", "children"] recursive %}
-						{% if value['results'] | length > 0 or value['images'] | length > 0 or value['artifacts'] | length > 0 %}
-						<div class="card" id="{{value['uuid']}}">
-								<div class="card-header" id="header-{{value['uuid']}}">
-									<h2 class="mb-0">
-										<button class="btn btn-lnk" type="button" data-toggle="collapse" data-target="#collapse-{{value['uuid']}}" aria-expanded="true" aria-controls="collapse-flags">
-											{{ name }}
-										</button>
-									</h2>
-								</div>
+					{% if 'children' in results %}
+						{% for name, value in results['children'].items() if name not in ["flags", "children"] recursive %}
+							{% if value['results'] | length > 0 or value['images'] | length > 0 or value['artifacts'] | length > 0 %}
+							<div class="card" id="{{value['uuid']}}">
+									<div class="card-header" id="header-{{value['uuid']}}">
+										<h2 class="mb-0">
+											<button class="btn btn-lnk" type="button" data-toggle="collapse" data-target="#collapse-{{value['uuid']}}" aria-expanded="true" aria-controls="collapse-flags">
+												{{ name }}
+											</button>
+										</h2>
+									</div>
 
-								<div id="collapse-{{value['uuid']}}" class="collapse show" aria-labelledby="header-{{value['uuid']}}">
-									<div class="accordion-body">
-										{% if value['results'] | length > 0 %}
-											<h3>Results</h3><hr>
-											<pre class="pre-scrollable"><code>{{ value['results'] | pretty_json }}</code></pre>
-										{% endif %}
-										{% if value['images'] | length > 0 %}
-											<h3>Images</h3><hr>
-											{% for image in value['images'] %}
-												<figure class="figure">
-													<img src="{{image}}" class="figure-img img-fluid"/>
-													<figcaption class="figure-caption">{{image}}</figcaption>
-												</figure>
-											{% endfor %}
-										{% endif %}
-										{% if value['artifacts'] | length > 0 %}
-											<h3>Artifacts</h3><hr>
-											<ul>
-												{% for artifact in value['artifacts'] %}
-													<li>{{artifact}}</li>
+									<div id="collapse-{{value['uuid']}}" class="collapse show" aria-labelledby="header-{{value['uuid']}}">
+										<div class="accordion-body">
+											{% if value['results'] | length > 0 %}
+												<h3>Results</h3><hr>
+												<pre class="pre-scrollable"><code>{{ value['results'] | pretty_json }}</code></pre>
+											{% endif %}
+											{% if value['images'] | length > 0 %}
+												<h3>Images</h3><hr>
+												{% for image in value['images'] %}
+													<figure class="figure">
+														<img src="{{image}}" class="figure-img img-fluid"/>
+														<figcaption class="figure-caption">{{image}}</figcaption>
+													</figure>
 												{% endfor %}
-											</ul>
-										{% endif %}
+											{% endif %}
+											{% if value['artifacts'] | length > 0 %}
+												<h3>Artifacts</h3><hr>
+												<ul>
+													{% for artifact in value['artifacts'] %}
+														<li>{{artifact}}</li>
+													{% endfor %}
+												</ul>
+											{% endif %}
+										</div>
 									</div>
 								</div>
-							</div>
-						{% endif %}
-						{% if value['children'] | length > 0 %}
-							{{ loop( value['children'].items() ) }}
-						{% endif %}
-					{% endfor %}
+							{% endif %}
+							{% if value['children'] | length > 0 %}
+								{{ loop( value['children'].items() ) }}
+							{% endif %}
+						{% endfor %}
+					{% endif %}
 
 				</div>
 			</div>
