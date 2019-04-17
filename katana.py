@@ -25,6 +25,7 @@ import clipboard
 import jinja2
 import shutil
 import uuid
+from hashlib import md5
 
 class Katana(object):
 
@@ -42,6 +43,7 @@ class Katana(object):
 		self.requested_units = []
 		self.recurse_queue = queue.Queue()
 		self.depth_lock = threading.Lock()
+		self.target_hashes = []
 
 		# Initial parser is for unit directory. We need to process this argument first,
 		# so that the specified unit may be loaded
@@ -268,8 +270,9 @@ class Katana(object):
 					path = '{0}-{1}{2}'.format(name, n, ext)
 				else:
 					break
-			
-			self.add_artifact(unit, path)
+
+			if not asdir:
+				self.add_artifact(unit, path)
 		
 		return (path, file_handle)
 
@@ -446,6 +449,7 @@ class Katana(object):
 
 	def add_to_work(self, units):
 		# Add all the cases to the work queue
+
 		for unit in units:
 			if not self.completed:
 				case_no = 0
@@ -471,16 +475,34 @@ class Katana(object):
 					clipboard.copy(flag)
 				self.results['flags'].append(flag)
 
-	def add_image(self, unit, image):
+	# JOHN: This is Caleb's function, which maintains a unit's scope when adding an image...
+	# def add_image(self, unit, image):
+
+	# 	with self.results_lock:
+	# 		r = self.get_unit_result(unit)
+			
+	# 		if 'images' not in r:
+	# 			r['images'] = [ image ]
+	# 		else:
+	# 			if image not in r['images']:
+	# 				r['images'].append(image)
+
+	# JOHN: I originally did not have the unit included.
+	def add_image(self, image):
 
 		with self.results_lock:
-			r = self.get_unit_result(unit)
+			# r = self.get_unit_result(unit)
 			
-			if 'images' not in r:
-				r['images'] = [ image ]
+			if 'images' not in self.results:
+				self.results['images'] = {}
 			else:
-				if image not in r['images']:
-					r['images'].append(image)
+				if image not in self.results['images'].keys():
+
+					image_hash = md5(open(image,'rb').read()).hexdigest()
+					if image_hash not in self.results['images'].values():
+						self.results['images'][image] = image_hash
+	
+
 	
 	def locate_flags(self, unit, output, stop=True, strict=False):
 		""" Look for flags in the given data/output """
@@ -548,15 +570,25 @@ class Katana(object):
 
 		units_so_far = []
 
+
 		if not self.config['auto'] and not recurse:
+			just_added = False
 			for unit_class in self.requested_units:
 				try:
-					units_so_far.append(unit_class(self, parent, target))
+					# Run this if we HAVE NOT seen it before...
+					unit = unit_class(self, parent, target)
+					unit_hash = md5(unit.target.encode('latin-1')).hexdigest()
+					if unit_hash not in self.target_hashes or just_added:
+						units_so_far.append(unit)
+						just_added = True
+						self.target_hashes.append(unit_hash)
+
 				except units.NotApplicable:
 					log.failure('{0}: unit not applicable to target'.format(
 						unit_class.__module__
 					))
 		else:
+			just_added = False
 			for unit_class in self.all_units:
 				try:
 					# Climb the family tree to see if ANY ancester is not allowed to recurse..
@@ -567,7 +599,13 @@ class Katana(object):
 #						for p in ([ parent ] + parent.family_tree):
 #							if p.PROTECTED_RECURSE:
 #								raise units.NotApplicable
-					units_so_far.append(unit_class(self, parent, target))
+					# Run this if we HAVE NOT seen it before...
+					unit = unit_class(self, parent, target)
+					unit_hash = md5(unit.target.encode('latin-1')).hexdigest()
+					if unit_hash not in self.target_hashes or just_added:
+						units_so_far.append(unit)
+						just_added = True
+						self.target_hashes.append(unit_hash)
 				except units.NotApplicable:
 					pass
 

@@ -23,7 +23,7 @@ class Unit(units.FileUnit):
 			# katana.locate_flags(str(response['stdout']))
 			for line in response['stdout']:
 				delimited = line.split(':')
-				metadata = delimited[0]
+				metadata = delimited[0].strip()
 				value = ':'.join(delimited[1:]).strip()
 				
 				katana.locate_flags(self,value)
@@ -32,7 +32,8 @@ class Unit(units.FileUnit):
 				# JOHN: We do NOT recurse on the metadata, because that is probably
 				#       NOT going to contain a flag
 				# katana.recurse(self, metadata)
-				katana.recurse(self, value)
+				if metadata in ['Comment', 'Album', 'Artist', 'Title']:
+					katana.recurse(self, value)
 
 		if 'stderr' in response:
 			katana.locate_flags(self, str(response['stderr']))

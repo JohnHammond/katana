@@ -18,9 +18,6 @@ from PIL import Image
 from pyzbar.pyzbar import decode
 import json
 
-
-
-
 class Unit(units.FileUnit):
 
 	def __init__(self, katana, parent, target):

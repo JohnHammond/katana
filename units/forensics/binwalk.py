@@ -12,7 +12,6 @@ import hashlib
 import shutil
 
 DEPENDENCIES = [ 'binwalk' ]
-PROTECTED_RECURSE = True
 
 def md5sum(path):
 	md5 = hashlib.md5()
@@ -23,6 +22,9 @@ def md5sum(path):
 
 class Unit(units.forensics.ForensicsUnit):
 
+	# JOHN: This MUST be in the class... 
+	PROTECTED_RECURSE = True
+	
 	def evaluate(self, katana, case):
 
 		# Find/create the output artifact directory
@@ -32,7 +34,7 @@ class Unit(units.forensics.ForensicsUnit):
 		)
 
 		# Run binwalk on the target
-		parms = ['binwalk', '-e', self.target, '--directory', binwalk_directory, '--dd=.*' ]
+		parms = ['binwalk', '-e', self.target, '--directory', binwalk_directory, '--dd=.*', '-M' ]
 		p = subprocess.Popen(parms, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
 		results = utilities.process_output(p)

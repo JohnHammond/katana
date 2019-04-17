@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-04-15 21:45:43
+# @Last Modified time: 2019-04-16 22:23:32
 from unit import BaseUnit
 from pwn import *
 import os
@@ -10,9 +10,13 @@ import magic
 import traceback
 import string
 import enchant
+import re
 
 dictionary = enchant.Dict()
-english_words_threshold = 2
+english_words_threshold = 1
+
+BASE64_PATTERN = re.compile( '^[a-zA-Z0-9+/]+={0,2}$', flags= re.DOTALL | re.IGNORECASE  )
+
 
 class NotApplicable(Exception):
 	pass
@@ -64,7 +68,8 @@ class FileUnit(BaseUnit):
 			raise NotApplicable()
 
 		if ' image ' in t:
-			katana.add_image(self, os.path.abspath(target))
+			# katana.add_image(self, os.path.abspath(target))
+			katana.add_image(os.path.abspath(target)) # JOHN: I'm still unsure about putting all the images in every unit
 
 class PrintableDataUnit(BaseUnit):
 	
@@ -159,13 +164,23 @@ class NotEnglishUnit(BaseUnit):
 			if c not in string.printable:
 				raise NotApplicable()
 
-		all_words = re.findall('[\w]+', self.target)
-		
-		english_words = [ word for word in all_words if dictionary.check(word) ]
+		# Also ensure this isn't Base64 (a lot of false positives...)
+		base64_result = BASE64_PATTERN.findall(str(self.target))
+		if base64_result is not None and base64_result != []:
+			raise NotApplicable()
+
+		# Filter out words that are only two letters long...
+		all_words = list(filter(lambda word : len(word)>2, re.findall('[A-Za-z]+', self.target)))
+		english_words = list(filter(lambda word : len(word)>2, [ word for word in all_words if dictionary.check(word) ]))
 
 		# This has a majority of English letters... it might be English!!
-		if len(english_words) >= (len(all_words) - english_words_threshold):
+		# print('='*30)
+		# print(target, all_words, english_words)
+		if len(english_words) >= (len(all_words) - english_words_threshold) and len(english_words) != 0:
+			# print("LOOKS LIKE ENGLISH")
 			raise NotApplicable()
+		# else:
+		# 	print("NOT ENGLISH")
 
 class BruteforcePasswordUnit(object):
 

@@ -38,6 +38,7 @@
 				<ul class="list-unstyled components" id="menu">
 					<p>Contents</p>
 					<li><a href="#card-flags">Potential Flags</a></li>
+					<li><a href="#card-images">Found Images</a></li>
 					{% for name,value in results['children'].items() if name is not in ["flags","children"] recursive %}
 						<li>
 							{% if value['children'] | length > 0 %}
@@ -74,6 +75,27 @@
 										<li class="list-group-item">{{flag}}</li>
 									{% endfor %}
 								</ul>
+							</div>
+						</div>
+					</div>
+
+					<div class="card">
+						<div class="card-header" id="card-images">
+							<h2 class="mb-0">
+								<button class="btn btn-lnk" type="button" data-toggle="collapse" data-target="#collapse-images" aria-expanded="true" aria-controls="collapse-images">
+									Images
+								</button>
+							</h2>
+						</div>
+
+						<div id="collapse-images" class="collapse show" aria-labelledby="card-images" data-parent="content-accordion">
+							<div class="accordion-body">
+								{% for image, hash in results['images'].items() %}
+									<figure class="figure">
+										<img src="{{image}}" class="figure-img img-fluid"/>
+										<figcaption class="figure-caption">{{image}}</figcaption>
+									</figure>
+								{% endfor %}
 							</div>
 						</div>
 					</div>
