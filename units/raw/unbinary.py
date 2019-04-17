@@ -6,6 +6,7 @@ import argparse
 from pwn import *
 import subprocess
 import units.raw
+import units
 import utilities
 import os
 from units import NotApplicable
@@ -17,13 +18,9 @@ class Unit(units.raw.RawUnit):
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
-		if self.target.lower().startswith('0x'):
-			self.target = self.target[2:]
-
 		PATTERN = re.compile( '[01]{8,}' , flags=re.MULTILINE | \
 								re.DOTALL | re.IGNORECASE  )
 		binary_result = PATTERN.findall(str(self.target))
-
 
 		if binary_result is None or binary_result == []:
 			raise NotApplicable()
