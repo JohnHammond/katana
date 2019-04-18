@@ -184,15 +184,24 @@ class Katana(object):
 
 		# Download the target, if that is specified
 		if self.config['download']:
-			temp_filename = self.config['target'].rsplit('/', 1)[1]
-			temp_folder = tempfile.gettempdir()
-			temp_path = os.path.join(temp_folder, temp_filename)
+			try:
+				temp_filename = self.config['target'].rsplit('/', 1)[1]
+				temp_folder = tempfile.gettempdir()
+				temp_path = os.path.join(temp_folder, temp_filename)
+	
+				self.progress.status(f'downloading and setting target to {temp_path}...')
+			except IndexError:
+				temp_path = self.config['target']
 
-			self.progress.status(f'downloading and setting target to {temp_path}...')
 
-			r = requests.get(self.config['target'], verify = False)
-			with open(temp_path, 'wb') as f:
-				f.write(r.content)
+			try:
+				r = requests.get(self.config['target'], verify = False)
+				with open(temp_path, 'wb') as f:
+					f.write(r.content)
+			except requests.exceptions.MissingSchema:
+				pass
+			except:
+				traceback.print_exc()
 
 			self.config['target'] = temp_path
 
@@ -507,7 +516,7 @@ class Katana(object):
 
 					image_hash = md5(open(image,'rb').read()).hexdigest()
 					if image_hash not in self.results['images'].values():
-						if katana.config['display_images']:
+						if self.config['display_images']:
 							Image.open(image).show()
 						self.results['images'][image] = image_hash
 	
