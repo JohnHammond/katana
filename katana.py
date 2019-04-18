@@ -25,6 +25,7 @@ import clipboard
 import jinja2
 import shutil
 import uuid
+from PIL import Image
 from hashlib import md5
 
 class Katana(object):
@@ -91,6 +92,8 @@ class Katana(object):
 				help='comma separated list of function name that may print a flag')
 		parser.add_argument('--timeout', default=0.1, type=float, 
 				help='suggested timeout for long running unit tests')
+		parser.add_argument('--display-images', '-i', action="store_true", default=False,
+				help='display images as katana finds them')
 
 		args, remaining = parser.parse_known_args()
 
@@ -504,6 +507,8 @@ class Katana(object):
 
 					image_hash = md5(open(image,'rb').read()).hexdigest()
 					if image_hash not in self.results['images'].values():
+						if katana.config['display_images']:
+							Image.open(image).show()
 						self.results['images'][image] = image_hash
 	
 
@@ -614,7 +619,7 @@ class Katana(object):
 					except UnicodeEncodeError:
 						# This can't hash. Just deal with it.
 						unit_hash = None
-						
+
 					if unit_hash not in self.target_hashes or just_added:
 						units_so_far.append(unit)
 						just_added = True
