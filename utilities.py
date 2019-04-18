@@ -9,6 +9,10 @@ import json
 import re
 import html
 import threading
+import enchant
+
+dictionary = enchant.Dict()
+english_words_threshold = 1
 
 # This subclass of argparse will print the help whenever there
 # is a syntactic error in the options parsing
@@ -62,148 +66,13 @@ def find_modules_recursively(path, prefix):
 			
 			yield name
 
-def element(tag, data, sub_level = 0, padding_level = None):
-	if padding_level is None:
-		padding_level = sub_level 
-	return '<%s style="padding-left: %dpx">%s</%s>' % ( tag, padding_level*20,html.escape(data), tag )
+def is_english(string):
+	# Filter out words that are only two letters long...
+	all_words = list(filter(lambda word : len(word)>2, re.findall('[A-Za-z]+', string)))
+	english_words = list(filter(lambda word : len(word)>2, [ word for word in all_words if dictionary.check(word) ]))
 
-def header(string, sub_level = 1, padding_level = None):
-	return element('h%d' % (sub_level+1), string, sub_level, padding_level)
+	return len(english_words) >= (len(all_words) - english_words_threshold) and len(english_words) != 0
 
-def pre(string, sub_level = 1, padding_level = None):
-	return element('pre', string, sub_level, padding_level)
-
-# This should happen FIRST in the HTML output generation...
-def process_unit_output(output,content):
-
-	anchors = []
-	number_of_lines_for_each_anchor = []
-
-	line_number_counter = 0
-	anchor_name = ""
-
-	for line in content:
-		
-		# Determine the level of indentation by examining the whitespace
-		level = re.findall('^ +', line)
-		if level:
-			level = len(level[0])/4-1
-		# If we are starting a new section, keep track of the anchor tag
-		if line.endswith('": {') or line.endswith('": ['):
-			string = line.split('"')[1]
-			anchor_name = string
-			if ( line.endswith('": {') and level == 0) or (line.endswith('": [') and level == 0): 
-
-				anchors.append(anchor_name)
-
-				if len(number_of_lines_for_each_anchor) == 0:
-					number_of_lines_for_each_anchor.append(line_number_counter)
-				else:
-					number_of_lines_for_each_anchor[-1] = line_number_counter
-				line_number_counter = 0
-				number_of_lines_for_each_anchor.append(0)
-
-				output.append('<hr style="opacity:0.3;">')
-
-			output.append( '<a name="%s">%s</a>' % ( anchor_name, header(string, level+1, padding_level =level -1)) )
-			line_number_counter -= 1
-
-		else:
-			
-			# Clean up block lines
-			if (line.endswith(']') and re.findall('^\s*\]', line)) \
-			or (line.endswith('}') and re.findall('^\s*\}', line)) \
-			or (line.endswith('{') and re.findall('^\s*\{', line)): continue
-
-			# Add the line as preformated text!
-			output.append(pre(line))
-
-		# Keep adding to the line number so we know how much a unit takes up
-		line_number_counter += 1
-
-	# Don't forget to handle the last unit's line count!
-	number_of_lines_for_each_anchor[-1] = line_number_counter
-
-	# Remove the first number of lines because it is 0 and unneeded
-	number_of_lines_for_each_anchor.pop(0)
-
-	return output, anchors, number_of_lines_for_each_anchor 
-
-
-def generate_table_of_contents(output, anchors, number_of_lines_for_each_anchor):
-
-	table_of_contents = ['<h1>Katana Results</h1>',
-							'<table>',
-								'<th>Unit</th>', '<th>Number of Lines</th>']
-
-	for i in range(len(number_of_lines_for_each_anchor)):
-		
-		anchor = anchors[i]
-		num_lines = number_of_lines_for_each_anchor[i]
-
-		# Add the anchor to the page...
-		table_of_contents.append(f'''
-		<tr>
-			<td>
-				<a href="#{anchor}">{anchor}</a>
-			</td>
-			<td>{num_lines}</td>
-		</tr>''')
-	
-	table_of_contents.append('</table><br>')
-	output.insert(0, '\n'.join(table_of_contents))
-
-	return output
-
-def add_flags_to_output(output, json_data):
-
-	if 'flags' in json_data:
-		
-		potential_flags = ['<h2>Potential Flags</h2>', '<ul>']
-		
-		for flag in json_data['flags']:
-			potential_flags.append(f'''
-				<li>
-					<span class='flag'>{flag}</span>
-				</li>''')
-
-		potential_flags.append('</ul><br>')
-
-		output.insert(1, '\n'.join(potential_flags))
-		return output
-	else:
-		return output
-
-def add_images_to_output(output, json_data):
-	if 'images' in json_data:
-		
-		found_images = ['<h2>Found Images</h2>', '<ul>',]
-		
-		for image in json_data['images']:
-			if image.startswith('./results'):
-				image = image.replace('./results','../results')
-			
-			found_images.append('<img src="%s">' % image)
-		found_images.append('</ul><br>')
-
-		output.insert(1, '\n'.join(found_images))
-		return output
-	else:
-		return output
-
-
-def render_html_to_file(json_data, file):
-
-	html_output = []
-	raw_content = [ x.rstrip() for x in json.dumps(json_data, indent=4).split('\n') ] 
-
-	html_output, anchors, number_of_lines_for_each_anchor = process_unit_output(html_output, raw_content)
-	html_output = generate_table_of_contents(html_output, anchors, number_of_lines_for_each_anchor)
-	html_output = add_flags_to_output(html_output, json_data)
-	html_output = add_images_to_output(html_output, json_data)
-
-	html_output = '\n'.join(html_output)
-	open(file,'w').write(html_output)
 
 def jinja_pretty_json(value):
 	return json.dumps(value, sort_keys=True, indent=4, separators=(',', ': '))

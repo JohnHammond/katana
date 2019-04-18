@@ -31,7 +31,6 @@ class Unit(units.FileOrDataUnit):
 
 
 	def evaluate(self, katana, case):
-		
 		for result in self.base64_result:
 			try:
 				decoded = base64.b64decode(result).decode('ascii')
