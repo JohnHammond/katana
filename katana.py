@@ -134,12 +134,14 @@ class Katana(object):
 			except AttributeError:
 				dependencies = []
 
-
 			# Ensure the dependencies exist
 			try:
 				for dependency in dependencies:
 					subprocess.check_output(['which',dependency])
-			except (FileNotFoundError, subprocess.CalledProcessError): 
+			except (FileNotFoundError, subprocess.CalledProcessError):
+				log.failure('{0}: dependancy not satisfied: {1}'.format(
+					name, dependency
+				))
 				continue
 			else:
 				# Dependencies are good, ensure the unit class exists

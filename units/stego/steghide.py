@@ -25,13 +25,6 @@ class Unit(units.FileUnit):
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target, keywords=['jpg', 'jpeg'])
 
-		if not os.path.isfile(target):
-			raise units.NotApplicable()
-		
-		t = magic.from_file(target).lower()
-		if not 'jpg' in t and not 'jpeg' in t:
-			raise units.NotApplicable()
-
 	def enumerate(self, katana):
 		# The default is to check an empty password
 		yield ''
