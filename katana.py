@@ -89,6 +89,10 @@ class Katana(object):
 				help='comma separated list of function name that may print a flag')
 		parser.add_argument('--timeout', default=0.1, type=float, 
 				help='suggested timeout for long running unit tests')
+		parser.add_argument('--exec', '-e', default=False,
+				action='store_true', help='run units which may execute arbitrary code')
+		parser.add_argument('--input', default='%s',
+				help='a format string used to create payloads for pwn challenges')
 
 		args, remaining = parser.parse_known_args()
 
