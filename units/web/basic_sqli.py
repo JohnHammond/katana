@@ -47,7 +47,7 @@ class Unit(units.web.WebUnit):
 		
 		# Only run this if we have potential information...
 		if not (self.action and self.method and self.username and self.password):
-			raise NotApplicable
+			raise units.NotApplicable
 
 	def enumerate(self, katana):
 		
