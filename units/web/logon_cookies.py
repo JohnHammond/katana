@@ -26,8 +26,6 @@ pass_regex = "<\s*input.*name\s*=\s*['\"](%s)['\"]" % "|".join(potential_passwor
 
 potential_cookie_names = [ 'admin', 'is_admin', 'isadmin', 'administrator', 'isAdmin' ]
 
-
-
 class Unit(units.web.WebUnit):
 
 	def __init__(self, katana, parent, target):
