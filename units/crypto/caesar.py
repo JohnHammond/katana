@@ -48,12 +48,18 @@ class Unit(units.NotEnglishUnit):
 	def evaluate(self, katana, case):
 
 		if ( katana.config['caesar_shift'] == -1 ):
-			results = { }
+			# results = { "mod26": {}, "mod255" : {} }
+			results = {}
 
 			for shift_value in range(len(string.ascii_lowercase)):
 				results[shift_value] = self.caesar(self.target, shift_value)
 				katana.recurse(self, results[shift_value])
 				katana.locate_flags(self, results[shift_value])
+
+			# for shift_value in range(255):
+			# 	results =  ''.join([chr(ord(character) + shift_value) % 255 for character in self.target ])
+			# 	katana.recurse(self, results[shift_value])
+			# 	katana.locate_flags(self, results[shift_value])
 
 		else:
 			results = self.caesar(source, katana.config['caesar_shift'])

