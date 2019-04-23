@@ -39,47 +39,20 @@ Katana works with a "boss -> worker" topology. One thread (the boss) spins off o
 To add functionality to Katana, you simply need to create units. The boss will then handle them appropriately. Currently, the units we have defined are:
 
 ```
-raw
-	- file
-	- strings
-	- exiftool
-	- morsecode
-	- qrcode
-
-stego
-	- steghide 
-	- snow
-	- qrcode
-	- zsteg
-	- jsteg
-
-web
-	- robots
-	- git
-	- cookies
-	- basic_sqli
-
-crypto
-	- caesar
-	- reverse
-	- atbash
-	- rot47
-
-forensics
-	- foremost
-	- binwalk
-
-pdf
-	- pdfinfo
-
-esoteric
-	- brainfuck
-	- malbolge
-	- pikalang
-
-zip
-	- crack
-
+crypto/affine.py       pdf/pdfinfo.py        stego/steghide.py
+crypto/atbash.py       pdf/pdftotext.py      stego/stegsolve.py
+crypto/caesar.py       pwnage/stdin.py       stego/zsteg.py
+crypto/polybius.py     raw/base64_decode.py  web/basic_img_shell.py
+crypto/railfence.py    raw/exiftool.py       web/basic_nosqli.py
+crypto/reverse.py      raw/file.py           web/basic_sqli.py
+crypto/rot47.py        raw/morsecode.py      web/cookies.py
+crypto/vigenere.py     raw/qrcode.py         web/git.py
+crypto/xor.py          raw/strings.py        web/logon_cookies.py
+esoteric/brainfuck.py  raw/unbinary.py       web/request.py
+esoteric/malbolge.py   raw/undecimal.py      web/robots.py
+esoteric/pikalang.py   raw/unhexlify.py      zip/crack.py
+forensics/binwalk.py   stego/jsteg.py
+forensics/foremost.py  stego/snow.py
 ```
 
 -------

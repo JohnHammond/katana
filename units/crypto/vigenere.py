@@ -2,6 +2,7 @@ from unit import BaseUnit
 from units import NotApplicable
 from units import PrintableDataUnit
 from units import NotEnglishUnit
+import utilities
 import string
 
 def vigenere(plaintext, key):
@@ -50,12 +51,18 @@ class Unit(NotEnglishUnit):
 		# Add all passwords from the dictionary file
 		if 'dict' in katana.config and katana.config['dict'] is not None:
 			katana.config['dict'].seek(0)
-			for line in katana.config['dict']:
-				yield line.rstrip('\n')
+			try:
+				for line in katana.config['dict']:
+					yield line.rstrip('\n')
+
+			except UnicodeDecodeError:
+				# JOHN: This happens sometimes on line 54 and I DON'T KNOW WHY
+				return
 
 	def evaluate(self, katana, case):
 		result = vigenere(self.target, case)
 		katana.locate_flags(self, result)
 		katana.add_results(self, result)
-		katana.recurse(self, result)
+		if utilities.is_english(result):
+			katana.recurse(self, result)
 	
