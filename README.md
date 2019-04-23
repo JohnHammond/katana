@@ -29,7 +29,6 @@ Dependencies
 
 ```
 pip install -r requirements.txt
-pip install git+https://github.com/arthaud/python3-pwntools.git
 ```
 
 Framework Methodology
