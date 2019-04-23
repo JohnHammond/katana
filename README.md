@@ -17,8 +17,9 @@ Virtual Environment
 We recommend running this with the latest version of Python and inside of virtual environment.
 
 ```
-python -m venv <your_environment>
-source <your_environment>/bin/activate
+sudo apt-get install python3-venv
+python3.7 -m venv env
+source env/bin/activate
 ```
 
 From there, you can safely install dependencies with the environment's `pip` (as in, **do not** use sudo).
