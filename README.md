@@ -17,7 +17,7 @@ Virtual Environment
 We recommend running this with the latest version of Python and inside of virtual environment.
 
 ```
-sudo apt-get install python3-venv
+sudo apt-get install -y python3-dev python3-venv libffi-dev libssl-dev pandoc 
 python3.7 -m venv env
 source env/bin/activate
 ```
@@ -28,7 +28,6 @@ Dependencies
 ---------------
 
 ```
-sudo apt install -y libffi-dev libssl-dev pandoc
 pip install -r requirements.txt
 pip install git+https://github.com/arthaud/python3-pwntools.git
 ```

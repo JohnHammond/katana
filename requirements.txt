@@ -6,3 +6,4 @@ pillow
 clipboard
 jinja2
 pyenchant
+pycrypto
