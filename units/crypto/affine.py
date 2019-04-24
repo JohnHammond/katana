@@ -15,9 +15,11 @@ from math import gcd
 from string import ascii_uppercase as alphabet
 from Crypto.Util.number import inverse
 
+BYTES_ALPHABET = bytes(alphabet, 'utf-8')
+
 def affine(letter, a, b):
-	if letter in alphabet:
-		return alphabet[ (a*alphabet.index(letter) + b) % len(alphabet) ] 
+	if letter in BYTES_ALPHABET:
+		return BYTES_ALPHABET[ (a*BYTES_ALPHABET.index(letter) + b) % len(alphabet) ] 
 	else:
 		return letter
 
@@ -37,10 +39,10 @@ def decrypt( ciphertext, a = 1, b = 1, alphabet = alphabet):
 	new_a = inverse( a, len(alphabet) )
 	new_b = (new_a * new_b) % len(alphabet)
 
-	for letter in ciphertext:
-		plaintext.append( affine(letter.upper(), new_a, new_b) )
+	for letter in ciphertext.upper():
+		plaintext.append( affine(letter, new_a, new_b) )
 
-	return "".join(plaintext)
+	return bytes(plaintext)
 
 # class Unit(units.PrintableDataUnit):
 class Unit(units.NotEnglishUnit):
@@ -79,11 +81,11 @@ class Unit(units.NotEnglishUnit):
 
 	def evaluate(self, katana, case):
 		a, b = case
+		raw_target = self.target.raw
 		try:
-			plaintext = decrypt( self.target, a, b, katana.config['affine_alphabet'] )
-			if plaintext != self.target.upper():
+			plaintext = decrypt( raw_target, a, b, katana.config['affine_alphabet'] )
+			if plaintext != raw_target:
 				katana.recurse(self, plaintext)
-				katana.locate_flags(self, plaintext)
 				katana.add_results(self, plaintext)
 		except Exception:
 			# JOHN: I don't know if or when or why this will error, but when IT DOES... we 
