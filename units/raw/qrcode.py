@@ -10,12 +10,10 @@ import utilities
 import os
 import magic
 from units import NotApplicable
-
 import warnings
 warnings.simplefilter("ignore", UserWarning)
-
 from PIL import Image
-from pyzbar.pyzbar import decode
+from pyzbar import pyzbar
 import json
 
 class Unit(units.FileUnit):
@@ -24,15 +22,16 @@ class Unit(units.FileUnit):
 		super(Unit, self).__init__(katana, parent, target, keywords = 'image')
 
 		try:
-			self.decoded = decode(Image.open(self.target))
+			self.image = Image.open(self.target.path)
 		except OSError:
 			raise NotApplicable
 
 
 	def evaluate(self, katana, case):
 
+		decoded = pyzbar.decode(self.image)
 
-		for each_decoded_item in self.decoded:
+		for each_decoded_item in decoded:
 			
 			decoded_data = each_decoded_item.data.decode('latin-1')
 
@@ -41,6 +40,5 @@ class Unit(units.FileUnit):
 				'data' : decoded_data
 			}
 			
-			katana.locate_flags(self, decoded_data)
 			katana.recurse(self, decoded_data)
 			katana.add_results(self, result)
