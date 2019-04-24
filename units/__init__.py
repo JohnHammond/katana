@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-04-24 17:31:54
+# @Last Modified time: 2019-04-24 18:02:58
 from unit import BaseUnit
 from pwn import *
 import os
@@ -27,9 +27,13 @@ class FileUnit(BaseUnit):
 		if not self.target.is_file:
 			raise NotApplicable
 
+		# JOHN: I do this so only ONE of the supplied keywords needs to be there.
+		#       This is to handle things like "jpg" or "jpeg" and other cases
+		keyword_found = False
 		for k in keywords:
-			if k not in self.target.magic:
-				raise NotApplicable
+			if k in self.target.magic:
+				keyword_found = True
+		if keyword_found: raise NotApplicable
 
 class PrintableDataUnit(BaseUnit):
 	

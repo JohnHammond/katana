@@ -23,7 +23,7 @@ class Unit(units.FileUnit):
 			default=[])
 
 	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target, keywords=['jpg', 'jpeg'])
+		super(Unit, self).__init__(katana, parent, target, keywords=['jpg ', 'jpeg '])
 
 	def enumerate(self, katana):
 		# The default is to check an empty password
@@ -53,7 +53,7 @@ class Unit(units.FileUnit):
 
 		# Run steghide
 		p = subprocess.Popen(
-			['steghide', 'extract', '-sf', self.target, '-p', password, '-xf', output_path],
+			['steghide', 'extract', '-sf', self.target.path, '-p', password, '-xf', output_path],
 			stdout = subprocess.PIPE, stderr = subprocess.PIPE
 		)
 
