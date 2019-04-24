@@ -49,4 +49,3 @@ class Unit(BaseUnit):
 				result = binascii.unhexlify(match[1:])
 				katana.recurse(self, result)
 				katana.add_results(self, result)
-

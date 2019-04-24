@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-04-17 19:18:12
+# @Last Modified time: 2019-04-24 17:31:54
 from unit import BaseUnit
 from pwn import *
 import os
@@ -11,9 +11,6 @@ import traceback
 import string
 import re
 import utilities
-
-BASE64_PATTERN = re.compile( '^[a-zA-Z0-9+/]+={0,2}$', flags= re.DOTALL | re.IGNORECASE  )
-
 
 class NotApplicable(Exception):
 	pass

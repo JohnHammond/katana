@@ -116,6 +116,12 @@ class Target(object):
 		if self.is_english:
 			self.is_english = english_words >= (all_words - DICTIONARY_THRESHOLD) and english_words != 0
 	
+	def __repr__(self):
+		try:
+			return self.upstream.decode('utf-8')
+		except:
+			return repr(self.upstream)
+
 	@property
 	def raw(self):
 		""" This will return a bytes-like object. For small objects already
@@ -139,5 +145,3 @@ class Target(object):
 			return open(self.path, 'rb')
 		else:
 			return BytesIO(self.upstream)
-
-
