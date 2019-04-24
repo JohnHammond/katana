@@ -23,12 +23,10 @@ class Unit(BaseUnit):
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
-		if not self.target.is_artifact:
+		if not self.target.is_file:
 			raise NotApplicable
 
 	def evaluate(self, katana, case):
-
-		log.info(self.target.path)
 
 		# Run the process.
 		p = subprocess.Popen(['strings', self.target.path, '-n', str(katana.config['strings_length'])], 

@@ -13,32 +13,33 @@ from units import NotApplicable
 import binascii
 import traceback
 
-class Unit(units.raw.RawUnit):
+DECIMAL_PATTERN = rb'[0-9]{1,3}'
+DECIMAL_REGEX   = re.compile( DECIMAL_PATTERN, flags=re.MULTILINE | \
+								re.DOTALL | re.IGNORECASE  )
+
+class Unit(BaseUnit):
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
-		PATTERN = re.compile( '[0-9]{1,3}' , flags=re.MULTILINE | \
-								re.DOTALL | re.IGNORECASE  )
-		decimal_result = PATTERN.findall(str(self.target))
+		# We don't need to operate on files
+		if not self.target.is_printable or self.target.is_file or self.target.is_english:
+			raise NotApplicable
 
-		if decimal_result is None or decimal_result == []:
+		self.matches = DECIMAL_REGEX.findall(self.target.raw)
+
+		if self.matches is None:
 			raise NotApplicable()
-		else:
 
-			for decimal in decimal_result:
-				if int(decimal) not in range(255):
-
-					raise NotApplicable
-			self.decimal_result = decimal_result
+		for decimal in self.matches:
+			if int(decimal) not in range(255):
+				raise NotApplicable
 
 	def evaluate(self, katana, case):
-		
 	
 		try:
-			new_result = ''.join(chr(int(d)) for d in self.decimal_result)
-
-		# If this fails, it's probably not binary we can deal with...
+			new_result = ''.join(chr(int(d)) for d in self.matches)
+		# If this fails, it's probably not decimal we can deal with...
 		except (UnicodeDecodeError, binascii.Error):
 			return None
 
@@ -47,5 +48,4 @@ class Unit(units.raw.RawUnit):
 		#       ... but we left it raw, because what if it uncovers a file?
 		# if new_result.replace('\n', '').isprintable():
 		katana.recurse(self, new_result)
-		katana.locate_flags(self, new_result )
 		katana.add_results(self, new_result )

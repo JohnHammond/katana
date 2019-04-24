@@ -115,6 +115,12 @@ class Target(object):
 		if self.is_english:
 			self.is_english = english_words >= (all_words - DICTIONARY_THRESHOLD) and english_words != 0
 	
+	def __repr__(self):
+		try:
+			return self.upstream.decode('utf-8')
+		except:
+			return repr(self.upstream)
+
 	@property
 	def raw(self):
 		if self.content is not None:
