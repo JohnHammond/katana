@@ -471,8 +471,6 @@ class Katana(object):
 			self.render()
 			
 			# JOHN: Maybe this defeats the purpose of --show, but I like it anyway...
-			if len(results.split('\n')) < 30:
-				print(results)
 			log.success('wrote output to {0}, note minimum data length is {1}'.format(os.path.join(self.config['outdir'], 'katana.json and html'), self.config['data_length']))
 		else:
 			log.failure("no units returned results")
