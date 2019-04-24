@@ -518,18 +518,18 @@ class Katana(object):
 
 		with self.results_lock:
 			# r = self.get_unit_result(unit)
-			
 			if 'images' not in self.results:
 				self.results['images'] = {}
-			else:
-				if image not in self.results['images'].keys():
+				# print("we adding")
+			# else:
+			if image not in self.results['images'].keys():
 
-					image_hash = md5(open(image,'rb').read()).hexdigest()
-					if image_hash not in self.results['images'].values():
-						if self.config['display_images']:
-							Image.open(image).show()
-						self.results['images'][image] = image_hash
-	
+				image_hash = md5(open(image,'rb').read()).hexdigest()
+				if image_hash not in self.results['images'].values():
+					if self.config['display_images']:
+						Image.open(image).show()
+					self.results['images'][image] = image_hash
+
 
 	
 	def locate_flags(self, unit, output, stop=True, strict=False):
