@@ -614,9 +614,10 @@ class Katana(object):
 					# Run this if we HAVE NOT seen it before...
 					unit = unit_class(self, parent, target)
 					units_so_far.append(unit)
-				except units.NotApplicable:
-					log.failure('{0}: unit not applicable to target'.format(
-						unit_class.__module__
+				except units.NotApplicable as error:
+					log.failure('{0}: target not applicable {1}'.format(
+						unit_class.__module__,
+						'({0})'.format(error.args[0]) if error.args else ''
 					))
 		else:
 			for unit_class in self.all_units:

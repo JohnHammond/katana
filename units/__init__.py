@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-04-24 18:02:58
+# @Last Modified time: 2019-04-24 18:27:02
 from unit import BaseUnit
 from pwn import *
 import os
@@ -25,15 +25,17 @@ class FileUnit(BaseUnit):
 		super(FileUnit, self).__init__(katana, parent, target)
 		
 		if not self.target.is_file:
-			raise NotApplicable
+			raise NotApplicable("not a file")
 
 		# JOHN: I do this so only ONE of the supplied keywords needs to be there.
 		#       This is to handle things like "jpg" or "jpeg" and other cases
-		keyword_found = False
-		for k in keywords:
-			if k in self.target.magic:
-				keyword_found = True
-		if keyword_found: raise NotApplicable
+		if keywords:
+			keyword_found = False
+			for k in keywords:
+				if k.lower() in self.target.magic.lower():
+					keyword_found = True
+			if not keyword_found: 
+				raise NotApplicable("no matching magic keywords")
 
 class PrintableDataUnit(BaseUnit):
 	
@@ -41,7 +43,7 @@ class PrintableDataUnit(BaseUnit):
 		super(PrintableDataUnit, self).__init__(katana, parent, target)
 
 		if not self.target.is_printable:
-			raise NotApplicable
+			raise NotApplicable("not printable data")
 
 class NotEnglishUnit(BaseUnit):
 	
@@ -49,4 +51,4 @@ class NotEnglishUnit(BaseUnit):
 		super(NotEnglishUnit, self).__init__(katana, parent, target)
 		
 		if not self.target.is_printable or self.target.is_english:
-			raise NotApplicable
+			raise NotApplicable("potential english text")

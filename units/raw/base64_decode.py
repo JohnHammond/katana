@@ -24,11 +24,11 @@ class Unit(BaseUnit):
 		super(Unit, self).__init__(katana, parent, target)
 
 		if not self.target.is_printable:
-			raise NotApplicable
+			raise NotApplicable("not printable data")
 
 		self.matches = BASE64_REGEX.findall(self.target.raw)
 		if self.matches is None:
-			raise NotApplicable
+			raise NotApplicable("no base64 text found")
 
 	def evaluate(self, katana, case):
 		for match in self.matches:
