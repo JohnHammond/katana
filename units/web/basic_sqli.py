@@ -13,7 +13,6 @@ import requests
 import magic
 import units
 
-
 potential_username_variables = [
 			'username', 'user', 'uname', 'un', 'name', 'user1', 'input1', 'uw1', 'username1', 'uname1', 'tbUsername', 'usern', 'id'
 ]
@@ -88,8 +87,15 @@ class Unit(units.web.WebUnit):
 	def evaluate(self, katana, case):
 		# Split up the target (see get_cases)
 		method, action, username, password, payload = case
+		
+		# print("trying ", self.target, method, action, username, password)
+		url_form = self.target.split('/')
+		if len(url_form) > 3:
+			last_location = '/'.join(self.target.split('/')[:-1]) + '/'
+		else:
+			last_location = self.target
 
-		r = method(self.target + action, data = { username: payload, password : payload })
+		r = method(last_location + action, data = { username: payload, password : payload })
 		
 		# Hunt for flags. If we found one, stop all other requests!
 		hit = katana.locate_flags(self, r.text)

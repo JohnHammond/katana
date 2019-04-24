@@ -590,7 +590,6 @@ class Katana(object):
 
 		units_so_far = []
 
-
 		if not self.config['auto'] and not recurse:
 			just_added = False
 			for unit_class in self.requested_units:
@@ -623,6 +622,7 @@ class Katana(object):
 #						for p in ([ parent ] + parent.family_tree):
 #							if p.PROTECTED_RECURSE:
 #								raise units.NotApplicable
+
 					# Run this if we HAVE NOT seen it before...
 					unit = unit_class(self, parent, target)
 					try:
