@@ -139,5 +139,3 @@ class Target(object):
 			return open(self.path, 'rb')
 		else:
 			return BytesIO(self.upstream)
-
-
