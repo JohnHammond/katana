@@ -1,5 +1,22 @@
 import requests
 import magic
+import re
+import os
+import hashlib
+from io import StringIO, BytesIO
+import string
+import enchant
+
+ADDRESS_PATTERN = rb'^((http|https):\/\/)(?P<host>[a-zA-Z0-9][a-zA-Z0-9\-_.]*)(:(?P<port>[0-9]{1,5}))?(\/(?P<uri>[^?]*))?(\?(?P<query>.*))?$'
+BASE64_PATTERN = rb'^[a-zA-Z0-9+/]+={0,2}$'
+LETTER_PATTERN = rb'[A-Za-z]+'
+LETTER_REGEX = re.compile(LETTER_PATTERN, re.DOTALL | re.MULTILINE)
+BASE64_REGEX = re.compile(BASE64_PATTERN, re.DOTALL | re.MULTILINE)
+ADDRESS_REGEX = re.compile(ADDRESS_PATTERN, re.DOTALL | re.MULTILINE)
+DICTIONARY = enchant.Dict()
+DICTIONARY_THRESHOLD = 1
+PRINTABLE_BYTES = bytes(string.printable, 'utf-8')
+BASE64_BYTES = bytes(string.ascii_letters+string.digits+'=', 'utf-8')
 
 class Target(object):
 	""" A Katana target.
@@ -13,86 +30,108 @@ class Target(object):
 		like object to use for processing.
 	"""
 
-	def __init__(self, katana, upstream):
-		self.known_types = {}
+	def __init__(self, katana, upstream, parent=None):
+
+		# The target class operates entirely off of bytes
+		if isinstance(upstream, str):
+			upstream = upstream.encode('utf-8')
+
+		# Initialize internal properties
 		self.katana = katana
 		self.upstream = upstream
-		self.types = []
+		self.is_printable = True
+		self.is_english = True
+		self.is_base64 = False
+		self.is_url = ADDRESS_REGEX.match(self.upstream) is not None
+		self.is_file = 0 not in self.upstream and os.path.isfile(self.upstream)
+		self.magic = 'data'
 
 		# Download the target of a URL
 		if self.is_url:
-			self._content = requests.get(upstream).content
-			filp, self._path = katana.create_artifact(None,
+			self.content = requests.get(upstream).content
+			self.path, filp = katana.create_artifact(parent,
 					hashlib.md5(upstream).hexdigest(),
 					mode='wb', create=True
 				)
 			with filp:
-				filp.write(self._content)
+				filp.write(self.content)
+			self.is_file = True
 		# Save the path to the file
 		elif self.is_file:
-			self._content = None
-			self._path = self.upstream
+			self.content = None
+			self.path = self.upstream
 		else:
 			# This is raw data. There is no file/path associated.
-			self._path = None
-			self._content = upstream
+			self.path = None
+			self.content = upstream
+
+		# Grab the file type from libmagic (both for files and raw buffers)
+		if self.is_file:
+			self.magic = magic.from_file(self.path)
+		else:
+			self.magic = magic.from_buffer(self.content)
+
+		# CALEB: This used to happen in a separate unit but it was silly
+		katana.locate_flags(parent, self.magic)
+
+		all_words = 0
+		english_words = 0
 
 		# Hash the target content for comparison to previous
 		# targets by Katana. This prevents recursion on the
 		# same target type.
 		self.hash = hashlib.md5()
 		with self.stream as st:
-			for chunk in iter(lambda: st.read(4096)):
+			for chunk in iter(lambda: st.read(4096), b''):
+				# Update the hash with this chunk
 				self.hash.update(chunk)
-	
-	@property
-	def is_url(self):
-		""" Check if the upstream refers to a URL """
-		# Match with REGEX
-		return False
-	
-	@property
-	def is_file(self):
-		""" This is used internally. If you want to know if the target has
-			a local file that represents its content, you should use
-			is_artifact. Further, `stream` will return an open stream
-			on the data no matter the type (web URL, file or raw data)
-		"""
-		if os.path.isfile(self.upstream):
-			return True
-		return False
+				
+				# Did we already rule out printable?
+				if not self.is_printable:
+					continue
 
-	@property
-	def is_artifact(self):
-		""" Identify whether this file is backed with some sort of artifact
-			This could either be the original target name or an artifact
-			created by katana.
-		"""
-		return self._path is not None
+				# Check if this chunk is printabale
+				for c in chunk:
+					if not c in PRINTABLE_BYTES:
+						self.is_printable = False
+						self.is_base64 = False
+						self.is_english = False
+						break
+					elif c not in BASE64_BYTES:
+						self.is_base64 = False
 
+				# If we found a non-printable character, abort
+				if not self.is_printable or not self.is_english:
+					continue
+
+				# Check how many english words this chunk contains
+				word_list = list(filter(lambda word : len(word)>2, LETTER_REGEX.findall(chunk)))
+				all_words += len(word_list)
+				english_words += len(list(filter(
+					lambda word : len(word)>2, [word for word in word_list if DICTIONARY.check(word.decode('utf-8'))]
+				)))
+
+		# If we haven't already decided, check if we think this is english
+		if self.is_english:
+			self.is_english = english_words >= (all_words - DICTIONARY_THRESHOLD) and english_words != 0
+	
 	@property
 	def raw(self):
-		if self._content is not None:
-			return self._content
-		elif self._path is not None:
-			with open(self._path, 'rb') as f:
+		if self.content is not None:
+			return self.content
+		elif self.path is not None:
+			with open(self.path, 'rb') as f:
 				return f.read()
 		else:
-			return self._upstream
+			return self.upstream
 	
 	@property
 	def stream(self):
-		if self._content is not None:
-			if isinstance(self._content, bytes):
-				return BytesIO(self._content)
-			else:
-				return StringIO(self._content)
-		elif self._path is not None:
-			return open(self._path, 'rb')
+		if self.content is not None:
+			return BytesIO(self.content)
+		elif self.is_file:
+			return open(self.path, 'rb')
 		else:
-			if isinstance(self.upstream, bytes):
-				return BytesIO(self.upstream)
-			else:
-				return StringIO(self.upstream)
+			return BytesIO(self.upstream)
 
 

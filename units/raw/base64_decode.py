@@ -15,30 +15,30 @@ import traceback
 import base64
 import binascii
 
-class Unit(units.FileOrDataUnit):
+BASE64_PATTERN = rb'[a-zA-Z0-9+/]+={0,2}'
+BASE64_REGEX = re.compile(BASE64_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
+
+class Unit(BaseUnit):
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
-		PATTERN = re.compile( '[a-zA-Z0-9+/]+={0,2}', flags=re.MULTILINE | \
-								re.DOTALL | re.IGNORECASE  )
-		base64_result = PATTERN.findall(str(self.target))
+		if not self.target.is_printable:
+			raise NotApplicable
 
-		if base64_result is None or base64_result == []:
-			raise NotApplicable()
-		else:
-			self.base64_result = base64_result
-
+		self.matches = BASE64_REGEX.findall(self.target.raw)
+		if self.matches is None:
+			raise NotApplicable
 
 	def evaluate(self, katana, case):
-		for result in self.base64_result:
+		for match in self.matches:
 			try:
-				decoded = base64.b64decode(result).decode('ascii')
+				decoded = base64.b64decode(match)
 
 				katana.recurse(self, decoded)
 
-				katana.locate_flags(self, decoded )
-				katana.add_results( self, decoded )
+				katana.locate_flags(self, decoded)
+				katana.add_results(self, decoded)
 			
 			except (UnicodeDecodeError, binascii.Error):
 				# This won't decode right... must not be right! Ignore it.				

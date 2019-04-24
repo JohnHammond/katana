@@ -10,7 +10,6 @@ import units
 import os
 from units import NotApplicable
 
-
 ADDRESS_PATTERN = r'^((http|https):\/\/)(?P<host>[a-zA-Z0-9][a-zA-Z0-9\-_.]*)(:(?P<port>[0-9]{1,5}))?(\/(?P<uri>[^?]*))?(\?(?P<query>.*))?$'
 
 class WebUnit(BaseUnit):

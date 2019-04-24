@@ -23,19 +23,15 @@ class Unit(BaseUnit):
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
-		try:
-			if not os.path.isfile(target):
-				raise NotApplicable
-
-		# JOHN: These apparently happen in Python 3 if you pass
-		#       a filename that contains a null-byte... 
-		except ValueError:
+		if not self.target.is_artifact:
 			raise NotApplicable
-			
+
 	def evaluate(self, katana, case):
 
+		log.info(self.target.path)
+
 		# Run the process.
-		p = subprocess.Popen(['strings', self.target, '-n', str(katana.config['strings_length'])], 
+		p = subprocess.Popen(['strings', self.target.path, '-n', str(katana.config['strings_length'])], 
 			stdout = subprocess.PIPE, stderr=subprocess.PIPE )
 
 		# Look for flags, if we found them...
