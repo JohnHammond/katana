@@ -6,6 +6,7 @@ import hashlib
 from io import StringIO, BytesIO
 import string
 import enchant
+import mmap
 
 ADDRESS_PATTERN = rb'^((http|https):\/\/)(?P<host>[a-zA-Z0-9][a-zA-Z0-9\-_.]*)(:(?P<port>[0-9]{1,5}))?(\/(?P<uri>[^?]*))?(\?(?P<query>.*))?$'
 BASE64_PATTERN = rb'^[a-zA-Z0-9+/]+={0,2}$'
@@ -117,11 +118,16 @@ class Target(object):
 	
 	@property
 	def raw(self):
+		""" This will return a bytes-like object. For small objects already
+			in memory, it will return the bytes object. For files or larger
+			objects not in memory, it will return an mmap object, which will
+			act the same as a bytes object in most situations.
+		"""
 		if self.content is not None:
-			return self.content
+			return self.content, None
 		elif self.path is not None:
 			with open(self.path, 'rb') as f:
-				return f.read()
+				return mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
 		else:
 			return self.upstream
 	
