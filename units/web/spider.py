@@ -46,9 +46,15 @@ class Unit(WebUnit):
 		# Remove anything that might not be local
 		links = list(filter(has_a_bad_start, links))
 		
-		for link in links:
-			new_link = '{0}/{1}'.format(self.target.rstrip('/'), link.lstrip('/'))
+		url_form = self.target.split('/')
+		if len(url_form) > 3:
+			last_location = '/'.join(self.target.split('/')[:-1]) + '/'
+		else:
+			last_location = self.target.rstrip('/')
 
+		for link in links:
+			new_link = '{0}/{1}'.format(last_location, link.lstrip('/'))
+			# print("spider new_link", new_link)
 			# All this does is find is new links. 
 			# It won't contain flags and they don't need to be considered results
 			if new_link:

@@ -27,6 +27,7 @@ import shutil
 import uuid
 from PIL import Image
 from hashlib import md5
+import signal
 
 class Katana(object):
 
@@ -389,6 +390,11 @@ class Katana(object):
 	def evaluate(self):
 		""" Start processing all units """
 
+		def show_status(signal_number, frame):
+			log.info("working \u001b[33;01m{0}\u001b[0m->\u001b[34;01m{1}\u001b[0m".format(*self.threads[0].getName().split('->')))
+
+		signal.signal(signal.SIGTSTP, show_status)
+
 		if not self.config['flag_format']:
 			log.warn("no flag format was specified, advise looking at saved results")
 
@@ -406,7 +412,8 @@ class Katana(object):
 		status_thread.start()
 
 		# Add the known units to the work queue
-		self.add_to_work(self.units)
+		try:
+			self.add_to_work(self.units)
 
 		# Monitor the work queue and update the progress
 		# while True:
@@ -420,17 +427,20 @@ class Katana(object):
 		# 	# We want to give the threads time to execute
 		# 	time.sleep(0.5)
 
-		while True:
-			try:
-				unit,data = self.recurse_queue.get(block=False)
-			except queue.Empty:
-				self.work.join()
-				if self.recurse_queue.empty():
-					break
-			else:
-				units = self.locate_units(data, parent=unit, recurse=True)
-				self.add_to_work(units)
-				self.recurse_queue.task_done()
+			while True:
+				try:
+					unit,data = self.recurse_queue.get(block=False)
+				except queue.Empty:
+					self.work.join()
+					if self.recurse_queue.empty():
+						break
+				else:
+					units = self.locate_units(data, parent=unit, recurse=True)
+					self.add_to_work(units)
+					self.recurse_queue.task_done()
+		except KeyboardInterrupt:
+			self.work.join()
+			log.failure("aborting early... ({} units not yet run)".format(self.recurse_queue.qsize()))
 
 		status_done.set()
 		status_thread.join()
@@ -457,10 +467,12 @@ class Katana(object):
 			if self.config['show']:
 				print(results)
 
-			# Use the raw json to process out HTML 
-			#utilities.render_html_to_file(self.results, os.path.join(self.config['outdir'], 'katana.html'))
+			# Use the raw json to process out HTML
 			self.render()
-
+			
+			# JOHN: Maybe this defeats the purpose of --show, but I like it anyway...
+			if len(results.split('\n')) < 30:
+				print(results)
 			log.success('wrote output to {0}, note minimum data length is {1}'.format(os.path.join(self.config['outdir'], 'katana.json and html'), self.config['data_length']))
 		else:
 			log.failure("no units returned results")
@@ -584,7 +596,8 @@ class Katana(object):
 		if verify_length and len(data) < self.config['data_length']:
 			return
 		
-		self.recurse_queue.put((unit,data))
+		if not self.locate_flags(unit, data):
+			self.recurse_queue.put((unit,data))
 
 	def locate_units(self, target, parent=None, recurse=False):
 
@@ -650,7 +663,7 @@ class Katana(object):
 
 	def worker(self):
 		""" Katana worker thread to process unit execution """
-
+		
 		if self.config['verbose']:
 			progress = log.progress('thread-{0} '.format(threading.get_ident()))
 		else:
@@ -659,6 +672,12 @@ class Katana(object):
 		while True:
 			# Grab the next item
 			unit,name,case = self.work.get()
+			try:
+				threading.current_thread().setName('{0} -> {1}...'.format(unit.unit_name,unit.target[:65]))
+			except AttributeError:
+				# JOHN: We may have died early. 
+				pass
+
 
 			if unit is None and name is None and case is None:
 				break
@@ -694,4 +713,6 @@ if __name__ == '__main__':
 	katana = Katana()
 
 	# Run katana against all units
+	
 	katana.evaluate()
+	

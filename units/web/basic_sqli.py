@@ -93,7 +93,7 @@ class Unit(units.web.WebUnit):
 		if len(url_form) > 3:
 			last_location = '/'.join(self.target.split('/')[:-1]) + '/'
 		else:
-			last_location = self.target
+			last_location = self.target.rstrip('/') + '/'
 
 		r = method(last_location + action, data = { username: payload, password : payload })
 		

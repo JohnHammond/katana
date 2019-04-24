@@ -14,7 +14,8 @@ class Unit(WebUnit):
 
 		# Check if this is an web address we can reach...
 		try:
-			self.response = requests.get(target)
+			# JOHN: I tinker with cookies and user-agent here, cuz why not?
+			self.response = requests.get(target, cookies = {"admin": "1"}, headers = { 'User-Agent': 'Googlebot/2.1' })
 		except requests.exceptions.ConnectionError:
 			raise NotApplicable
 

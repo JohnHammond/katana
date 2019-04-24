@@ -16,17 +16,20 @@ class Unit(WebUnit):
 
 		# Run the parent constructor, to ensure this is a valid URL
 		super(Unit, self).__init__(katana, parent, target)
-		
+		if not self.target.endswith('/'):
+			raise NotApplicable
+
 		# Try to get see if there is a .git directory
 		url = '{0}/{1}'.format(self.target, '.git/HEAD')
+		
 		try:
-			r = requests.get(url)
+			r = requests.get(url, allow_redirects=False)
 		except (requests.exceptions.ConnectionError,):
 			raise NotApplicable
 
 		# If the response is anything other than a "Not Found",
 		# we might have something here...
-		if r.status_code == 404:
+		if r.status_code == 404 or r.text == "Not Found":
 			raise NotApplicable
 		else:
 			self.response = r
