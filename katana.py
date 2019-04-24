@@ -60,7 +60,7 @@ class Katana(object):
 		parser.add_argument('--unit-help', action='store_true',
 			default=False, help='display help on unit selection')
 		# The number of threads to use
-		parser.add_argument('--threads', '-t', type=int, default=10,
+		parser.add_argument('--threads', '-t', type=int, default=len(os.sched_getaffinity(0)),
 			help='number of threads to use')
 		# The list of targets to scan
 		parser.add_argument('target', type=str,

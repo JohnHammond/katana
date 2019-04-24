@@ -130,7 +130,7 @@ class Target(object):
 			act the same as a bytes object in most situations.
 		"""
 		if self.content is not None:
-			return self.content, None
+			return self.content
 		elif self.path is not None:
 			with open(self.path, 'rb') as f:
 				return mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
