@@ -35,17 +35,6 @@ class Unit(units.FileOrDataUnit):
 		else:
 			if self.target.count('\x00') > len(self.target)/2:
 				raise NotApplicable
-		# print("WORKING", self.parent.__class__, repr(self.target[:40]), )
-
-			# pass
-
-	# def enumerate(self, katana):
-	# 	if ( katana.config['xor_key'] ):
-	# 		yield katana.config['xor_key']
-	# 	else:
-	# 		for k in range(255):
-	# 			yield k
-
 
 	def evaluate(self, katana, case):
 	
@@ -93,7 +82,6 @@ class Unit(units.FileOrDataUnit):
 
 				else:
 					return None
-
 
 			# If this fails, it's probably not binary we can deal with...
 			except (UnicodeDecodeError, binascii.Error):

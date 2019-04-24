@@ -40,6 +40,6 @@ class Unit(units.FileOrDataUnit):
 				katana.locate_flags(self, decoded )
 				katana.add_results( self, decoded )
 			
-			except (UnicodeDecodeError, binascii.Error):
+			except (UnicodeDecodeError, binascii.Error, ValueError):
 				# This won't decode right... must not be right! Ignore it.				
 				pass

@@ -1,3 +1,4 @@
+wheel
 requests
 argparse
 python-magic
@@ -6,3 +7,7 @@ pillow
 clipboard
 jinja2
 pyenchant
+pycrypto
+git+https://github.com/arthaud/python3-pwntools.git
+git+https://github.com/elliptic-shiho/primefac-fork
+

@@ -18,7 +18,7 @@ class Unit(units.NotEnglishUnit):
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
-		parser.add_argument('--caesar-shift', default=-1, type=int, help='number to shift by for caesar cipher')
+		parser.add_argument('--caesar-shift', default="", type=str, help='number to shift by for caesar cipher')
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
@@ -46,19 +46,35 @@ class Unit(units.NotEnglishUnit):
 		return rotate_string.translate(rotate_string.maketrans(string.ascii_uppercase, upper)).translate(rotate_string.maketrans(string.ascii_lowercase, lower))
 
 	def evaluate(self, katana, case):
-
-		if ( katana.config['caesar_shift'] == -1 ):
-			results = { }
+		results = {}
+		if ( katana.config['caesar_shift'] == "" ):
+			results = { "mod26": {}, "mod255" : {} }
+			# results = {}
 
 			for shift_value in range(len(string.ascii_lowercase)):
-				results[shift_value] = self.caesar(self.target, shift_value)
-				katana.recurse(self, results[shift_value])
-				katana.locate_flags(self, results[shift_value])
+				results['mod26'][shift_value] = self.caesar(self.target, shift_value)
+				katana.recurse(self, results['mod26'][shift_value])
+				katana.locate_flags(self, results['mod26'][shift_value])
+
+			for shift_value in range(255):
+				results["mod255"][shift_value] =  ''.join([chr(ord(character) + shift_value % 255) for character in self.target ])
+				katana.recurse(self, results["mod255"][shift_value])
+				katana.locate_flags(self, results["mod255"][shift_value])
 
 		else:
-			results = self.caesar(source, katana.config['caesar_shift'])
-			katana.recurse(self, results)
-			katana.locate_flags(self, results)
+			if '-' in katana.config['caesar_shift']:
+
+				# Interpret these as bounds...
+				for shift_value in range(*[ int(x) for x in katana.config['caesar_shift'].split('-') ]):
+					result = ''.join([chr(ord(character) + shift_value % 255) for character in self.target ])
+					katana.recurse(self, result)
+					katana.locate_flags(self, result)
+			else:
+				results = self.caesar(self.target, int(katana.config['caesar_shift']))
+				katana.recurse(self, results)
+				katana.locate_flags(self, results)
+
+
 
 		katana.add_results(self, results)
 		

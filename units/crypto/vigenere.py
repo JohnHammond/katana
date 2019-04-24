@@ -2,29 +2,33 @@ from unit import BaseUnit
 from units import NotApplicable
 from units import PrintableDataUnit
 from units import NotEnglishUnit
+import utilities
 import string
 
 def vigenere(plaintext, key):
-        plaintext = plaintext.upper()
-        key = key.upper()
+	plaintext = plaintext.upper()
+	key = key.upper()
 
-        valid_chars = string.ascii_uppercase
+	valid_chars = string.ascii_uppercase
 
-        idx = 0
-        ciphertext = ''
+	idx = 0
+	ciphertext = []
 
-        for c in plaintext:
-                if c not in valid_chars:
-                        ciphertext += c
-                else:
-                        if key[idx] not in valid_chars:
-                                idx = (idx + 1) % len(key)
-                        v1 = ord(c) - ord('A')
-                        v2 = ord(key[idx]) - ord('A')
-                        ciphertext += chr(((v1 - v2) % 26)+ord('A'))
-                        idx = (idx + 1) % len(key)
+	for i, c in enumerate(plaintext):
+		if c not in valid_chars:
+			ciphertext.append(c)
+		else:
+			try:
+				if key[idx] not in valid_chars:
+					idx = (idx + 1) % len(key)
+			except IndexError:
+				continue
+			v1 = ord(c) - ord('A')
+			v2 = ord(key[idx]) - ord('A')
+			ciphertext.append(chr(((v1 - v2) % 26)+ord('A')))
+			idx = (idx + 1) % len(key)
 
-        return ciphertext
+	return ''.join(ciphertext)
 
 # class Unit(PrintableDataUnit):
 class Unit(NotEnglishUnit):
@@ -42,6 +46,8 @@ class Unit(NotEnglishUnit):
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
+		print("trying", self.target)
+
 	def enumerate(self, katana):
 		# Check each given password
 		for p in katana.config['vigenere_password']:
@@ -50,12 +56,21 @@ class Unit(NotEnglishUnit):
 		# Add all passwords from the dictionary file
 		if 'dict' in katana.config and katana.config['dict'] is not None:
 			katana.config['dict'].seek(0)
-			for line in katana.config['dict']:
-				yield line.rstrip('\n')
+			try:
+				for line in katana.config['dict']:
+					yield line.rstrip('\n')
+			except UnicodeDecodeError:
+				# JOHN: This happens sometimes on line 54 and I DON'T KNOW WHY
+				return
 
 	def evaluate(self, katana, case):
+
 		result = vigenere(self.target, case)
-		katana.locate_flags(self, result)
-		katana.add_results(self, result)
-		katana.recurse(self, result)
+
+		if result:
+			katana.locate_flags(self, result)
+			katana.add_results(self, result)
+
+			if utilities.is_english(result):
+				katana.recurse(self, result)
 	
