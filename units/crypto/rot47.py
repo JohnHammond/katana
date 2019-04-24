@@ -11,7 +11,8 @@ import string
 import collections
 
 
-class Unit(units.PrintableDataUnit):
+# class Unit(units.PrintableDataUnit):
+class Unit(units.NotEnglishUnit):
 
 	PROTECTED_RECURSE = True
 

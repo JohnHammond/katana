@@ -12,10 +12,12 @@ import glob
 from hashlib import md5
 
 DEPENDENCIES = [ 'foremost' ]
-PROTECTED_RECURSE = True
 
 class Unit(units.forensics.ForensicsUnit):
 
+	# JOHN: This MUST be in the class... 
+	PROTECTED_RECURSE = True
+	
 	# We do not need to include the constructor here 
 	# because the ForensicsUnit parent will pull from FileUnit, 
 	# to ensure the target is in fact a file.

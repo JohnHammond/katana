@@ -2,17 +2,18 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-04-15 21:45:43
+# @Last Modified time: 2019-04-17 19:18:12
 from unit import BaseUnit
 from pwn import *
 import os
 import magic
 import traceback
 import string
-import enchant
+import re
+import utilities
 
-dictionary = enchant.Dict()
-english_words_threshold = 2
+BASE64_PATTERN = re.compile( '^[a-zA-Z0-9+/]+={0,2}$', flags= re.DOTALL | re.IGNORECASE  )
+
 
 class NotApplicable(Exception):
 	pass
@@ -35,7 +36,7 @@ class FileOrDataUnit(BaseUnit):
 			pass
 		except:
 			traceback.print_exc()
-
+		
 		# We do that before super, so that self.target always refers to
 		# the correct target
 		super(FileOrDataUnit, self).__init__(katana, parent, target)
@@ -66,7 +67,8 @@ class FileUnit(BaseUnit):
 			raise NotApplicable()
 
 		if ' image ' in t:
-			katana.add_image(self, os.path.abspath(target))
+			# katana.add_image(self, os.path.abspath(target))
+			katana.add_image(os.path.abspath(target)) # JOHN: I'm still unsure about putting all the images in every unit
 
 class PrintableDataUnit(BaseUnit):
 	
@@ -95,6 +97,7 @@ class PrintableDataUnit(BaseUnit):
 		for c in self.target:
 			if c not in string.printable:
 				raise NotApplicable()
+
 
 class ContainsLettersUnit(BaseUnit):
 	
@@ -161,12 +164,12 @@ class NotEnglishUnit(BaseUnit):
 			if c not in string.printable:
 				raise NotApplicable()
 
-		all_words = re.findall('[\w]+', self.target)
-		
-		english_words = [ word for word in all_words if dictionary.check(word) ]
+		# Also ensure this isn't Base64 (a lot of false positives...)
+		base64_result = BASE64_PATTERN.findall(str(self.target))
+		if base64_result is not None and base64_result != []:
+			raise NotApplicable()
 
-		# This has a majority of English letters... it might be English!!
-		if len(english_words) >= (len(all_words) - english_words_threshold):
+		if utilities.is_english(self.target):
 			raise NotApplicable()
 
 class BruteforcePasswordUnit(object):

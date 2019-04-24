@@ -32,6 +32,7 @@ def get_plane(img, channel, index = 0):
 
 				plane = bin(channel)[2:].zfill(8)
 				try:
+					new_color = 255*int(plane[abs(index-7)])
 					new_image_data[x, y] = 255*int(plane[abs(index-7)])
 				except IndexError:
 					pass
@@ -48,8 +49,8 @@ class Unit(units.FileUnit):
 			help="a channel to scrape out in stegsolve, R, G, B, or A", action="append",
 			default=None)
 		parser.add_argument('--stegsolve-max', type=int,
-			help="maximum number of bits to bruteforce (without specifying --stegsolve-plane), default 3", action="append",
-			default=2)
+			help="maximum number of bits to bruteforce (without specifying --stegsolve-plane), default 1", action="append",
+			default=1)
 		parser.add_argument('--stegsolve-plane', type=int,
 			help="a bit number to scrape out in stegsolve, in range 0 to 7.", action="append",
 			default=None)
@@ -58,15 +59,19 @@ class Unit(units.FileUnit):
 		# Call the parent constructor to ensure that this an image file!
 		super(Unit, self).__init__(katana, parent, target, keywords=[' image '])
 
+
 		try:
 			self.img = Image.open(target)
+
 			
 		# If we don't know what this is, don't bother with it.
 		except OSError:
+			print('wy we die')
 			raise units.NotApplicable
 
 		except Exception:
 			# JOHN: I don't know what errors this could produce... but it COULD!
+
 			traceback.print_exc()
 			raise units.NotApplicable
 
@@ -88,7 +93,8 @@ class Unit(units.FileUnit):
 					yield (channel, katana.config['stegsolve_plane'])
 			else:
 				for plane in range(katana.config['stegsolve_max']):
-					for channel in [ 'R', 'G', 'B', 'A' ]:
+					# for channel in [ 'R', 'G', 'B', 'A' ]:
+					for channel in [ 'R' ]:
 						yield ( channel, plane )
 
 	def evaluate(self, katana, information):
@@ -106,4 +112,5 @@ class Unit(units.FileUnit):
 			image.save(output_path)
 
 			# JOHN:  Because this is our generated image. we will NOT recurse and NOT hunt for flags! 
-			katana.add_image(self, os.path.abspath(output_path))
+			# katana.add_image(self, os.path.abspath(output_path))
+			katana.add_image(os.path.abspath(output_path))
