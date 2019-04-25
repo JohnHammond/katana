@@ -1,0 +1,19 @@
+[
+	{ "name": "Raw - Strings", "target": "./tests/orchestra", "unit": [ "raw" ], "flag_format": "USCGA{.*?}", "flag": "USCGA{strings}" },
+	{ "name": "Raw - Exiftool with Base64", "target": "./tests/woof64.jpg", "flag_format": "USCGA{.*?}", "unit": [ "raw" ], "flag": "USCGA{the_best_base_is_the_base64}" },
+	{ "name": "Raw - Morse Code with Hexlify", "target": "./tests/tamuctf_morsecode.txt", "flag_format": "gigem{.*?}", "unit": [ "raw" ], "flag": "gigem{C1icK_cl1CK-y0u_h4v3_m4I1}" },
+	{ "name": "Stego - QR Code", "target": "./tests/qrcode.png", "flag_format": "USCGA{.*?}", "unit": [ "raw" ], "flag": "USCGA{is_this_ecoin_from_mr_robot}" },
+	{ "name": "Stego - steghide (no password)", "target": "./tests/rubber_ducky.jpg", "flag_format": "USCGA{.*?}", "unit": [ "stego" ], "flag": "USCGA{hidden_in_the_bathtub}" }, 
+	{ "name": "Stego - steghide (rockyou.txt)", "target": "./tests/evil_ducky.jpg", "flag_format": "USCGA{.*?}", "unit": [ "stego" ], "dict": "./tests/rockyou.txt", "flag": "USCGA{we_finally_found_the_the_flag}" },
+	{ "name": "Stego - Snow", "target": "./tests/let_it_snow.txt", "flag_format": "USCGA{.*?}", "unit": [ "stego" ], "flag": "USCGA{snow_can_both_hide_and_show}" },
+	{ "name": "Stego - Zsteg", "target": "./tests/pierre.png", "flag_format": "USCGA{.*?}", "unit": [ "stego" ] },
+	{ "name": "Web - robots.txt", "target": "http://web5.tamuctf.com", "flag_format": "gigem{.*?}", "unit": [ "web" ] },
+	{ "name": "Web - Basic SQL (tamu)", "target": "http://web1.tamuctf.com", "flag_format": "gigem{.*?}", "unit": [ "web" ], "flag": "gigem{f4rm3r5_f4rm3r5_w3'r3_4ll_r16h7}" },
+	{ "name": "Web - Basic SQL (pico)", "target": "http://2018shell.picoctf.com:53261/", "flag_format": "picoCTF{.*}", "unit": [ "web" ], "flag": "picoCTF{w3lc0m3_t0_th3_vau1t_23495366}" },
+	{ "name": "Web - Cookies", "target": "http://whatarecookies.com", "unit": [ "web.cookies" ] },
+	{ "name": "Esoteric - Brainfuck (brainmeat)", "target": "./tests/brainmeat.txt", "flag_format": "sun{.*?}", "unit": [ "esoteric.brainfuck" ], "flag": "sun{fuck_the-brain#we!got^beef}" },
+	{ "name": "Esoteric - Brainfuck (uscga)", "target": "./tests/brainfuck.txt", "auto": true },
+	{ "name": "Esoteric - Pikalang (it)", "target": "./tests/it.pokeball", "unit": [ "esoteric" ], "flag_format": "HELLO WORLD", "flag": "HELLO WORLD" },
+	{ "name": "Esoteric - Pikalang (pikalang)", "target": "./tests/pikalang.pokeball", "unit": [ "esoteric" ], "flag_format": "USCGA{.*?}", "flag": "USCGA{hello_this_is_my_flag}" },
+	{ "name": "Esoteric - Malbolge", "target": "./tests/malbolge.txt", "unit": [ "esoteric" ], "flag_format": "Hello World!", "flag": "Hello World!" }
+]
