@@ -22,12 +22,12 @@ class Unit(BaseUnit):
 
 		# We don't need to operate on files
 		if not self.target.is_printable or self.target.is_file or self.target.is_english:
-			raise NotApplicable
+			raise NotApplicable("is a file")
 
 		# Check if there is hex in it
 		self.matches = HEX_REGEX.findall(self.target.raw)
 		if self.matches is None:
-			raise NotApplicable()
+			raise NotApplicable("no hex found")
 
 	def evaluate(self, katana, case):	
 		for match,_ in self.matches:

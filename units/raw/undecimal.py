@@ -24,16 +24,16 @@ class Unit(BaseUnit):
 
 		# We don't need to operate on files
 		if not self.target.is_printable or self.target.is_file or self.target.is_english:
-			raise NotApplicable
+			raise NotApplicable("is a file")
 
 		self.matches = DECIMAL_REGEX.findall(self.target.raw)
 
 		if self.matches is None:
-			raise NotApplicable()
+			raise NotApplicable("no decimal values found")
 
 		for decimal in self.matches:
 			if int(decimal) not in range(255):
-				raise NotApplicable
+				raise NotApplicable("decimal value larger than 255 was found")
 
 	def evaluate(self, katana, case):
 	

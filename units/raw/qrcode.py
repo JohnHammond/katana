@@ -24,7 +24,7 @@ class Unit(units.FileUnit):
 		try:
 			self.image = Image.open(self.target.path)
 		except OSError:
-			raise NotApplicable
+			raise NotApplicable("not an image")
 
 
 	def evaluate(self, katana, case):

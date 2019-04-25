@@ -24,7 +24,7 @@ class Unit(BaseUnit):
 		super(Unit, self).__init__(katana, parent, target)
 
 		if not self.target.is_file:
-			raise NotApplicable
+			raise NotApplicable("not a file")
 
 	def evaluate(self, katana, case):
 

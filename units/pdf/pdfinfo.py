@@ -10,7 +10,11 @@ import utilities
 
 DEPENDENCIES = [ 'pdfinfo' ]
 
-class Unit(units.pdf.PdfUnit):
+class Unit(units.FileUnit):
+
+	def __init__(self, katana, parent, target):
+		# This ensures it is a PDF
+		super(Unit, self).__init__(katana, parent, target, keywords=['pdf document'])
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
@@ -22,7 +26,7 @@ class Unit(units.pdf.PdfUnit):
 
 	def evaluate(self, katana, case):
 
-		p = subprocess.Popen(['pdfinfo', self.target, '-upw', katana.config['pdf_user_password'], '-opw', katana.config['pdf_owner_password'] ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		p = subprocess.Popen(['pdfinfo', self.target.path, '-upw', katana.config['pdf_user_password'], '-opw', katana.config['pdf_owner_password'] ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		
 		# Look for flags, if we found them...
 		response = utilities.process_output(p)

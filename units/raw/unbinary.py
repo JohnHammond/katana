@@ -24,7 +24,7 @@ class Unit(BaseUnit):
 		self.matches = BINARY_REGEX.findall(self.target.raw)
 
 		if self.matches is None:
-			raise NotApplicable
+			raise NotApplicable("no binary data found")
 
 	def evaluate(self, katana, case):
 
