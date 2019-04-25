@@ -1,11 +1,11 @@
-from units.zip import ZipUnit
+import units
 import zipfile
 import argparse
 from pwn import *
 
 DEPENDENCIES = [ 'unzip' ]
 
-class Unit(ZipUnit):
+class Unit(units.FileUnit):
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
@@ -13,9 +13,9 @@ class Unit(ZipUnit):
 					help='A password to try on the file', action='append',
 					default=[])
 
-
-	def __init__( self, katana, parent, target ):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, parent, target):
+		# This ensures it is a ZIP
+		super(Unit, self).__init__(katana, parent, target, keywords=['zip archive'])
 
 	def enumerate(self, katana):
 		yield ''
@@ -76,4 +76,3 @@ class Unit(ZipUnit):
 				katana.recurse(self, name)
 
 			return True
-

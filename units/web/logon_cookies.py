@@ -76,3 +76,6 @@ class Unit(units.web.WebUnit):
 						else:
 							new = requests.get(r.url, cookies = { admin_cookie : '1' })
 							if katana.locate_flags(self, new.text): break
+			else:
+				new = s.get(r.url, cookies = { 'admin' : '1' })
+				if katana.locate_flags(self, new.text): return

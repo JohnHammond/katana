@@ -16,7 +16,8 @@ class Unit(WebUnit):
 		# Run the parent constructor, to ensure this is a valid URL
 		super(Unit, self).__init__(katana, parent, target)
 		
-		# Then check if robots.txt even exists.
+		if not self.target.endswith('/'):
+			raise NotApplicable
 
 		# Try to get the robots.txt file
 		try:

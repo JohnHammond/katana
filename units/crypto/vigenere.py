@@ -43,10 +43,6 @@ class Unit(NotEnglishUnit):
 		)
 		return	
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
-
-		print("trying", self.target)
 
 	def enumerate(self, katana):
 		# Check each given password
