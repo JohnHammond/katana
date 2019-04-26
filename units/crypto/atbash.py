@@ -8,6 +8,7 @@ import os
 import units.crypto
 import string
 import collections
+import io
 
 # class Unit(units.PrintableDataUnit):
 class Unit(units.NotEnglishUnit):
@@ -21,13 +22,15 @@ class Unit(units.NotEnglishUnit):
 		new_string = []
 		reverse_upper = string.ascii_uppercase[::-1]
 		reverse_lower = string.ascii_lowercase[::-1]
-		for character in self.target:
-			if character in string.ascii_uppercase:
-				new_string.append(reverse_upper[string.ascii_uppercase.index(character)])
-			elif character in string.ascii_lowercase:
-				new_string.append(reverse_lower[string.ascii_lowercase.index(character)])
-			else:
-				new_string.append(character)
+
+		with io.TextIOWrapper(self.target.stream, encoding='utf-8') as stream:
+			for character in iter(lambda: stream.read(1), ''):
+				if character in string.ascii_uppercase:
+					new_string.append(reverse_upper[string.ascii_uppercase.index(character)])
+				elif character in string.ascii_lowercase:
+					new_string.append(reverse_lower[string.ascii_lowercase.index(character)])
+				else:
+					new_string.append(character)
 
 		result = ''.join(new_string)
 
