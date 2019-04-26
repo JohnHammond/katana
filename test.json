@@ -16,5 +16,6 @@
 	{ "name": "esoteric.pikalang.it", "target": "./tests/it.pokeball", "unit": [ "esoteric" ], "flag_format": "HELLO WORLD", "flag": "HELLO WORLD" },
 	{ "name": "esoteric.pikalang.pikalang", "target": "./tests/pikalang.pokeball", "unit": [ "esoteric" ], "flag_format": "USCGA{.*?}", "flag": "USCGA{hello_this_is_my_flag}" },
 	{ "name": "esoteric.malbolge", "target": "./tests/malbolge.txt", "unit": [ "esoteric" ], "flag_format": "Hello World!", "flag": "Hello World!" },
-	{ "name": "crypto.atbash", "target": "./tests/atbash.txt", "unit": ["crypto"], "flag_format": "FLAG{.*?}", "flag": "FLAG{you_can_solve_this_atbash}" }
+	{ "name": "crypto.atbash", "target": "./tests/atbash.txt", "unit": ["crypto"], "flag_format": "FLAG{.*?}", "flag": "FLAG{you_can_solve_this_atbash}" },
+	{ "name": "crypto.caesar", "target": "bhwc{whh_dweh_ywaown}", "unit": ["crypto"], "flag_format": "FLAG{.*?}", "flag": "FLAG{ALL_HAIL_CAESAR}" }
 ]
