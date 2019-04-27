@@ -56,11 +56,11 @@ class Unit(units.NotEnglishUnit):
 			for c in iter(lambda: stream.read(1), ''):
 				idx = string.ascii_uppercase.find(c)
 				if c != -1:
-					result.append(string.ascii_uppercase[(c+case) % len(string.ascii_uppercase)])
+					result.append(string.ascii_uppercase[(idx+case) % len(string.ascii_uppercase)])
 				else:
 					idx = string.ascii_lowercase.find(c)
 					if idx != -1:
-						result.append(string.ascii_lowercase[(c+case) % len(string.ascii_lowercase)])
+						result.append(string.ascii_lowercase[(idx+case) % len(string.ascii_lowercase)])
 					else:
 						result.append(c)
 

@@ -12,7 +12,7 @@
 	{ "name": "web.basicsql.pico", "target": "http://2018shell.picoctf.com:53261/", "flag_format": "picoCTF{.*}", "unit": [ "web" ], "flag": "picoCTF{w3lc0m3_t0_th3_vau1t_23495366}" },
 	{ "name": "web.cookies", "target": "http://whatarecookies.com", "unit": [ "web.cookies" ] },
 	{ "name": "esoteric.brainfuck.brainmeat", "target": "./tests/brainmeat.txt", "flag_format": "sun{.*?}", "unit": [ "esoteric.brainfuck" ], "flag": "sun{fuck_the-brain#we!got^beef}" },
-	{ "name": "esoteric.brainfuck.uscga", "target": "./tests/brainfuck.txt", "auto": true },
+	{ "name": "esoteric.brainfuck.uscga", "target": "./tests/brainfuck.txt", "unit": ["esoteric.brainfuck"], "flag_format": "USCGA{.*?}", "flag": "USCGA{this_here_is_brainfuck}" },
 	{ "name": "esoteric.pikalang.it", "target": "./tests/it.pokeball", "unit": [ "esoteric" ], "flag_format": "HELLO WORLD", "flag": "HELLO WORLD" },
 	{ "name": "esoteric.pikalang.pikalang", "target": "./tests/pikalang.pokeball", "unit": [ "esoteric" ], "flag_format": "USCGA{.*?}", "flag": "USCGA{hello_this_is_my_flag}" },
 	{ "name": "esoteric.malbolge", "target": "./tests/malbolge.txt", "unit": [ "esoteric" ], "flag_format": "Hello World!", "flag": "Hello World!" },

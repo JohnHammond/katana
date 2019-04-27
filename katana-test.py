@@ -17,6 +17,10 @@ if __name__ == "__main__":
 			help='run all tests')
 	parser.add_argument('--data', '-d', default='./test.json',
 			help='the unit test data to use')
+	parser.add_argument('--list', '-l', action='store_true', default=False,
+			help='list all available unit tests')
+	parser.add_argument('--output', '-o', type=str, default="./test-results",
+			help='directory to store all test results')
 	args = parser.parse_args()
 
 	# Read in the test data
@@ -28,15 +32,22 @@ if __name__ == "__main__":
 		traceback.print_exc()
 		sys.exit(-1)
 
+	# List units if requested
+	if args.list:
+		log.info('Availabe Unit Tests:')
+		for test in tests:
+			print(f'\t- {test["name"]}')
+		sys.exit(0)
+
 	# Remove old results tree if it exists
 	try:
-		shutil.rmtree('./test-results')
+		shutil.rmtree(args.output)
 	except:
 		# We don't care if it didn't exis
 		pass
 
 	# Create results tree
-	os.mkdir('./test-results')
+	os.mkdir(args.output)
 
 	# Make a map of test name -> test data
 	required_tests = []
@@ -65,21 +76,21 @@ if __name__ == "__main__":
 
 		# Build arguments
 		prog.status('building arguments')
-		args = [ './katana.py', '--outdir', os.path.join('./test-results', test['name']) ]
+		prog_args = [ './katana.py', '--outdir', os.path.join(args.output, test['name']) ]
 		for item, value in test.items():
 			if item == 'name' or item == 'flag' or item == 'test_timeout':
 				continue
 			elif item == 'unit':
 				for unit in value:
-					args.append('--unit')
-					args.append(unit)
+					prog_args.append('--unit')
+					prog_args.append(unit)
 			elif item == 'auto':
-				args.append('--auto')
+				prog_args.append('--auto')
 			elif item == 'target':
-				args.append(value)
+				prog_args.append(value)
 			else:
-				args.append('--' + item.replace('_', '-'))
-				args.append(value)
+				prog_args.append('--' + item.replace('_', '-'))
+				prog_args.append(value)
 
 		if 'test_timeout' in test:
 			timeout = test['test_timeout']
@@ -90,10 +101,13 @@ if __name__ == "__main__":
 
 		# Run the test
 		try:
-			result = subprocess.run(args, capture_output=True, timeout=timeout)
+			result = subprocess.run(prog_args, capture_output=True, timeout=timeout)
 		except subprocess.TimeoutExpired:
 			prog.failure('test timeout expired!')
 			continue
+
+		with open(os.path.join(args.output, test['name'], 'stdout.txt'), 'wb') as f:
+			f.write(result.stdout)
 
 		# Check the result
 		#if result.returncode != 0:
