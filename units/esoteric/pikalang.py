@@ -354,25 +354,32 @@ class Unit(EsotericUnit):
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--pikalang-args',  action='store_true', default=[], help='arguments for pikalang')
 
+	def __init__(self, katana, parent, target):
+		super(Unit, self).__init__(katana, parent, target)
+
+		if not self.target.is_file:
+			raise NotApplicable('not a file')
+
 	def evaluate(self, katana, case ):
 
 		output = None
+		target = self.target.raw
 		
 		try:
-			output = run(self.target, katana.config['pikalang_args'])
-			katana.locate_flags(self, output)
+			output = run(target, katana.config['pikalang_args'])
+			#katana.locate_flags(self, output)
 
 
 		except SyntaxError:
-			p_mappings = ["pikachu", "pikapi", 'pichu', 'pika', 'pipi', 'chu', 'ka', 'pi']
-			r_mappings = [".",        ",",      '<',     '[',      '>',  ']',  '-',  '+']
+			p_mappings = [b"pikachu", b"pikapi", b'pichu', b'pika', b'pipi', b'chu', b'ka', b'pi']
+			r_mappings = [b".",       b",",      b'<',     b'[',    b'>',	 b']',   b'-',  b'+']
 
 			for i in range(len(p_mappings)):
-				self.target = self.target.replace(p_mappings[i], r_mappings[i])
+				target = target.replace(p_mappings[i], r_mappings[i])
 			
-			self.target = self.target.replace(' ' ,'')
+			target = target.replace(' ' ,'')
 			try:
-				output = evaluate_brainfuck(self.target, None)
+				output = evaluate_brainfuck(target, None)
 			except (ValueError, TypeError):
 				return
 
