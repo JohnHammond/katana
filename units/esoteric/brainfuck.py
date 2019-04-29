@@ -20,7 +20,7 @@ import time
 #	 return m
 
 def cleanup(code):
-	return ''.join(filter(lambda x: x in ['.', ',', '[', ']', '<', '>', '+', '-'], code))
+	return (b''.join(filter(lambda x: x in [b'.', b',', b'[', b']', b'<', b'>', b'+', b'-'], code))).decode('utf-8')
 
 
 def buildbracemap(code):
@@ -44,6 +44,7 @@ def evaluate_brainfuck(code, input_file, timeout = 1):
 		code	= cleanup(list(code))
 		bracemap = buildbracemap(code)
 	except:
+		traceback.print_exc()
 		return ""
 
 	cells, codeptr, cellptr = [0], 0, 0
@@ -97,14 +98,14 @@ class Unit(EsotericUnit):
 	def evaluate(self, katana, case):
 
 		try:
-			output = evaluate_brainfuck(self.target, katana.config['brainfuck_input'], katana.config['brainfuck_timeout'])
+			output = evaluate_brainfuck(self.target.raw, katana.config['brainfuck_input'], katana.config['brainfuck_timeout'])
 
 			# JOHN: Again, this is from Caleb's old code.
 			# output = evaluate_brainfuck(target, self.config['bf_map'], self.config['bf_input'])
 		except (ValueError, TypeError):
+			traceback.print_exc()
 			return None
 
 		if output:
-			katana.locate_flags(self, output)
 			katana.recurse(self, output)
 			katana.add_results(self, output)

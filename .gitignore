@@ -4,3 +4,4 @@ domains.txt
 tests/
 env/
 *.pyc
+test-results/
