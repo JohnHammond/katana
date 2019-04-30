@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-from pwnlib import *
-from pwn import log
+from pwn import *
 import argparse
 import json
 import sys
@@ -624,8 +623,8 @@ class Katana(object):
 		else:
 			for unit_class in self.all_units:
 				try:
-					# Climb the family tree to see if ANY ancester is not allowed to recurse..
-					# If that is the case, don't bother with this unit
+					# Climb the family tree to see if THE MOST RECENT ancester 
+					# is not allowed to recurse.. don't bother with this unit
 					if unit_class.PROTECTED_RECURSE and parent is not None:
 						if parent.PROTECTED_RECURSE:
 							raise units.NotApplicable()
@@ -681,7 +680,7 @@ class Katana(object):
 			self.work.task_done()
 
 		if progress is not None:
-			progress.success('thread completed. exiting')
+			progress.success('complete. exiting')
 
 
 # Make sure we find the local packages (first current directory)

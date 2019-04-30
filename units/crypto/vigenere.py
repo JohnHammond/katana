@@ -6,9 +6,6 @@ import string
 
 def vigenere(plaintext, key):
 
-		# If for some stupid reason we have no key, don't bother.
-		if not key: return ""
-
 		plaintext = plaintext.upper()
 		key = key.upper()
 
@@ -45,6 +42,8 @@ class Unit(NotEnglishUnit):
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
+		if katana.config['vigenere_key'] == [""]:
+			raise NotApplicable("empty vignere key passed")
 
 	def enumerate(self, katana):
 		# Check each given password
