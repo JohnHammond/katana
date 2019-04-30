@@ -53,7 +53,7 @@ class Unit(web.WebUnit):
 			
 			# Check out the cookies. Flip them if they are boolean, look for flags.
 			if s.cookies:
-				for admin_cookie in potential_cookie_names:
+				for admin_cookie in web.potential_cookie_names:
 					if admin_cookie in s.cookies.keys():
 						if s.cookies[admin_cookie] == 'False':
 							new = requests.get(r.url, cookies = { admin_cookie : 'True' })
