@@ -14,7 +14,7 @@ class Unit(WebUnit):
 
 		# View the page
 		try:
-			r = requests.get(self.target)
+			r = requests.get(self.target.upstream)
 		except requests.exceptions.ConnectionError:
 			return
 		
@@ -26,9 +26,11 @@ class Unit(WebUnit):
 			# self.locate_flags(katana, key)
 			for cookie_name, cookie_value in cookies.items():
 
-				# I cast this to a string because it may be a number or a bool
-				katana.locate_flags(self, str(cookie_value))
-				katana.locate_flags(self, cookie_name)
+				## I cast this to a string because it may be a number or a bool
+				## We do not need to locate flags because the recurse function
+				## now does this for us...
+				# katana.locate_flags(self, str(cookie_value))
+				# katana.locate_flags(self, cookie_name)
 				katana.recurse(self, str(cookie_value))
 				katana.recurse(self, cookie_name)
 				
