@@ -20,21 +20,17 @@ def md5sum(path):
 			md5.update(chunk)
 	return md5
 
-class Unit(units.forensics.ForensicsUnit):
+class Unit(units.FileUnit):
 
 	# JOHN: This MUST be in the class... 
 	PROTECTED_RECURSE = True
 	
 	def evaluate(self, katana, case):
 
-		# Find/create the output artifact directory
-		binwalk_directory, _ = katana.create_artifact(self,
-				hashlib.md5(self.target.encode('utf-8')).hexdigest(),
-				create=True, asdir=True
-		)
+		binwalk_directory = katana.get_artifact_path(self)
 
 		# Run binwalk on the target
-		parms = ['binwalk', '-e', self.target, '--directory', binwalk_directory, '--dd=.*', '-M' ]
+		parms = ['binwalk', '-e', self.target.path, '--directory', binwalk_directory, '--dd=.*', '-M' ]
 		p = subprocess.Popen(parms, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
 		results = utilities.process_output(p)
@@ -45,7 +41,7 @@ class Unit(units.forensics.ForensicsUnit):
 			return
 
 		# Grab the md5 sum of the target file
-		target_sum = md5sum(self.target)
+		target_sum = md5sum(self.target.path)
 
 		# Inspect all the resulting files
 		for root, dirs, files in os.walk(binwalk_directory):

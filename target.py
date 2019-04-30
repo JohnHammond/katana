@@ -138,7 +138,10 @@ class Target(object):
 			return self.content
 		elif self.path is not None:
 			with open(self.path, 'rb') as f:
-				return mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+				try:
+					return mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+				except ValueError:
+					return self.upstream
 		else:
 			return self.upstream
 	
