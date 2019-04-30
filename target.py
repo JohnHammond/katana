@@ -42,6 +42,7 @@ class Target(object):
 		self.upstream = upstream
 		self.is_printable = True
 		self.is_english = True
+		self.is_image = False
 		self.is_base64 = False
 		self.is_url = ADDRESS_REGEX.match(self.upstream) is not None
 		self.is_file = 0 not in self.upstream and os.path.isfile(self.upstream)
@@ -71,6 +72,10 @@ class Target(object):
 			self.magic = magic.from_file(self.path)
 		else:
 			self.magic = magic.from_buffer(self.content)
+
+		# JOHN: Add a test to determine if this is in fact an image
+		if 'image' in self.magic.lower():
+			self.is_image = True
 
 		# CALEB: This used to happen in a separate unit but it was silly
 		katana.locate_flags(parent, self.magic)

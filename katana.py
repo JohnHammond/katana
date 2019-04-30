@@ -286,16 +286,25 @@ class Katana(object):
 			# "-#" to the filename _BEFORE THE EXTENSION_. The returned path will be
 			# correct
 			while True:
-				try:
-					if asdir:
-						os.mkdir(path)
-					else:
-						file_handle = open(path, mode)
-				except OSError:
-					n += 1
-					path = '{0}-{1}{2}'.format(name, n, ext)
+				if asdir:
+					os.mkdir(path)
 				else:
-					break
+					if ( not os.path.exists(path) ):
+						file_handle = open(path, mode)
+						break
+					else:
+						n += 1
+						path = '{0}-{1}{2}'.format(name, n, ext)
+				# try:
+				# 	if asdir:
+				# 		os.mkdir(path)
+				# 	else:
+				# 		file_handle = open(path, mode)
+				# except OSError:
+				# 	n += 1
+				# 	path = '{0}-{1}{2}'.format(name, n, ext)
+				# else:
+				# 	break
 
 			if not asdir:
 				self.add_artifact(unit, path)
@@ -438,6 +447,9 @@ class Katana(object):
 				units = self.locate_units(target, parent=unit, recurse=True)
 				# Add the units to the work queue
 				self.add_to_work(units)
+				# Keep track of images if we see them as a target.
+				if target.is_image and target.path is not None: 
+					self.add_image(os.path.abspath(target.path.decode('utf-8')))
 				# Notify that the recurse queue is finished
 				self.recurse_queue.task_done()
 
@@ -518,11 +530,9 @@ class Katana(object):
 	def add_image(self, image):
 
 		with self.results_lock:
-			# r = self.get_unit_result(unit)
 			if 'images' not in self.results:
 				self.results['images'] = {}
-				# print("we adding")
-			# else:
+
 			if image not in self.results['images'].keys():
 
 				image_hash = md5(open(image,'rb').read()).hexdigest()
@@ -596,6 +606,7 @@ class Katana(object):
 		if verify_length and len(data) < self.config['data_length']:
 			return
 	
+		# If the data is not a flag, go ahead and recurse on it!
 		if not self.locate_flags(unit, data):
 			self.recurse_queue.put((unit,data))
 
