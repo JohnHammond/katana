@@ -1,5 +1,5 @@
 from unit import BaseUnit
-from units import PrintableDataUnit
+from units import NotEnglishUnit
 from collections import Counter
 import sys
 from io import StringIO
