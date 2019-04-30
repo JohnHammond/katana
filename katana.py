@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from pwnlib.log import getLogger; log = getLogger(__name__)
+from pwnlib import *
+from pwn import log
 import argparse
 import json
 import sys
@@ -20,6 +21,7 @@ import tempfile
 import re
 import binascii
 import base64
+import subprocess
 import units
 import clipboard
 import jinja2

@@ -81,7 +81,7 @@ class Unit(units.NotEnglishUnit):
 
 	def evaluate(self, katana, case):
 		a, b = case
-		raw_target = self.target.raw
+		raw_target = self.target.stream.read()
 		try:
 			plaintext = decrypt( raw_target, a, b, katana.config['affine_alphabet'] )
 			if plaintext != raw_target:

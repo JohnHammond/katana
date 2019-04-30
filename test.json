@@ -17,5 +17,7 @@
 	{ "name": "esoteric.pikalang.pikalang", "target": "./tests/pikalang.pokeball", "unit": [ "esoteric" ], "flag_format": "USCGA{.*?}", "flag": "USCGA{hello_this_is_my_flag}" },
 	{ "name": "esoteric.malbolge", "target": "./tests/malbolge.txt", "unit": [ "esoteric" ], "flag_format": "Hello World!", "flag": "Hello World!" },
 	{ "name": "crypto.atbash", "target": "./tests/atbash.txt", "unit": ["crypto"], "flag_format": "FLAG{.*?}", "flag": "FLAG{you_can_solve_this_atbash}" },
-	{ "name": "crypto.caesar", "target": "bhwc{whh_dweh_ywaown}", "unit": ["crypto"], "flag_format": "FLAG{.*?}", "flag": "FLAG{ALL_HAIL_CAESAR}" }
+	{ "name": "crypto.caesar", "target": "bhwc{whh_dweh_ywaown}", "unit": ["crypto"], "flag_format": "FLAG{.*?}", "flag": "FLAG{ALL_HAIL_CAESAR}" },
+	{ "name": "crypto.rot47", "target": "./tests/rot47_test.txt", "unit": ["crypto"], "flag_format": "FLAG{.*?}", "flag": "FLAG{lol_what_even_is_rot47}" },
+	{ "name": "crypto.reverse", "target": "}enif_skrow_esrever{GALF", "unit": ["crypto"], "flag_format": "FLAG{.*?}", "flag": "FLAG{reverse_works_fine}" }
 ]
