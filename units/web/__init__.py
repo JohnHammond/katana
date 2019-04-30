@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-04-13 18:08:50
+# @Last Modified time: 2019-04-30 18:19:02
 
 from pwn import *
 from unit import BaseUnit
@@ -10,16 +10,11 @@ import units
 import os
 from units import NotApplicable
 
-ADDRESS_PATTERN = r'^((http|https):\/\/)(?P<host>[a-zA-Z0-9][a-zA-Z0-9\-_.]*)(:(?P<port>[0-9]{1,5}))?(\/(?P<uri>[^?]*))?(\?(?P<query>.*))?$'
-
 class WebUnit(BaseUnit):
 	
 	def __init__(self, katana, parent, target):
 
 		super(WebUnit, self).__init__(katana, parent, target)
 		
-		self.regex = re.compile(ADDRESS_PATTERN)
-		match = self.regex.match(target)
-		
-		if match is None:
-			raise NotApplicable
+		if not self.target.is_url:
+			raise NotApplicable("not a web url")

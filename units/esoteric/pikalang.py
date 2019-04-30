@@ -364,7 +364,6 @@ class Unit(PrintableDataUnit):
 	def evaluate(self, katana, case ):
 
 		output = None
-		
 		try:
 			output = run(self.raw_target, katana.config['pikalang_args'])
 			katana.locate_flags(self, output)

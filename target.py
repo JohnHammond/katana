@@ -58,6 +58,8 @@ class Target(object):
 			with filp:
 				filp.write(self.content)
 			self.is_file = True
+			# Carve out the root of the URL
+			self.url_root = '/'.join(upstream.decode('utf-8').split('/')[:3]) + '/'
 		# Save the path to the file
 		elif self.is_file:
 			self.content = None

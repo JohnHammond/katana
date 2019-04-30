@@ -112,7 +112,7 @@ __strings__
 
 
 ```
-rm -r results/ ; ./katana.py --unit raw ./tests/orchestra
+rm -r results/ ; ./katana.py --unit raw ./tests/orchestra -ff USCGA{.*?}
 ```
 
 __exiftool__
@@ -201,12 +201,12 @@ rm -r results/ ; ./katana.py -a ./tests/brainfuck.txt -ff USCGA{.*?}
 __Pikalang__
 
 ```
-rm -r results/ ; ./katana.py --unit esoteric ./tests/it.pokeball 
-rm -r results/ ; ./katana.py --unit esoteric ./tests/pikalang.pokeball
+rm -r results/ ; ./katana.py --unit esoteric ./tests/it.pokeball -s  -ff "HELLO WORLD"
+rm -r results/ ; ./katana.py --unit esoteric ./tests/pikalang.pokeball -ff USCGA{.*?}
 ```
 
 __Malbolge__
 
 ```
-rm -r results/ ; ./katana.py --unit esoteric ./tests/malbolge.txt 
+rm -r results/ ; ./katana.py --unit esoteric ./tests/malbolge.txt -ff "Hello World"
 ```
