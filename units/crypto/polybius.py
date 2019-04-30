@@ -10,7 +10,6 @@ from units import NotApplicable
 import string
 import collections
 
-
 def generate_table(alphabet = 'ABCDEFGHIKLMNOPQRSTUVWXYZ'):
 	
 	table = [[0] * 5 for row in range(5)]
@@ -41,7 +40,7 @@ class Unit(units.PrintableDataUnit):
 	def __init__( self, katana, parent, target ):
 		super(Unit, self).__init__(katana, parent, target)
 
-		no_spaces = target.replace(' ','')
+		no_spaces = target.stream.read().decode('utf-8').replace(' ','')
 		if not no_spaces.isdecimal():
 			raise NotApplicable
 
@@ -57,7 +56,7 @@ class Unit(units.PrintableDataUnit):
 
 		table = generate_table(katana.config['polybius_alphabet'])
 
-		no_spaces = self.target.replace(' ','')
+		no_spaces = self.target.stream.read().decode('utf-8').replace(' ','')
 		content = decrypt(table, no_spaces)
 		
 		katana.recurse(self,content)
