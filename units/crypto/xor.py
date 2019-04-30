@@ -30,12 +30,15 @@ class Unit(units.BaseUnit):
 		super(Unit, self).__init__(katana, parent, target)
 
 		# JOHN: We actually DON'T want printable characters in this case!
-		self.raw_target = target.raw.read().decode('utf-8').replace('\n','').replace('\t','')
+		try:
+			self.raw_target = target.stream.read().decode('utf-8').replace('\n','').replace('\t','')
+		except UnicodeDecodeError:
+			raise NotApplicable("unicode decode error")
 		if self.raw_target.isprintable():
-			raise NotApplicable
+			raise NotApplicable("seemingly printable")
 		else:
 			if self.raw_target.count('\x00') > len(self.raw_target)/2:
-				raise NotApplicable
+				raise NotApplicable("more than half null-bytes")
 
 
 	def evaluate(self, katana, case):

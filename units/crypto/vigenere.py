@@ -5,26 +5,26 @@ from units import NotEnglishUnit
 import string
 
 def vigenere(plaintext, key):
-        plaintext = plaintext.upper()
-        key = key.upper()
+		plaintext = plaintext.upper()
+		key = key.upper()
 
-        valid_chars = string.ascii_uppercase
+		valid_chars = string.ascii_uppercase
 
-        idx = 0
-        ciphertext = ''
+		idx = 0
+		ciphertext = ''
 
-        for c in plaintext:
-                if c not in valid_chars:
-                        ciphertext += c
-                else:
-                        if key[idx] not in valid_chars:
-                                idx = (idx + 1) % len(key)
-                        v1 = ord(c) - ord('A')
-                        v2 = ord(key[idx]) - ord('A')
-                        ciphertext += chr(((v1 - v2) % 26)+ord('A'))
-                        idx = (idx + 1) % len(key)
+		for c in plaintext:
+			if c not in valid_chars:
+				ciphertext += c
+			else:
+				if key[idx] not in valid_chars:
+					idx = (idx + 1) % len(key)
+				v1 = ord(c) - ord('A')
+				v2 = ord(key[idx]) - ord('A')
+				ciphertext += chr(((v1 - v2) % 26)+ord('A'))
+				idx = (idx + 1) % len(key)
 
-        return ciphertext
+		return ciphertext
 
 # class Unit(PrintableDataUnit):
 class Unit(NotEnglishUnit):
@@ -33,8 +33,8 @@ class Unit(NotEnglishUnit):
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
-		parser.add_argument('--vigenere-password', type=str,
-			action='append', help='a password for {0} files',
+		parser.add_argument('--vigenere-key', type=str,
+			action='append', help='a key for vignere cipher',
 			default=[]
 		)
 		return	
@@ -44,7 +44,7 @@ class Unit(NotEnglishUnit):
 
 	def enumerate(self, katana):
 		# Check each given password
-		for p in katana.config['vigenere_password']:
+		for p in katana.config['vigenere_key']:
 			yield p
 
 		# Add all passwords from the dictionary file
@@ -54,7 +54,7 @@ class Unit(NotEnglishUnit):
 				yield line.rstrip('\n')
 
 	def evaluate(self, katana, case):
-		result = vigenere(self.target, case)
+		result = vigenere(self.target.stream.read().decode('utf-8'), case)
 		katana.locate_flags(self, result)
 		katana.add_results(self, result)
 		katana.recurse(self, result)
