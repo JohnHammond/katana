@@ -174,7 +174,6 @@ rm -r results/; ./katana.py --unit web.robots http://johnhammond.org -ff "FLAG{.
 __Basic SQL Injection__
 
 ```
-rm -r results/; ./katana.py --unit web http://web1.tamuctf.com -ff "gigem{.*?}"
 rm -r results/; ./katana.py --unit web http://2018shell.picoctf.com:53261/ -ff "picoCTF{.*}"
 ```
 

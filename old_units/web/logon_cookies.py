@@ -8,26 +8,16 @@ import subprocess
 import os
 import units.raw
 import re
-import units.web
+import units.web as web
 import requests
 import magic
 import units
 
-potential_username_variables = [
-			'username', 'user', 'uname', 'un', 'name', 'user1', 'input1', 'uw1', 'username1', 'uname1', 'tbUsername', 'usern', 'id'
-]
-potential_password_variables = [
-	'password', 'pass', 'pword', 'pw', 'pass1', 'input2', 'password1', 'pw1', 'pword1', 'tbPassword'
-]
-
-user_regex = "<\s*input.*name\s*=\s*['\"](%s)['\"]" % "|".join(potential_username_variables)
-pass_regex = "<\s*input.*name\s*=\s*['\"](%s)['\"]" % "|".join(potential_password_variables)
-
-potential_cookie_names = [ 'admin', 'is_admin', 'isadmin', 'administrator', 'isAdmin' ]
 
 
 
-class Unit(units.web.WebUnit):
+
+class Unit(web.WebUnit):
 
 	def __init__(self, katana, parent, target):
 
