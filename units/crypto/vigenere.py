@@ -5,6 +5,10 @@ from units import NotEnglishUnit
 import string
 
 def vigenere(plaintext, key):
+
+		# If for some stupid reason we have no key, don't bother.
+		if not key: return ""
+
 		plaintext = plaintext.upper()
 		key = key.upper()
 
@@ -58,4 +62,3 @@ class Unit(NotEnglishUnit):
 		katana.locate_flags(self, result)
 		katana.add_results(self, result)
 		katana.recurse(self, result)
-	
