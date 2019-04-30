@@ -27,7 +27,7 @@ class Unit(units.pwnage.BasicBufferOverflowUnit):
 
 				# Grab the pid
 				pid = p.pid
-
+				
 				# Send the input
 				(stdout, stderr) = p.communicate(cyclic(size), timeout=katana.config['timeout'])
 
