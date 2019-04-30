@@ -18,7 +18,7 @@ import traceback
 PROTECTED_RECURSE = True
 
 # JOHN: I inherit from FileOrData unit, because this may very well not be printable text!
-class Unit(units.FileOrDataUnit):
+class Unit(units.BaseUnit):
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
@@ -30,45 +30,13 @@ class Unit(units.FileOrDataUnit):
 		super(Unit, self).__init__(katana, parent, target)
 
 		# JOHN: We actually DON'T want printable characters in this case!
-		if self.target.replace('\n','').replace('\t','').isprintable():
+		self.raw_target = target.raw.read().decode('utf-8').replace('\n','').replace('\t','')
+		if self.raw_target.isprintable():
 			raise NotApplicable
 		else:
-			if self.target.count('\x00') > len(self.target)/2:
+			if self.raw_target.count('\x00') > len(self.raw_target)/2:
 				raise NotApplicable
-		# print("WORKING", self.parent.__class__, repr(self.target[:40]), )
 
-			# pass
-
-	# def enumerate(self, katana):
-	# 	if ( katana.config['xor_key'] ):
-	# 		yield katana.config['xor_key']
-	# 	else:
-	# 		for k in range(255):
-	# 			yield k
-
-
-	def evaluate(self, katana, case):
-	
-		key = case
-		try:
-			result = xor(self.target, key).decode('latin-1')
-
-			if result.isprintable():
-				# JOHN: Recursing on this dangerous, admittedly... 
-				#       But sometimes it must be done (!!??!?!)
-				# katana.recurse(self, result)
-				katana.add_results(self, result)
-				# If we find the flag, STOP doing this!!
-				if katana.locate_flags(self, result):
-					self.completed = True
-
-			else:
-				return None
-
-
-		# If this fails, it's probably not binary we can deal with...
-		except (UnicodeDecodeError, binascii.Error):
-			return None
 
 	def evaluate(self, katana, case):
 	
@@ -80,7 +48,7 @@ class Unit(units.FileOrDataUnit):
 		# key = case
 		for k in key:
 			try:
-				result = xor(self.target, k).decode('latin-1')
+				result = xor(self.raw_target, k).decode('latin-1')
 
 				if result.isprintable():
 					# JOHN: Recursing on this dangerous, admittedly... 
@@ -93,7 +61,6 @@ class Unit(units.FileOrDataUnit):
 
 				else:
 					return None
-
 
 			# If this fails, it's probably not binary we can deal with...
 			except (UnicodeDecodeError, binascii.Error):
