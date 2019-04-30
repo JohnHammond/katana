@@ -21,6 +21,7 @@ import traceback
 #	 return m
 
 def cleanup(code):
+	code = [ x.encode('utf-8') for x in code ]
 	return (b''.join(filter(lambda x: x in [b'.', b',', b'[', b']', b'<', b'>', b'+', b'-'], code))).decode('utf-8')
 
 
