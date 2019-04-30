@@ -1,5 +1,5 @@
 from unit import BaseUnit
-from esoteric import EsotericUnit
+from units import PrintableDataUnit
 from collections import Counter
 import sys
 from io import StringIO
@@ -118,8 +118,7 @@ def execute(code, inf=sys.stdin.buffer, allow_not_isprint=False, debug=False):
             return ''.join(output)
             break
     
-    
-class Unit(EsotericUnit):
+class Unit(PrintableDataUnit):
 
 
     @classmethod
@@ -129,7 +128,7 @@ class Unit(EsotericUnit):
     def evaluate(self, katana, case):
         
         try:
-            output = execute(self.target, katana.config['malbolge_input'])
+            output = execute(self.target.stream.read().decode('utf-8'), katana.config['malbolge_input'])
 
         except (ValueError, AssertionError):
             return None
