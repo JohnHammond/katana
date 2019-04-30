@@ -33,5 +33,4 @@ class Unit(units.FileUnit):
 		if 'stdout' in response:
 			for line in response['stdout']:
 				katana.locate_flags(self, line)
-
-		katana.add_results(self, response)		
+			katana.add_results(self, response)
