@@ -29,7 +29,7 @@ class Unit(units.NotEnglishUnit):
 
 	def evaluate(self, katana, case):
 
-		content = self.do_rot47(self.target.raw)
+		content = self.do_rot47(self.target.raw.decode('utf-8'))
 		katana.recurse(self,content)
 		katana.locate_flags(self, content)
 		katana.add_results(self, content)

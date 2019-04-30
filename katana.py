@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from pwn import *
+from pwnlib.log import getLogger; log = getLogger(__name__)
 import argparse
 import json
 import sys
