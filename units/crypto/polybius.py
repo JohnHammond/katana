@@ -42,7 +42,7 @@ class Unit(units.PrintableDataUnit):
 
 		no_spaces = target.stream.read().decode('utf-8').replace(' ','')
 		if not no_spaces.isdecimal():
-			raise NotApplicable
+			raise NotApplicable("not just decimal numbers")
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
