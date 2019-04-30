@@ -19,7 +19,7 @@ class Unit(WebUnit):
 		try:
 			r = requests.get('{0}/{1}'.format(self.target.url_root.rstrip('/'), 'robots.txt'), headers = headers)
 		except requests.exceptions.ConnectionError:
-			raise NotApplicable("no /robots.txt found")
+			raise NotApplicable("cannot reach url")
 
 		# Check if the request succeeded
 		if r.status_code != 200:

@@ -50,11 +50,14 @@ class Target(object):
 
 		# Download the target of a URL
 		if self.is_url:
-			self.content = requests.get(upstream).content
+			self.request = requests.get(upstream)
+			self.content = self.request.content
 			self.path, filp = katana.create_artifact(parent,
 					hashlib.md5(upstream).hexdigest(),
 					mode='wb', create=True
 				)
+			# JOHN: This used to happen in web.request but it was silly
+			katana.locate_flags(parent, self.content)
 			with filp:
 				filp.write(self.content)
 			self.is_file = True

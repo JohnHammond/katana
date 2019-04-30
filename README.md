@@ -168,9 +168,8 @@ rm -r results/; ./katana.py --unit raw --unit stego ./tests/pierre.png -ff "USCG
 __robots.txt__
 
 ```
-rm -r results/; ./katana.py --unit web http://web5.tamuctf.com -ff "gigem{.*?}"
+rm -r results/; ./katana.py --unit web.robots http://johnhammond.org -ff "FLAG{.*?}"
 ```
-
 
 __Basic SQL Injection__
 
@@ -182,7 +181,7 @@ rm -r results/; ./katana.py --unit web http://2018shell.picoctf.com:53261/ -ff "
 __Cookies__
 
 ```
-rm -r results/; ./katana.py --unit web.cookies "http://www.whatarecookies.com/"
+rm -r results/; ./katana.py --unit web.cookies http://johnhammond.org -ff "FLAG{.*?}"
 ```
 
 __Crypto__

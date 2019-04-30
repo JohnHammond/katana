@@ -12,18 +12,11 @@ class Unit(WebUnit):
 	
 	def evaluate(self, katana, case):
 
-		# View the page
-		try:
-			r = requests.get(self.target.upstream)
-		except requests.exceptions.ConnectionError:
-			return
-		
    		# Return the cookies
-		result = [ vars(cookie) for cookie in r.cookies if cookie ]
+		result = [ vars(cookie) for cookie in self.target.request.cookies if cookie ]
 		
 		# Hunt for flags...
 		for cookies in result:
-			# self.locate_flags(katana, key)
 			for cookie_name, cookie_value in cookies.items():
 
 				## I cast this to a string because it may be a number or a bool
