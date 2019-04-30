@@ -1,5 +1,5 @@
 from unit import BaseUnit
-from units import PrintableDataUnit
+from units import NotEnglishUnit
 from collections import Counter
 import sys
 from io import StringIO
@@ -118,7 +118,7 @@ def execute(code, inf=sys.stdin.buffer, allow_not_isprint=False, debug=False):
             return ''.join(output)
             break
     
-class Unit(PrintableDataUnit):
+class Unit(NotEnglishUnit):
 
 
     @classmethod

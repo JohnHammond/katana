@@ -92,7 +92,7 @@ def evaluate_brainfuck(code, input_file, timeout = 1):
 	return ''.join(output)
 
 
-class Unit(PrintableDataUnit):
+class Unit(NotEnglishUnit):
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
