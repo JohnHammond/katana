@@ -1,11 +1,11 @@
-from units.zip import ZipUnit
+import units
 import zipfile
 import argparse
 from pwn import *
 
 DEPENDENCIES = [ 'unzip' ]
 
-class Unit(ZipUnit):
+class Unit(units.FileUnit):
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
@@ -13,9 +13,9 @@ class Unit(ZipUnit):
 					help='A password to try on the file', action='append',
 					default=[])
 
-
-	def __init__( self, katana, parent, target ):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, parent, target):
+		# This ensures it is a ZIP
+		super(Unit, self).__init__(katana, parent, target, keywords=['zip archive'])
 
 	def enumerate(self, katana):
 		yield ''
@@ -35,9 +35,9 @@ class Unit(ZipUnit):
 			'namelist': []
 		}
 
-		directory_path, _ = katana.create_artifact(self, os.path.basename(self.target), create=True, asdir=True)
+		directory_path, _ = katana.create_artifact(self, os.path.basename(self.target.path.decode('utf-8')), create=True, asdir=True)
 
-		p = subprocess.Popen(['unzip', '-P', password, self.target], cwd=directory_path, 
+		p = subprocess.Popen(['unzip', '-P', password, self.target.path], cwd=directory_path, 
 				stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
 		
 		p.wait()
@@ -47,11 +47,11 @@ class Unit(ZipUnit):
 				path = os.path.join(root, name)
 				katana.add_artifact(self, path)
 				katana.recurse(self, path)
-				self._completed = True
+				self.completed = True
 
 		return
 
-		with zipfile.ZipFile(self.target, allowZip64=True) as z:
+		with zipfile.ZipFile(self.target.path, allowZip64=True) as z:
 			name = z.namelist()[0]
 			#self.artificate_dir()
 			# Try to extract the file
@@ -76,4 +76,3 @@ class Unit(ZipUnit):
 				katana.recurse(self, name)
 
 			return True
-

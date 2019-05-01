@@ -27,7 +27,7 @@ class Unit(units.NotEnglishUnit):
 				if c in string.ascii_letters:
 					return
 
-		raise NotApplicable
+		raise NotApplicable("no english letters")
 
 	def caesar(self, rotate_string, number_to_rotate_by):
 		upper = collections.deque(string.ascii_uppercase)

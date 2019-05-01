@@ -1,5 +1,5 @@
 from unit import BaseUnit
-from esoteric import EsotericUnit
+from units import NotEnglishUnit
 from collections import Counter
 import sys
 from io import StringIO
@@ -8,6 +8,7 @@ import os
 from pwn import *
 import threading
 import time
+import traceback
 
 # JOHN: Below is part of Caleb's old code. I am keeping it here for
 #	   preservation's sake.
@@ -20,6 +21,7 @@ import time
 #	 return m
 
 def cleanup(code):
+	code = [ x.encode('utf-8') for x in code ]
 	return (b''.join(filter(lambda x: x in [b'.', b',', b'[', b']', b'<', b'>', b'+', b'-'], code))).decode('utf-8')
 
 
@@ -30,9 +32,12 @@ def buildbracemap(code):
 		if command == "[": 
 			temp_bracestack.append(position)
 		if command == "]":
-			start = temp_bracestack.pop()
-			bracemap[start] = position
-			bracemap[position] = start
+			try:
+				start = temp_bracestack.pop()
+				bracemap[start] = position
+				bracemap[position] = start
+			except IndexError as error:
+				pass
 	return bracemap
 
 
@@ -80,7 +85,7 @@ def evaluate_brainfuck(code, input_file, timeout = 1):
 				else:
 					cells[cellptr] = input_file.read(1)
 
-		except KeyError:
+		except (KeyError, TypeError):
 			return None
 
 		codeptr += 1
@@ -88,7 +93,7 @@ def evaluate_brainfuck(code, input_file, timeout = 1):
 	return ''.join(output)
 
 
-class Unit(EsotericUnit):
+class Unit(NotEnglishUnit):
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
@@ -98,7 +103,7 @@ class Unit(EsotericUnit):
 	def evaluate(self, katana, case):
 
 		try:
-			output = evaluate_brainfuck(self.target.raw, katana.config['brainfuck_input'], katana.config['brainfuck_timeout'])
+			output = evaluate_brainfuck(self.target.stream.read().decode('utf-8'), katana.config['brainfuck_input'], katana.config['brainfuck_timeout'])
 
 			# JOHN: Again, this is from Caleb's old code.
 			# output = evaluate_brainfuck(target, self.config['bf_map'], self.config['bf_input'])

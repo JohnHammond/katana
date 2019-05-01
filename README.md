@@ -112,7 +112,7 @@ __strings__
 
 
 ```
-rm -r results/ ; ./katana.py --unit raw ./tests/orchestra
+rm -r results/ ; ./katana.py --unit raw ./tests/orchestra -ff USCGA{.*?}
 ```
 
 __exiftool__
@@ -168,21 +168,19 @@ rm -r results/; ./katana.py --unit raw --unit stego ./tests/pierre.png -ff "USCG
 __robots.txt__
 
 ```
-rm -r results/; ./katana.py --unit web http://web5.tamuctf.com -ff "gigem{.*?}"
+rm -r results/; ./katana.py --unit web.robots http://johnhammond.org -ff "FLAG{.*?}"
 ```
-
 
 __Basic SQL Injection__
 
 ```
-rm -r results/; ./katana.py --unit web http://web1.tamuctf.com -ff "gigem{.*?}"
 rm -r results/; ./katana.py --unit web http://2018shell.picoctf.com:53261/ -ff "picoCTF{.*}"
 ```
 
 __Cookies__
 
 ```
-rm -r results/; ./katana.py --unit web.cookies "http://www.whatarecookies.com/"
+rm -r results/; ./katana.py --unit web.cookies http://johnhammond.org -ff "FLAG{.*?}"
 ```
 
 __Crypto__
@@ -201,12 +199,12 @@ rm -r results/ ; ./katana.py -a ./tests/brainfuck.txt -ff USCGA{.*?}
 __Pikalang__
 
 ```
-rm -r results/ ; ./katana.py --unit esoteric ./tests/it.pokeball 
-rm -r results/ ; ./katana.py --unit esoteric ./tests/pikalang.pokeball
+rm -r results/ ; ./katana.py --unit esoteric ./tests/it.pokeball -s  -ff "HELLO WORLD"
+rm -r results/ ; ./katana.py --unit esoteric ./tests/pikalang.pokeball -ff USCGA{.*?}
 ```
 
 __Malbolge__
 
 ```
-rm -r results/ ; ./katana.py --unit esoteric ./tests/malbolge.txt 
+rm -r results/ ; ./katana.py --unit esoteric ./tests/malbolge.txt -ff "Hello World"
 ```

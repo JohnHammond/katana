@@ -17,5 +17,11 @@
 	{ "name": "esoteric.pikalang.pikalang", "target": "./tests/pikalang.pokeball", "unit": [ "esoteric" ], "flag_format": "USCGA{.*?}", "flag": "USCGA{hello_this_is_my_flag}" },
 	{ "name": "esoteric.malbolge", "target": "./tests/malbolge.txt", "unit": [ "esoteric" ], "flag_format": "Hello World!", "flag": "Hello World!" },
 	{ "name": "crypto.atbash", "target": "./tests/atbash.txt", "unit": ["crypto"], "flag_format": "FLAG{.*?}", "flag": "FLAG{you_can_solve_this_atbash}" },
-	{ "name": "crypto.caesar", "target": "bhwc{whh_dweh_ywaown}", "unit": ["crypto"], "flag_format": "FLAG{.*?}", "flag": "FLAG{ALL_HAIL_CAESAR}" }
+	{ "name": "crypto.caesar", "target": "bhwc{whh_dweh_ywaown}", "unit": ["crypto"], "flag_format": "FLAG{.*?}", "flag": "FLAG{ALL_HAIL_CAESAR}" },
+	{ "name": "crypto.rot47", "target": "u{pvL920E9:D08@@50E@@N", "unit": ["crypto"], "flag_format": "FLAG{.*?}", "flag": "FLAG{ha_this_good_too}" },
+	{ "name": "crypto.reverse", "target": "}enif_skrow_esrever{GALF", "unit": ["crypto"], "flag_format": "FLAG{.*?}", "flag": "FLAG{reverse_works_fine}" },
+	{ "name": "crypto.polybius", "target": "442315213111222443353431541224454324433334441123114242543534444415424335153131", "unit": ["crypto"], "flag_format": "theflagis.*", "flag": "THEFLAGISPOLYBIUSISNOTAHARRYPOTTERSPELL" },
+	{ "name": "crypto.xor", "target": "./tests/xor_test.txt", "unit": ["crypto"], "flag_format": "FLAG{.*}", "flag": "FLAG{this_is_xor}", "xor_key" : "xor_key" },
+	{ "name": "crypto.vigenere", "target": "GWAO{lljd_ia_nmhyezw}", "unit": ["crypto"], "flag_format": "FLAG{.*}", "flag": "FLAG{THIS_IS_VIGNERE}", "vigenere_key" : "xor_key" },
+	{ "name": "crypto.railfence", "target": "FA{iigterifneLGrdn_h_alec}", "unit": ["crypto"], "flag_format": "FLAG{.*}", "flag": "FLAG{riding_the_railfence}" }
 ]

@@ -8,46 +8,31 @@ import subprocess
 import os
 import units.raw
 import re
-import units.web
+import units.web as web
 import requests
 import magic
 import units
 
-
-potential_username_variables = [
-			'username', 'user', 'uname', 'un', 'name', 'user1', 'input1', 'uw1', 'username1', 'uname1', 'tbUsername', 'usern', 'id'
-]
-potential_password_variables = [
-	'password', 'pass', 'pword', 'pw', 'pass1', 'input2', 'password1', 'pw1', 'pword1', 'tbPassword'
-]
-
-user_regex = "<\s*input.*name\s*=\s*['\"](%s)['\"]" % "|".join(potential_username_variables)
-pass_regex = "<\s*input.*name\s*=\s*['\"](%s)['\"]" % "|".join(potential_password_variables)
-
-
-class Unit(units.web.WebUnit):
+class Unit(web.WebUnit):
 
 	def __init__(self, katana, parent, target):
 
 		# Run the parent constructor, to ensure this is a valid URL
 		super(Unit, self).__init__(katana, parent, target)
 		if not katana.config['flag_format']:
-			raise units.NotApplicable
+			raise units.NotApplicable('no flag format supplied')
 
-		try:
-			self.response = requests.get(self.target)
-		except requests.exceptions.ConnectionError:
-			raise units.NotApplicable
+		raw_content = self.target.content.decode('utf-8')
+		
+		self.action = re.findall(r"<\s*form.*action\s*=\s*['\"](.+?)['\"]", raw_content, flags=re.IGNORECASE)
+		self.method = re.findall(r"<\s*form.*method\s*=\s*['\"](.+?)['\"]", raw_content, flags=re.IGNORECASE)
 
-		self.action = re.findall(r"<\s*form.*action\s*=\s*['\"](.+?)['\"]", self.response.text, flags=re.IGNORECASE)
-		self.method = re.findall(r"<\s*form.*method\s*=\s*['\"](.+?)['\"]", self.response.text, flags=re.IGNORECASE)
-
-		self.username = re.findall(user_regex, self.response.text, flags=re.IGNORECASE)
-		self.password = re.findall(pass_regex, self.response.text, flags=re.IGNORECASE)
+		self.username = re.findall(web.user_regex, raw_content, flags=re.IGNORECASE)
+		self.password = re.findall(web.pass_regex, raw_content, flags=re.IGNORECASE)
 		
 		# Only run this if we have potential information...
 		if not (self.action and self.method and self.username and self.password):
-			raise NotApplicable
+			raise NotApplicable('no form found')
 
 	def enumerate(self, katana):
 		
@@ -89,7 +74,7 @@ class Unit(units.web.WebUnit):
 		# Split up the target (see get_cases)
 		method, action, username, password, payload = case
 
-		r = method(self.target + action, data = { username: payload, password : payload })
+		r = method(self.target.upstream.decode('utf-8') + action, data = { username: payload, password : payload })
 		
 		# Hunt for flags. If we found one, stop all other requests!
 		hit = katana.locate_flags(self, r.text)

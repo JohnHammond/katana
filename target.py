@@ -42,6 +42,7 @@ class Target(object):
 		self.upstream = upstream
 		self.is_printable = True
 		self.is_english = True
+		self.is_image = False
 		self.is_base64 = False
 		self.is_url = ADDRESS_REGEX.match(self.upstream) is not None
 		self.is_file = 0 not in self.upstream and os.path.isfile(self.upstream)
@@ -49,14 +50,19 @@ class Target(object):
 
 		# Download the target of a URL
 		if self.is_url:
-			self.content = requests.get(upstream).content
+			self.request = requests.get(upstream)
+			self.content = self.request.content
 			self.path, filp = katana.create_artifact(parent,
 					hashlib.md5(upstream).hexdigest(),
 					mode='wb', create=True
 				)
+			# JOHN: This used to happen in web.request but it was silly
+			katana.locate_flags(parent, self.content)
 			with filp:
 				filp.write(self.content)
 			self.is_file = True
+			# Carve out the root of the URL
+			self.url_root = '/'.join(upstream.decode('utf-8').split('/')[:3]) + '/'
 		# Save the path to the file
 		elif self.is_file:
 			self.content = None
@@ -71,6 +77,10 @@ class Target(object):
 			self.magic = magic.from_file(self.path)
 		else:
 			self.magic = magic.from_buffer(self.content)
+
+		# JOHN: Add a test to determine if this is in fact an image
+		if 'image' in self.magic.lower():
+			self.is_image = True
 
 		# CALEB: This used to happen in a separate unit but it was silly
 		katana.locate_flags(parent, self.magic)
@@ -133,7 +143,10 @@ class Target(object):
 			return self.content
 		elif self.path is not None:
 			with open(self.path, 'rb') as f:
-				return mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+				try:
+					return mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+				except ValueError:
+					return self.upstream
 		else:
 			return self.upstream
 	

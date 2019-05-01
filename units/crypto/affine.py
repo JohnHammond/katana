@@ -23,15 +23,6 @@ def affine(letter, a, b):
 	else:
 		return letter
 
-# JOHN: This is not needed for the purposes of Katana, but I have left it here
-#       for preservation's sake
-# def encrypt( plaintext, a = 1, b = 1 ):
-# 	ciphertext = []
-# 	for letter in plaintext:
-# 		ciphertext.append( affine(letter.upper(), a, b) )
-
-# 	return "".join(ciphertext)
-
 def decrypt( ciphertext, a = 1, b = 1, alphabet = alphabet):
 
 	plaintext = []
@@ -81,7 +72,7 @@ class Unit(units.NotEnglishUnit):
 
 	def evaluate(self, katana, case):
 		a, b = case
-		raw_target = self.target.raw
+		raw_target = self.target.stream.read()
 		try:
 			plaintext = decrypt( raw_target, a, b, katana.config['affine_alphabet'] )
 			if plaintext != raw_target:
