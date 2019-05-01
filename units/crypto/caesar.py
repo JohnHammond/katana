@@ -16,7 +16,7 @@ class Unit(units.NotEnglishUnit):
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
-		parser.add_argument('--caesar-shift', default="", type=str, help='number to shift by for caesar cipher')
+		parser.add_argument('--caesar-shift', default=-1, type=int, help='number to shift by for caesar cipher')
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)

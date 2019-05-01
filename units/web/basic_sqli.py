@@ -33,7 +33,7 @@ class Unit(web.WebUnit):
 		
 		# Only run this if we have potential information...
 		if not (self.action and self.method and self.username and self.password):
-			raise NotApplicable('no form found')
+			raise units.NotApplicable('no form found')
 
 
 	def enumerate(self, katana):

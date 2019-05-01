@@ -693,7 +693,7 @@ class Katana(object):
 			# Grab the next item
 			unit,name,case = self.work.get()
 			try:
-				threading.current_thread().setName('{0} -> {1}...'.format(unit.unit_name,unit.target[:65]))
+				threading.current_thread().setName('{0} -> {1}...'.format(unit.unit_name,unit.target.upstream[:65]))
 			except AttributeError:
 				# JOHN: We may have died early. 
 				pass
