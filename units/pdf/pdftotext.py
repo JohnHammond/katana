@@ -13,7 +13,7 @@ import glob
 DEPENDENCIES = [ 'pdftotext' ]
 
 
-class Unit(units.pdf.PdfUnit):
+class Unit(units.FileUnit):
 
 	# JOHN: This MUST be in the class... 
 	PROTECTED_RECURSE = True
@@ -25,15 +25,14 @@ class Unit(units.pdf.PdfUnit):
 	def evaluate(self, katana, case):
 
 		# Find/create the output artifact directory
-		filename = os.path.splitext(self.target)
+		filename = os.path.splitext(self.target.path)
 		if filename:
 			filename = filename[0].split('/')[-1]
 
 		artifact_path, _ = katana.create_artifact(self, f'{filename}.txt', create=False)
 		
-		p = subprocess.Popen(['pdftotext', self.target, artifact_path ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		p = subprocess.Popen(['pdftotext', self.target.path, artifact_path ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		p.wait()
 		
 		if os.path.exists(artifact_path):
-
 			katana.recurse(self, artifact_path)

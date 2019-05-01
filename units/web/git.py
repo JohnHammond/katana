@@ -16,8 +16,6 @@ class Unit(WebUnit):
 
 		# Run the parent constructor, to ensure this is a valid URL
 		super(Unit, self).__init__(katana, parent, target)
-		if not self.target.endswith('/'):
-			raise NotApplicable
 
 		# Try to get see if there is a .git directory
 		url = '{0}/{1}'.format(self.target.url_root.rstrip('/'), '.git/HEAD')

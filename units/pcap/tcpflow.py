@@ -27,7 +27,7 @@ class Unit(units.pcap.PcapUnit):
 		# Find/create the output artifact directory
 		tcpflow_directory = katana.get_artifact_path(self)
 		
-		p = subprocess.Popen(['tcpflow', '-r', self.target, '-o', tcpflow_directory ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		p = subprocess.Popen(['tcpflow', '-r', self.target.path, '-o', tcpflow_directory ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		p.wait()
 		
 		results = {

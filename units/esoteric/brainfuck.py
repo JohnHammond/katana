@@ -44,7 +44,7 @@ def buildbracemap(code):
 def evaluate_brainfuck(code, input_file, timeout = 1):
 
 	output = []
-
+	code = code.strip()
 	try:
 		code	= cleanup(list(code))
 		bracemap = buildbracemap(code)
@@ -76,11 +76,11 @@ def evaluate_brainfuck(code, input_file, timeout = 1):
 			if command == "[" and cells[cellptr] == 0: codeptr = bracemap[codeptr]
 			if command == "]" and cells[cellptr] != 0: codeptr = bracemap[codeptr]
 			
-			if command == ".": output.append(chr(int(cells[cellptr])))
+			if command == ".": output.append(chr(cells[cellptr]))
 
 			if command == ",": 
 				if input_file == None:
-					cells[cellptr] = '\n'
+					cells[cellptr] = 10
 
 				else:
 					cells[cellptr] = input_file.read(1)

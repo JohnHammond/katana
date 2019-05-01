@@ -19,7 +19,7 @@ class Unit(units.PrintableDataUnit):
 	def evaluate(self, katana, case):
 		
 		try:
-			new_result = urllib.request.unquote(self.target)
+			new_result = urllib.request.unquote(self.target.upstream.decode('utf-8'))
 
 		# If this fails, it's probably not something we can deal with...
 		except (UnicodeDecodeError, binascii.Error):

@@ -8,12 +8,12 @@ import subprocess
 import os
 import units.raw
 import re
-import units.web
+import units.web as web
 import requests
 import magic
 import units
 
-class Unit(units.web.WebUnit):
+class Unit(web.WebUnit):
 
 	def __init__(self, katana, parent, target):
 
@@ -21,19 +21,15 @@ class Unit(units.web.WebUnit):
 		super(Unit, self).__init__(katana, parent, target)
 		
 		if not katana.config['flag_format']:
-			raise units.NotApplicable
-		try:
-			self.response = requests.get(self.target)
-		except requests.exceptions.ConnectionError:
-			raise units.NotApplicable
-
-		self.action = re.findall(r"<\s*form.*action\s*=\s*['\"](.+?)['\"]", self.response.text, flags=re.IGNORECASE)
-		self.method = re.findall(r"<\s*form.*method\s*=\s*['\"](.+?)['\"]", self.response.text, flags=re.IGNORECASE)
+			raise units.NotApplicable('no flag format specified')
+		
+		raw_content = self.target.content.decode('utf-8')
+		self.action = re.findall(r"<\s*form.*action\s*=\s*['\"](.+?)['\"]", raw_content, flags=re.IGNORECASE)
+		self.method = re.findall(r"<\s*form.*method\s*=\s*['\"](.+?)['\"]", raw_content, flags=re.IGNORECASE)
 
 		# Only run this if we have potential information...
 		if not (self.action and self.method):
-			raise units.NotApplicable
-
+			raise units.NotApplicable('no form detected')
 
 	def evaluate(self, katana, case):
 
@@ -46,11 +42,11 @@ class Unit(units.web.WebUnit):
 				log.warning("Could not find an appropriate HTTP method... defaulting to POST!")
 				method = requests.post
 				
-		url_form = self.target.split('/')
+		url_form = self.target.upstream.decode('utf-8').split('/')
 		if len(url_form) > 3:
-			last_location = '/'.join(self.target.split('/')[:-1]) + '/'
+			last_location = '/'.join(url_form[:-1]) + '/'
 		else:
-			last_location = self.target.rstrip('/') + '/'
+			last_location = self.target.upstream.decode('utf-8') + '/'
 
 		r = method(last_location + action, allow_redirects = True)
 		
@@ -58,6 +54,8 @@ class Unit(units.web.WebUnit):
 		katana.recurse(self, r.url)
 
 		# Hunt for flags. If we found one, stop all other requests!
+		# I call this because we are NOT recursing on this page... 
+		# just new ones. But we need to hunt in this page itself.
 		hit = katana.locate_flags(self, r.text)
 
 		if hit:
