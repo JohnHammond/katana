@@ -77,11 +77,11 @@ class Unit(web.WebUnit):
 		method, action, username, password, payload = case
 		
 		# print("trying ", self.target, method, action, username, password)
-		url_form = self.target.split('/')
+		url_form = self.target.upstream.decode('utf-8').split('/')
 		if len(url_form) > 3:
-			last_location = '/'.join(self.target.split('/')[:-1]) + '/'
+			last_location = '/'.join(url_form[:-1]) + '/'
 		else:
-			last_location = self.target.rstrip('/') + '/'
+			last_location = self.target.upstream.decode('utf-8').rstrip('/') + '/'
 
 		r = method(self.target.upstream.decode('utf-8') + action, data = { username: payload, password : payload })
 		
