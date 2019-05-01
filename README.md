@@ -170,7 +170,7 @@ rm -r results/ ; ./katana.py -a ./tests/brainfuck.txt -ff USCGA{.*?}
 __Pikalang__
 
 ```
-rm -r results/ ; ./katana.py --unit esoteric ./tests/it.pokeball -s  -ff "HELLO WORLD"
+rm -r results/ ; ./katana.py --unit esoteric ./tests/it.pokeball -ff "HELLO WORLD"
 rm -r results/ ; ./katana.py --unit esoteric ./tests/pikalang.pokeball -ff USCGA{.*?}
 ```
 
