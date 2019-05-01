@@ -1,5 +1,5 @@
 from unit import BaseUnit
-from esoteric import EsotericUnit
+from units import PrintableDataUnit, NotApplicable
 from collections import Counter
 import sys
 from io import StringIO
@@ -348,7 +348,14 @@ def run(fileName, args):
 	return ''.join(output)
 
 
-class Unit(EsotericUnit):
+class Unit(PrintableDataUnit):
+
+	def __init__(self, katana, parent, target, keywords=[]):
+		super(Unit, self).__init__(katana, parent, target)
+
+		self.raw_target = self.target.stream.read().decode('utf-8')
+		if ( self.raw_target.count('pi') < 10 ):
+			raise NotApplicable("less than 10 occurences of 'pi'")
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
@@ -357,9 +364,8 @@ class Unit(EsotericUnit):
 	def evaluate(self, katana, case ):
 
 		output = None
-		
 		try:
-			output = run(self.target, katana.config['pikalang_args'])
+			output = run(self.raw_target, katana.config['pikalang_args'])
 			katana.locate_flags(self, output)
 
 
@@ -368,11 +374,11 @@ class Unit(EsotericUnit):
 			r_mappings = [".",        ",",      '<',     '[',      '>',  ']',  '-',  '+']
 
 			for i in range(len(p_mappings)):
-				self.target = self.target.replace(p_mappings[i], r_mappings[i])
+				self.raw_target = self.raw_target.replace(p_mappings[i], r_mappings[i])
 			
-			self.target = self.target.replace(' ' ,'')
+			self.raw_target = self.raw_target.replace(' ' ,'')
 			try:
-				output = evaluate_brainfuck(self.target, None)
+				output = evaluate_brainfuck(self.raw_target, None)
 			except (ValueError, TypeError):
 				return
 

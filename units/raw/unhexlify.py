@@ -12,70 +12,40 @@ from units import NotApplicable
 import binascii
 import traceback
 
-class Unit(units.raw.RawUnit):
+HEX_PATTERN = rb'((0x)?[a-f0-9]+)'
+HEX_REGEX = re.compile(HEX_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
+
+class Unit(BaseUnit):
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
-		if self.target.lower().startswith('0x'):
-			self.target = self.target[2:]
+		# We don't need to operate on files
+		if not self.target.is_printable or self.target.is_file or self.target.is_english:
+			raise NotApplicable("is a file")
 
-		PATTERN = re.compile( '[abcdef1234567890]+' , flags=re.MULTILINE | \
-								re.DOTALL | re.IGNORECASE  )
-		hex_result = PATTERN.findall(str(self.target))
+		# Check if there is hex in it
+		self.matches = HEX_REGEX.findall(self.target.raw)
+		if self.matches is None:
+			raise NotApplicable("no hex found")
 
-
-		if hex_result is None or hex_result == []:
-			raise NotApplicable()
-		else:
-			self.hex_result = hex_result
-
-	def evaluate(self, katana, case):
-		
-		for result in self.hex_result:
+	def evaluate(self, katana, case):	
+		for match,_ in self.matches:
+			if match.lower().startswith(b'0x'):
+				match = match[2:]
+			if len(match) < 4:
+				continue
 			try:
-				new_result = binascii.unhexlify(result).decode('utf-8')
-
-				# JOHN: The question of whether or not we should only handle
-				#       printables came up when we worked on XOR...
-				#       ... but we left it raw, because what if it uncovers a file?
-				# if new_result.replace('\n', '').isprintable():
-
-				katana.recurse(self, new_result)
-				katana.locate_flags(self, new_result )
-				katana.add_results(self, new_result )
-
-			except binascii.Error:
-
+				result = binascii.unhexlify(match)
+				katana.recurse(self, result)
+				katana.add_results(self, result)
+			except binascii.Error as e:
 				# We may have an "odd-length string" in the way...
 				# try to clean up the ends to see if we get anything
-				try:
-					new_result = binascii.unhexlify(result[:-1]).decode('utf-8')
+				result = binascii.unhexlify(match[0:-1])
+				katana.recurse(self, result)
+				katana.add_results(self, result)
 
-					# JOHN: The question of whether or not we should only handle
-					#       printables came up when we worked on XOR...
-					#       ... but we left it raw, because what if it uncovers a file?
-					# if new_result.replace('\n', '').isprintable():
-					katana.recurse(self, new_result)
-					katana.locate_flags(self, new_result )
-					katana.add_results(self, new_result )
-
-					new_result = binascii.unhexlify(result[1:]).decode('utf-8')
-
-					# JOHN: The question of whether or not we should only handle
-					#       printables came up when we worked on XOR...
-					#       ... but we left it raw, because what if it uncovers a file?
-					# if new_result.replace('\n', '').isprintable():
-					katana.recurse(self, new_result)
-					katana.locate_flags(self, new_result )
-					katana.add_results(self, new_result )	
-
-				except UnicodeDecodeError:
-					# This won't decode right... must not be right!
-					pass
-
-
-			except UnicodeDecodeError:
-				# This won't decode right... must not be right!
-				pass
-
+				result = binascii.unhexlify(match[1:])
+				katana.recurse(self, result)
+				katana.add_results(self, result)

@@ -18,7 +18,7 @@ class Unit(units.NotEnglishUnit):
 
 	def evaluate(self, katana, case):
 
-		result = self.target[::-1]
+		result = self.target.raw[::-1]
 		katana.locate_flags(self, result)
 		katana.recurse(self, result)
 		katana.add_results(self, result)

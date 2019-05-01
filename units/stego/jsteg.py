@@ -20,12 +20,7 @@ class Unit(units.FileUnit):
 
 	def evaluate(self, katana, case):
 
-		try:
-			p = subprocess.Popen(['jsteg', 'reveal', self.target ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-		except FileNotFoundError as e:
-			if "No such file or directory: 'jsteg'" in e.args:
-				log.failure("jsteg is not in the PATH (not installed)? Cannot run the stego.jsteg unit!")
-				return None
+		p = subprocess.Popen(['jsteg', 'reveal', self.target.path ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
 		# Look for flags, if we found them...
 		response = utilities.process_output(p)
@@ -33,7 +28,6 @@ class Unit(units.FileUnit):
 		if 'stdout' in response:
 			for line in response['stdout']:
 				katana.recurse(self, line)
-				katana.locate_flags(self, str(response['stdout']))
 				
 		if 'stderr' in response:
 			return

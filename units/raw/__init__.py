@@ -4,13 +4,3 @@
 # @Last Modified by:   John Hammond
 # @Last Modified time: 2019-04-05 22:56:13
 
-from pwn import *
-from units import FileOrDataUnit
-import os
-
-class RawUnit(FileOrDataUnit):
-
-    pass
-
-
-    
