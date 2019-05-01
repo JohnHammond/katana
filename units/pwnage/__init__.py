@@ -7,10 +7,10 @@ class ElfUnit(units.FileUnit):
 	# the target!!!!
 	EXECUTE_UNSAFE = True
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, katana, parent, target):
 		""" Check that this is a valid ELF binary """
-		super(ElfUnit, self).__init__(*args, **kwargs)
-
+		super(ElfUnit, self).__init__(katana, parent, target)
+		
 		# Load the binary
 		try:
 			self.elf = ELF(self.target.path)
@@ -24,7 +24,6 @@ class BasicBufferOverflowUnit(ElfUnit):
 		super(BasicBufferOverflowUnit, self).__init__(katana, parent, target)
 
 		self.functions = []
-
 		for func in katana.config['functions'].split(','):
 			if func.encode('utf-8') in self.elf.symbols:
 				self.functions.append(self.elf.symbols[func.encode('utf-8')])
