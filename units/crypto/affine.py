@@ -38,7 +38,12 @@ def decrypt( ciphertext, a = 1, b = 1, alphabet = alphabet):
 # class Unit(units.PrintableDataUnit):
 class Unit(units.NotEnglishUnit):
 
-	# JOHN: We do not need the constructor, because we will inherit the parent!
+	def __init__(self, katana, parent, target):
+		super(Unit, self).__init__(katana, parent, target)
+
+		# We won't have non-printable characters in an affine cipher...
+		if not self.target.is_printable:
+			raise unit.NotApplicable("not printable characters")
 	
 	PROTECTED_RECURSE = True
 
@@ -47,7 +52,6 @@ class Unit(units.NotEnglishUnit):
 		parser.add_argument('--affine-a', default=-1, type=int, help='coefficient a for affine cipher')
 		parser.add_argument('--affine-b', default=-1, type=int, help='coefficient b for affine cipher')
 		parser.add_argument('--affine-alphabet', default=alphabet, type=str, help='alphabet for affine cipher')
-
 
 	# JOHN: We should enumerate all the potential iterations of this code.
 	def enumerate(self, katana):
