@@ -48,6 +48,7 @@ class Katana(object):
 		self.recurse_queue = queue.Queue()
 		self.depth_lock = threading.Lock()
 		self.target_hashes = []
+		self.completed = False
 
 		# Initial parser is for unit directory. We need to process this argument first,
 		# so that the specified unit may be loaded
@@ -101,6 +102,8 @@ class Katana(object):
 				help='a format string used to create payloads for pwn challenges')
 		parser.add_argument('--display-images', '-i', action="store_true", default=False,
 				help='display images as katana finds them')
+		parser.add_argument('--continue', '-c', action="store_true", default=False,
+				help='continue after finding a flag')
 
 		args, remaining = parser.parse_known_args()
 
@@ -461,7 +464,7 @@ class Katana(object):
 					unit,data = self.recurse_queue.get(block=False)
 				except queue.Empty:
 					self.work.join()
-					if self.recurse_queue.empty():
+					if self.completed or self.recurse_queue.empty():
 						break
 				else:
 					# Create the target
@@ -519,7 +522,7 @@ class Katana(object):
 			if not self.completed:
 				case_no = 0
 				for case in unit.enumerate(self):
-					if not unit.completed:
+					if not unit.completed and not self.completed:
 						self.work.put((unit, case_no, case))
 						self.total_work += 1
 						case_no += 1
@@ -602,6 +605,10 @@ class Katana(object):
 			# Stop the unit if they asked
 			if stop:
 				unit.completed = True
+
+			# Stop everything if we have requested that
+			if not self.config['continue']:
+				self.completed = True
 
 			return True
 
@@ -696,20 +703,24 @@ class Katana(object):
 		while True:
 			# Grab the next item
 			unit,name,case = self.work.get()
-			try:
-				threading.current_thread().setName('{0} -> {1}...'.format(unit.unit_name,unit.target.upstream[:65]))
-			except AttributeError:
-				# JOHN: We may have died early. 
-				pass
 
-
+			# This means we are done. It's a signal from the 
+			# main thread to exit.
 			if unit is None and name is None and case is None:
 				break
-			
-			if unit.completed:
+
+			# Check if this unit is already completed (by another thread)
+			if self.completed or unit.completed:
 				self.work.task_done()
 				continue
 
+			# Set the thread description base on target representation
+			target_repr = repr(unit.target)
+			threading.current_thread().setName('{0} -> {1}...'.format(
+				unit.unit_name,
+				target_repr[:62]+'...' if len(target_repr) > 65 else target_repr
+			))
+			
 			# Perform the evaluation
 			if progress is not None:
 				progress.status('entering {0}'.format(unit.unit_name))
