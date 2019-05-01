@@ -113,16 +113,17 @@ if __name__ == "__main__":
 		if result.returncode != 0:
 			prog.failure('non-zero return code: {0}'.format(result.returncode))
 			continue
-		
-		if 'flag' not in test:
-			prog.success('test completed. correct flag unknown; check results')
 
 		# Load test results
 		with open(os.path.join(args.output, test['name'], 'katana.json')) as f:
 			results = json.load(f)
 
-		if len(results['flags']) == 0 or test['flag'] not in results['flags']:
+		if 'flags' not in results or len(results['flags']) == 0:
 			prog.failure('test failed: flag not found in output!')
-		else:
+		elif 'flag' not in test:
+			prog.success('flags found, but no correct flag specified; check results')
+		elif test['flag'] in results['flags']:
 			prog.success('flag found')
+		else:
+			prog.failure('flags found, but correct flag not found')
 
