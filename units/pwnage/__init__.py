@@ -13,9 +13,9 @@ class ElfUnit(units.FileUnit):
 		
 		# Load the binary
 		try:
-			self.elf = ELF(self.target)
+			self.elf = ELF(self.target.path)
 		except:
-			raise units.NotApplicable
+			raise units.NotApplicable("not an elf binary")
 
 class BasicBufferOverflowUnit(ElfUnit):
 
@@ -29,7 +29,7 @@ class BasicBufferOverflowUnit(ElfUnit):
 				self.functions.append(self.elf.symbols[func.encode('utf-8')])
 
 		if len(self.functions) == 0:
-			raise units.NotApplicable()
+			raise units.NotApplicable("no functions found")
 	
 	def enumerate(self, katana):
 		""" Return each function as a case for execution """

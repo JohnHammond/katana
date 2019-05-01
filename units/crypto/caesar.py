@@ -1,7 +1,7 @@
 from unit import BaseUnit
 from collections import Counter
 import sys
-from io import StringIO
+import io
 import argparse
 from pwn import *
 import os
@@ -10,8 +10,6 @@ from units import NotApplicable
 import string
 import collections
 
-
-# class Unit(units.PrintableDataUnit):
 class Unit(units.NotEnglishUnit):
 
 	PROTECTED_RECURSE = True
@@ -24,14 +22,12 @@ class Unit(units.NotEnglishUnit):
 		super(Unit, self).__init__(katana, parent, target)
 
 		# DO NOT run this if the string does not contain any letters.
-		odd_characters = 0
-		for c in target:
-			if c not in string.ascii_letters:
-				odd_characters += 1
+		with io.TextIOWrapper(self.target.stream, encoding='utf-8') as stream:
+			for c in iter(lambda: stream.read(1), ''):
+				if c in string.ascii_letters:
+					return
 
-		if odd_characters == len(target):
-			raise NotApplicable
-
+		raise NotApplicable("no english letters")
 
 	def caesar(self, rotate_string, number_to_rotate_by):
 		upper = collections.deque(string.ascii_uppercase)
@@ -45,36 +41,28 @@ class Unit(units.NotEnglishUnit):
 
 		return rotate_string.translate(rotate_string.maketrans(string.ascii_uppercase, upper)).translate(rotate_string.maketrans(string.ascii_lowercase, lower))
 
-	def evaluate(self, katana, case):
-		results = {}
-		if ( katana.config['caesar_shift'] == "" ):
-			results = { "mod26": {}, "mod255" : {} }
-			# results = {}
-
-			for shift_value in range(len(string.ascii_lowercase)):
-				results['mod26'][shift_value] = self.caesar(self.target, shift_value)
-				katana.recurse(self, results['mod26'][shift_value])
-				katana.locate_flags(self, results['mod26'][shift_value])
-
-			for shift_value in range(255):
-				results["mod255"][shift_value] =  ''.join([chr(ord(character) + shift_value % 255) for character in self.target ])
-				katana.recurse(self, results["mod255"][shift_value])
-				katana.locate_flags(self, results["mod255"][shift_value])
-
+	def enumerate(self, katana):
+		if katana.config['caesar_shift'] == -1:
+			for shift in range(1, len(string.ascii_lowercase)):
+				yield shift
 		else:
-			if '-' in katana.config['caesar_shift']:
+			yield katana.config['caesar_shift']
 
-				# Interpret these as bounds...
-				for shift_value in range(*[ int(x) for x in katana.config['caesar_shift'].split('-') ]):
-					result = ''.join([chr(ord(character) + shift_value % 255) for character in self.target ])
-					katana.recurse(self, result)
-					katana.locate_flags(self, result)
-			else:
-				results = self.caesar(self.target, int(katana.config['caesar_shift']))
-				katana.recurse(self, results)
-				katana.locate_flags(self, results)
+	def evaluate(self, katana, case):
+		result = []
 
+		with io.TextIOWrapper(self.target.stream, encoding='utf-8') as stream:
+			for c in iter(lambda: stream.read(1), ''):
+				idx = string.ascii_uppercase.find(c)
+				if c != -1:
+					result.append(string.ascii_uppercase[(idx+case) % len(string.ascii_uppercase)])
+				else:
+					idx = string.ascii_lowercase.find(c)
+					if idx != -1:
+						result.append(string.ascii_lowercase[(idx+case) % len(string.ascii_lowercase)])
+					else:
+						result.append(c)
 
-
-		katana.add_results(self, results)
-		
+		result = ''.join(result)
+		katana.recurse(self, result)
+		katana.add_results(self, result)

@@ -13,7 +13,7 @@ from hashlib import md5
 
 DEPENDENCIES = [ 'foremost' ]
 
-class Unit(units.forensics.ForensicsUnit):
+class Unit(units.FileUnit):
 
 	# JOHN: This MUST be in the class... 
 	PROTECTED_RECURSE = True
@@ -26,15 +26,15 @@ class Unit(units.forensics.ForensicsUnit):
 
 		# Find/create the output artifact directory
 		foremost_directory = katana.get_artifact_path(self)
-		# foremost_directory = katana.create_artifact(self, "extracted_files", False)
-		p = subprocess.Popen(['foremost', self.target, '-o', foremost_directory ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+		p = subprocess.Popen(['foremost', self.target.path, '-o', foremost_directory ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		p.wait()
 		
 		results = {
 			"extracted_files" : []
 		}
 
-		target_hash = md5(open(self.target, 'rb').read()).hexdigest()
+		target_hash = md5(open(self.target.path, 'rb').read()).hexdigest()
 
 		for (directory, _, files) in os.walk(foremost_directory):
 			for filename in files:

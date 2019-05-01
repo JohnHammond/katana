@@ -12,23 +12,18 @@ class Unit(WebUnit):
 	
 	def evaluate(self, katana, case):
 
-		# View the page
-		try:
-			r = requests.get(self.target)
-		except requests.exceptions.ConnectionError:
-			return
-		
    		# Return the cookies
-		result = [ vars(cookie) for cookie in r.cookies if cookie ]
+		result = [ vars(cookie) for cookie in self.target.request.cookies if cookie ]
 		
 		# Hunt for flags...
 		for cookies in result:
-			# self.locate_flags(katana, key)
 			for cookie_name, cookie_value in cookies.items():
 
-				# I cast this to a string because it may be a number or a bool
-				katana.locate_flags(self, str(cookie_value))
-				katana.locate_flags(self, cookie_name)
+				## I cast this to a string because it may be a number or a bool
+				## We do not need to locate flags because the recurse function
+				## now does this for us...
+				# katana.locate_flags(self, str(cookie_value))
+				# katana.locate_flags(self, cookie_name)
 				katana.recurse(self, str(cookie_value))
 				katana.recurse(self, cookie_name)
 				

@@ -13,37 +13,35 @@ from units import NotApplicable
 import binascii
 import traceback
 
-class Unit(units.raw.RawUnit):
+BINARY_PATTERN = rb'[01]{8,}'
+BINARY_REGEX = re.compile(BINARY_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
+
+class Unit(BaseUnit):
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
-		PATTERN = re.compile( '[01]{8,}' , flags=re.MULTILINE | \
-								re.DOTALL | re.IGNORECASE  )
-		binary_result = PATTERN.findall(str(self.target))
+		self.matches = BINARY_REGEX.findall(self.target.raw)
 
-		if binary_result is None or binary_result == []:
-			raise NotApplicable()
-		else:
-			self.binary_result = binary_result
+		if self.matches is None:
+			raise NotApplicable("no binary data found")
 
 	def evaluate(self, katana, case):
 
 		try:
-			raw = ''.join([ chr(int(x,2)) for x in self.binary_result])
+			raw = ''.join([ chr(int(x,2)) for x in self.matches])
 
 			# JOHN: The question of whether or not we should only handle
 			#       printables came up when we worked on XOR...
 			#       ... but we left it raw, because what if it uncovers a file?
 			# if raw.replace('\n', '').isprintable():
 			katana.recurse(self, raw)
-			katana.locate_flags(self, raw )
 			katana.add_results(self, raw )
 
 		except:
 			pass
 
-		for result in self.binary_result:
+		for result in self.matches:
 			decimal = int(result,2)
 			try:
 				new_result = binascii.unhexlify(hex(decimal)[2:]).decode('utf-8')
@@ -56,5 +54,4 @@ class Unit(units.raw.RawUnit):
 			#       ... but we left it raw, because what if it uncovers a file?
 			# if new_result.replace('\n','').isprintable():
 			katana.recurse(self, new_result)
-			katana.locate_flags(self, new_result )
 			katana.add_results(self, new_result )

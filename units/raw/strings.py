@@ -23,19 +23,13 @@ class Unit(BaseUnit):
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
-		try:
-			if not os.path.isfile(target):
-				raise NotApplicable
+		if not self.target.is_file:
+			raise NotApplicable("not a file")
 
-		# JOHN: These apparently happen in Python 3 if you pass
-		#       a filename that contains a null-byte... 
-		except ValueError:
-			raise NotApplicable
-			
 	def evaluate(self, katana, case):
 
 		# Run the process.
-		p = subprocess.Popen(['strings', self.target, '-n', str(katana.config['strings_length'])], 
+		p = subprocess.Popen(['strings', self.target.path, '-n', str(katana.config['strings_length'])], 
 			stdout = subprocess.PIPE, stderr=subprocess.PIPE )
 
 		# Look for flags, if we found them...

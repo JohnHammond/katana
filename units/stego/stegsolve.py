@@ -61,12 +61,10 @@ class Unit(units.FileUnit):
 
 
 		try:
-			self.img = Image.open(target)
+			self.img = Image.open(self.target.path)
 
-			
 		# If we don't know what this is, don't bother with it.
 		except OSError:
-			print('wy we die')
 			raise units.NotApplicable
 
 		except Exception:
@@ -99,14 +97,11 @@ class Unit(units.FileUnit):
 
 	def evaluate(self, katana, information):
 
-		# Get the original image...
-		img = Image.open(self.target)
-
 		# Grab the current case
 		channel, plane = information
 		
 		# Carve out the needed plane
-		image = get_plane(img, channel, plane)
+		image = get_plane(self.img, channel, plane)
 		if image:
 			output_path, _ = katana.create_artifact(self, f"channel_{channel}_plane_{plane}.png", create=True)
 			image.save(output_path)

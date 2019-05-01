@@ -20,6 +20,7 @@ import tempfile
 import re
 import binascii
 import base64
+import subprocess
 import units
 import clipboard
 import jinja2
@@ -28,6 +29,7 @@ import uuid
 from PIL import Image
 from hashlib import md5
 import signal
+from target import Target
 
 class Katana(object):
 
@@ -60,7 +62,7 @@ class Katana(object):
 		parser.add_argument('--unit-help', action='store_true',
 			default=False, help='display help on unit selection')
 		# The number of threads to use
-		parser.add_argument('--threads', '-t', type=int, default=10,
+		parser.add_argument('--threads', '-t', type=int, default=len(os.sched_getaffinity(0)),
 			help='number of threads to use')
 		# The list of targets to scan
 		parser.add_argument('target', type=str,
@@ -116,7 +118,7 @@ class Katana(object):
 
 		# Load all units under the unit directory
 		for importer, name, ispkg in pkgutil.walk_packages([self.config['unitdir']], ''):
-			
+
 			# Exclude packages/units that were excluded from loading
 			try:
 				for exclude in self.config['exclude']:
@@ -218,7 +220,7 @@ class Katana(object):
 
 		# Compile the flag format if given
 		if self.config['flag_format']:
-			self.flag_pattern = re.compile('({0})'.format(self.config['flag_format']),
+			self.flag_pattern = re.compile(bytes('({0})'.format(self.config['flag_format']), 'utf-8'),
 					flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
 		else:
 			self.flag_pattern = None
@@ -240,6 +242,9 @@ class Katana(object):
 
 		self.progress.status('initialization complete')
 
+		# Evaluate the given target as a target object
+		self.config['target'] = Target(self,self.config['target'])
+
 		# Find units which match this target
 		self.units = self.locate_units(self.config['target'])
 
@@ -249,6 +254,9 @@ class Katana(object):
 		return self.config['target']
 
 	def get_artifact_path(self, unit):
+		if unit is None:
+			return self.config['outdir']
+
 		# Compute the correct directory for this unit based on the parent tree
 		path = os.path.join(self.config['outdir'], *[u.unit_name for u in unit.family_tree], unit.unit_name)
 
@@ -283,16 +291,25 @@ class Katana(object):
 			# "-#" to the filename _BEFORE THE EXTENSION_. The returned path will be
 			# correct
 			while True:
-				try:
-					if asdir:
-						os.mkdir(path)
-					else:
-						file_handle = open(path, mode)
-				except OSError:
-					n += 1
-					path = '{0}-{1}{2}'.format(name, n, ext)
+				if asdir:
+					os.mkdir(path)
 				else:
-					break
+					if ( not os.path.exists(path) ):
+						file_handle = open(path, mode)
+						break
+					else:
+						n += 1
+						path = '{0}-{1}{2}'.format(name, n, ext)
+				# try:
+				# 	if asdir:
+				# 		os.mkdir(path)
+				# 	else:
+				# 		file_handle = open(path, mode)
+				# except OSError:
+				# 	n += 1
+				# 	path = '{0}-{1}{2}'.format(name, n, ext)
+				# else:
+				# 	break
 
 			if not asdir:
 				self.add_artifact(unit, path)
@@ -308,6 +325,9 @@ class Katana(object):
 			r['artifacts'].append(path)
 		
 	def get_unit_result(self, unit):
+		if unit is None:
+			return self.results
+
 		parents = unit.family_tree
 		with self.results_lock:
 			# Start at the global results
@@ -347,6 +367,11 @@ class Katana(object):
 					r[name] = x
 			if len(r) == 0:
 				r = None
+		elif isinstance(d, bytes):
+			try:
+				r = d.decode('utf-8')
+			except UnicodeError:
+				r = repr(d)
 		else:
 			r = d
 		return r
@@ -439,8 +464,16 @@ class Katana(object):
 					if self.recurse_queue.empty():
 						break
 				else:
-					units = self.locate_units(data, parent=unit, recurse=True)
+					# Create the target
+					target = Target(self, data, parent=unit)
+					# Locate applicable units
+					units = self.locate_units(target, parent=unit, recurse=True)
+					# Add the units to the work queue
 					self.add_to_work(units)
+					# Keep track of images if we see them as a target.
+					if target.is_image and target.path is not None: 
+						self.add_image(os.path.abspath(target.path.decode('utf-8')))
+					# Notify that the recurse queue is finished
 					self.recurse_queue.task_done()
 		except KeyboardInterrupt:
 			self.work.join()
@@ -523,19 +556,17 @@ class Katana(object):
 	def add_image(self, image):
 
 		with self.results_lock:
-			# r = self.get_unit_result(unit)
-			
 			if 'images' not in self.results:
 				self.results['images'] = {}
-			else:
-				if image not in self.results['images'].keys():
 
-					image_hash = md5(open(image,'rb').read()).hexdigest()
-					if image_hash not in self.results['images'].values():
-						if self.config['display_images']:
-							Image.open(image).show()
-						self.results['images'][image] = image_hash
-	
+			if image not in self.results['images'].keys():
+
+				image_hash = md5(open(image,'rb').read()).hexdigest()
+				if image_hash not in self.results['images'].values():
+					if self.config['display_images']:
+						Image.open(image).show()
+					self.results['images'][image] = image_hash
+
 
 	
 	def locate_flags(self, unit, output, stop=True, strict=False):
@@ -545,8 +576,11 @@ class Katana(object):
 		if self.flag_pattern == None:
 			return False
 
+		if isinstance(output, str):
+			output = output.encode('utf-8')
+
 		# CALEB: this is a hack to remove XML from flags, and check that as well
-		no_xml = re.sub('<[^<]+>', '', output)
+		no_xml = re.sub(b'<[^<]+>', b'', output)
 		if no_xml != output:
 			self.locate_flags(unit, no_xml, stop=stop)
 
@@ -555,7 +589,7 @@ class Katana(object):
 
 			# JOHN: This test is here because we had an issue with esoteric languages.
 			#       We MORE THAN LIKELY will not have a flag without printable chars...
-			found = match.group()
+			found = match.group().decode('utf-8')
 			if found.isprintable():
 
 				# JOHN:
@@ -597,13 +631,19 @@ class Katana(object):
 
 		if verify_length and len(data) < self.config['data_length']:
 			return
-		
+	
+		# If the data is not a flag, go ahead and recurse on it!
 		if not self.locate_flags(unit, data):
 			self.recurse_queue.put((unit,data))
 
 	def locate_units(self, target, parent=None, recurse=False):
 
 		units_so_far = []
+		
+		if target.hash.hexdigest() in self.target_hashes:
+			return units_so_far
+		else:
+			self.target_hashes.append(target.hash.hexdigest())
 
 		if not self.config['auto'] and not recurse:
 			just_added = False
@@ -611,26 +651,17 @@ class Katana(object):
 				try:
 					# Run this if we HAVE NOT seen it before...
 					unit = unit_class(self, parent, target)
-					try:
-						unit_hash = md5(unit.target.encode('latin-1')).hexdigest()
-					except UnicodeEncodeError:
-						# This can't hash. Just deal with it.
-						unit_hash = None
-					if unit_hash not in self.target_hashes or just_added:
-						units_so_far.append(unit)
-						just_added = True
-						if unit_hash: self.target_hashes.append(unit_hash)
-
-				except units.NotApplicable:
-					log.failure('{0}: unit not applicable to target'.format(
-						unit_class.__module__
+					units_so_far.append(unit)
+				except units.NotApplicable as error:
+					log.failure('{0}: target not applicable {1}'.format(
+						unit_class.__module__,
+						'({0})'.format(error.args[0]) if error.args else ''
 					))
 		else:
-			just_added = False
 			for unit_class in self.all_units:
 				try:
-					# Climb the family tree to see if ANY ancester is not allowed to recurse..
-					# If that is the case, don't bother with this unit
+					# Climb the family tree to see if THE MOST RECENT ancester 
+					# is not allowed to recurse.. don't bother with this unit
 					if unit_class.PROTECTED_RECURSE and parent is not None:
 						if parent.PROTECTED_RECURSE:
 							raise units.NotApplicable()
@@ -640,16 +671,7 @@ class Katana(object):
 
 					# Run this if we HAVE NOT seen it before...
 					unit = unit_class(self, parent, target)
-					try:
-						unit_hash = md5(unit.target.encode('latin-1')).hexdigest()
-					except UnicodeEncodeError:
-						# This can't hash. Just deal with it.
-						unit_hash = None
-
-					if unit_hash not in self.target_hashes or just_added:
-						units_so_far.append(unit)
-						just_added = True
-						if unit_hash: self.target_hashes.append(unit_hash)
+					units_so_far.append(unit)
 				except units.NotApplicable:
 					pass
 
@@ -702,7 +724,7 @@ class Katana(object):
 			self.work.task_done()
 
 		if progress is not None:
-			progress.success('thread completed. exiting')
+			progress.success('complete. exiting')
 
 
 # Make sure we find the local packages (first current directory)
@@ -717,4 +739,3 @@ if __name__ == '__main__':
 	# Run katana against all units
 	
 	katana.evaluate()
-	

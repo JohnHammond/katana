@@ -12,7 +12,7 @@ import utilities
 from units import NotApplicable
 import units
 
-class Unit(units.FileOrDataUnit):
+class Unit(units.PrintableDataUnit):
 
 	def evaluate(self, katana, case):
 
@@ -120,24 +120,34 @@ class Unit(units.FileOrDataUnit):
 
 		final_morse_code = []
 		inverse_morse_alphabet = dict((v, k) for (k, v) in morse_alphabet.items())
-
+		token = b''
+		whitespace = bytes(string.whitespace, 'utf-8')
 		count = 0
-		for x in self.target.split():
-			if x in international_morse_code_mapping:
-				count += 1
-				final_morse_code.append(international_morse_code_mapping[x])
-			elif x in inverse_morse_alphabet:
-				count += 1
-				final_morse_code.append(inverse_morse_alphabet[x])
 
+		with self.target.stream as stream:
+			for c in iter(lambda: stream.read(1), b''):
+				if c in whitespace and len(token) > 0:
+					if len(token) > 0:
+						token = token.decode('utf-8')
+						if token in international_morse_code_mapping:
+							count += 1
+							final_morse_code.append(
+								international_morse_code_mapping[token]
+							)
+						elif token in inverse_morse_alphabet:
+							count += 1
+							final_morse_code.append(
+								inverse_morse_alphabet[token]
+							)
+						token = b''
+				elif c not in whitespace:
+					token += c
+		
 		if ( count ):
-			
 			final_morse_code = ''.join(final_morse_code).upper().strip()
 
 			# if this results in an emptry string, don't bother...
-			if final_morse_code:
+			if final_morse_code != '':
 				# Who knows what this data may be. So scan it again!
 				katana.recurse(self, final_morse_code)
-
-				katana.locate_flags(self, final_morse_code)
 				katana.add_results(self, final_morse_code)

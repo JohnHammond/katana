@@ -20,17 +20,17 @@ class Unit(WebUnit):
 			raise NotApplicable
 
 		# Try to get see if there is a .git directory
-		url = '{0}/{1}'.format(self.target, '.git/HEAD')
-		
+		url = '{0}/{1}'.format(self.target.url_root.rstrip('/'), '.git/HEAD')
+
 		try:
 			r = requests.get(url, allow_redirects=False)
 		except (requests.exceptions.ConnectionError,):
-			raise NotApplicable
+			raise NotApplicable('cannot reach server')
 
 		# If the response is anything other than a "Not Found",
 		# we might have something here...
-		if r.status_code == 404 or r.text == "Not Found":
-			raise NotApplicable
+		if r.status_code == 404:
+			raise NotApplicable('http response 404 at /.git/HEAD')
 		else:
 			self.response = r
 	
@@ -40,4 +40,4 @@ class Unit(WebUnit):
 		#	   the repo. Right now, if it sees that it exists, though
 		#	   just tell the user.
 
-		katana.add_results( self,  self.target + '/.git' )
+		katana.add_results( self,  self.target.url_root.rstrip('/') + '/.git' )

@@ -6,29 +6,27 @@ import utilities
 import string
 
 def vigenere(plaintext, key):
+
 	plaintext = plaintext.upper()
 	key = key.upper()
 
 	valid_chars = string.ascii_uppercase
 
 	idx = 0
-	ciphertext = []
+	ciphertext = ''
 
-	for i, c in enumerate(plaintext):
+	for c in plaintext:
 		if c not in valid_chars:
-			ciphertext.append(c)
+			ciphertext += c
 		else:
-			try:
-				if key[idx] not in valid_chars:
-					idx = (idx + 1) % len(key)
-			except IndexError:
-				continue
+			if key[idx] not in valid_chars:
+				idx = (idx + 1) % len(key)
 			v1 = ord(c) - ord('A')
 			v2 = ord(key[idx]) - ord('A')
-			ciphertext.append(chr(((v1 - v2) % 26)+ord('A')))
+			ciphertext += chr(((v1 - v2) % 26)+ord('A'))
 			idx = (idx + 1) % len(key)
 
-	return ''.join(ciphertext)
+	return ciphertext
 
 # class Unit(PrintableDataUnit):
 class Unit(NotEnglishUnit):
@@ -37,16 +35,20 @@ class Unit(NotEnglishUnit):
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
-		parser.add_argument('--vigenere-password', type=str,
-			action='append', help='a password for {0} files',
+		parser.add_argument('--vigenere-key', type=str,
+			action='append', help='a key for vignere cipher',
 			default=[]
 		)
 		return	
 
+	def __init__(self, katana, parent, target):
+		super(Unit, self).__init__(katana, parent, target)
+		if katana.config['vigenere_key'] == [""]:
+			raise NotApplicable("empty vignere key passed")
 
 	def enumerate(self, katana):
 		# Check each given password
-		for p in katana.config['vigenere_password']:
+		for p in katana.config['vigenere_key']:
 			yield p
 
 		# Add all passwords from the dictionary file
@@ -61,12 +63,9 @@ class Unit(NotEnglishUnit):
 
 	def evaluate(self, katana, case):
 
-		result = vigenere(self.target, case)
+		result = vigenere(self.target.stream.read().decode('utf-8'), case)
+		# We do not need to locate_flags anymore because recurse this for us
+		# katana.locate_flags(self, result)
+		katana.add_results(self, result)
+		katana.recurse(self, result)
 
-		if result:
-			katana.locate_flags(self, result)
-			katana.add_results(self, result)
-
-			if utilities.is_english(result):
-				katana.recurse(self, result)
-	
