@@ -25,9 +25,9 @@ class Unit(units.FileUnit):
 	def evaluate(self, katana, case):
 
 		# Find/create the output artifact directory
-		filename = os.path.splitext(self.target.path)
+		filename = [ str(p) for p in os.path.splitext(self.target.path) ]
 		if filename:
-			filename = filename[0].decode('utf-8').split('/')[-1]
+			filename = filename[0].split('/')[-1]
 
 		artifact_path, _ = katana.create_artifact(self, f'{filename}.txt', create=False)
 		
