@@ -102,6 +102,8 @@ if __name__ == "__main__":
 		# Run the test
 		try:
 			with open(os.path.join(args.output, test['name']+'.txt'), 'wb') as f:
+				f.write(('command: ' + ' '.join(prog_args)+'\n').encode('utf-8'))
+				f.flush()
 				result = subprocess.run(prog_args, stdout=f, stderr=f, timeout=timeout)
 		except subprocess.TimeoutExpired:
 			prog.failure('test timeout expired!')
@@ -119,7 +121,7 @@ if __name__ == "__main__":
 		with open(os.path.join(args.output, test['name'], 'katana.json')) as f:
 			results = json.load(f)
 
-		if test['flag'] not in results['flags']:
+		if len(results['flags']) == 0 or test['flag'] not in results['flags']:
 			prog.failure('test failed: flag not found in output!')
 		else:
 			prog.success('flag found')
