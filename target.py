@@ -32,7 +32,7 @@ class Target(object):
 	"""
 
 	def __init__(self, katana, upstream, parent=None):
-
+		
 		# The target class operates entirely off of bytes
 		if isinstance(upstream, str):
 			upstream = upstream.encode('utf-8')
@@ -45,24 +45,34 @@ class Target(object):
 		self.is_image = False
 		self.is_base64 = False
 		self.is_url = ADDRESS_REGEX.match(self.upstream) is not None
+		# This zero test is here because os.path.isfile chokes on a null-byte
 		self.is_file = 0 not in self.upstream and os.path.isfile(self.upstream)
+		
 		self.magic = 'data'
 
 		# Download the target of a URL
 		if self.is_url:
-			self.request = requests.get(upstream)
-			self.content = self.request.content
-			self.path, filp = katana.create_artifact(parent,
-					hashlib.md5(upstream).hexdigest(),
-					mode='wb', create=True
-				)
-			# JOHN: This used to happen in web.request but it was silly
-			katana.locate_flags(parent, self.content)
-			with filp:
-				filp.write(self.content)
-			self.is_file = True
-			# Carve out the root of the URL
-			self.url_root = '/'.join(upstream.decode('utf-8').split('/')[:3]) + '/'
+			try:
+				url_accessible = True
+				self.request = requests.get(upstream)
+			except requests.exceptions.ConnectionError:
+				url_accessible = False
+			if url_accessible:
+				self.content = self.request.content
+				self.path, filp = katana.create_artifact(parent,
+						hashlib.md5(upstream).hexdigest(),
+						mode='wb', create=True
+					)
+				# JOHN: This used to happen in web.request but it was silly
+				katana.locate_flags(parent, self.content)
+				with filp:
+					filp.write(self.content)
+				self.is_file = True
+				# Carve out the root of the URL
+				self.url_root = '/'.join(upstream.decode('utf-8').split('/')[:3]) + '/'
+			else:
+				self.is_url = False
+				self.content = b""
 		# Save the path to the file
 		elif self.is_file:
 			self.content = None

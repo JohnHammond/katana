@@ -14,6 +14,16 @@ import pytesseract
 from PIL import Image
 import traceback
 
+def attempt_ocr(image_path):
+	try:
+		ocr_data = pytesseract.image_to_string(Image.open(image_path))
+	# JOHN: I don't know when this will go wrong, but when it does....
+	except:
+		traceback.print_exc()
+		ocr_data = None
+
+	return ocr_data
+
 
 class Unit(units.FileUnit):
 
@@ -28,12 +38,7 @@ class Unit(units.FileUnit):
 
 	def evaluate(self, katana, case):
 
-		try:
-			ocr_data = pytesseract.image_to_string(Image.open(self.target.path))
-		# JOHN: I don't know when this will go wrong, but when it does....
-		except:
-			traceback.print_exc()
-			ocr_data = None
+		ocr_data = attempt_ocr(self.target.path)
 
 		if ocr_data:
 			# We don't locate flags any more because recurse does this for us.

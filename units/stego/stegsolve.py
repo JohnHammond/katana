@@ -14,14 +14,16 @@ import traceback
 import units
 from PIL import Image
 import PIL.ImageOps
+from units.ocr.tesseract import attempt_ocr
 
-def get_plane(img, channel, index = 0):
+def get_plane(img, data, channel, index = 0):
 
 	if channel in img.mode:
 		new_image = Image.new('L', img.size)
 		new_image_data = new_image.load()
 
-		img_data = img.load()
+		# JOHN: I pass in the data now, so it is not loaded every time.
+		img_data = data
 	
 		channel_index = img.mode.index(channel)
 		for x in range(img.size[0]):
@@ -50,7 +52,7 @@ class Unit(units.FileUnit):
 			default=None)
 		parser.add_argument('--stegsolve-max', type=int,
 			help="maximum number of bits to bruteforce (without specifying --stegsolve-plane), default 1", action="append",
-			default=1)
+			default=8)
 		parser.add_argument('--stegsolve-plane', type=int,
 			help="a bit number to scrape out in stegsolve, in range 0 to 7.", action="append",
 			default=None)
@@ -59,19 +61,19 @@ class Unit(units.FileUnit):
 		# Call the parent constructor to ensure that this an image file!
 		super(Unit, self).__init__(katana, parent, target, keywords=[' image '])
 
-
 		try:
 			self.img = Image.open(self.target.path)
+			self.data = self.img.load()
 
 		# If we don't know what this is, don't bother with it.
 		except OSError:
-			raise units.NotApplicable
+			raise units.NotApplicable("cannot read file")
 
 		except Exception:
 			# JOHN: I don't know what errors this could produce... but it COULD!
 
 			traceback.print_exc()
-			raise units.NotApplicable
+			raise units.NotApplicable("unknown error occured")
 
 
 	def enumerate(self, katana):
@@ -88,24 +90,30 @@ class Unit(units.FileUnit):
 		else:
 			if katana.config['stegsolve_plane'] is not None:
 				for channel in [ 'R', 'G', 'B', 'A' ]:
-					yield (channel, katana.config['stegsolve_plane'])
+					for given_plane in katana.config['stegsolve_plane']:
+						yield (channel, given_plane)
 			else:
 				for plane in range(katana.config['stegsolve_max']):
-					# for channel in [ 'R', 'G', 'B', 'A' ]:
-					for channel in [ 'R' ]:
+					# By default, check every channel...
+					for channel in [ 'R', 'G', 'B', 'A' ]:
 						yield ( channel, plane )
 
-	def evaluate(self, katana, information):
-
+	def evaluate(self, katana, case):
 		# Grab the current case
-		channel, plane = information
+		channel, plane = case
 		
 		# Carve out the needed plane
-		image = get_plane(self.img, channel, plane)
+		image = get_plane(self.img, self.data, channel, plane)
+
 		if image:
 			output_path, _ = katana.create_artifact(self, f"channel_{channel}_plane_{plane}.png", create=True)
 			image.save(output_path)
 
-			# JOHN:  Because this is our generated image. we will NOT recurse and NOT hunt for flags! 
-			# katana.add_image(self, os.path.abspath(output_path))
+			# We won't recurse on this, because it does too much stuff..
+			# But we can still try and hunt for flags in any found text
+			# I replace newlines in here incase the flag spans multiple lines
+			if katana.locate_flags(self, attempt_ocr(os.path.abspath(output_path)).replace('\n', '')):
+			# If we do find a flag, stop this unit!!
+				self.completed = True
+			
 			katana.add_image(os.path.abspath(output_path))
