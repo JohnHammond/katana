@@ -9,5 +9,7 @@ jinja2
 pyenchant
 pycrypto
 pytesseract
+dulwich
+bs4
 git+https://github.com/arthaud/python3-pwntools.git
 git+https://github.com/elliptic-shiho/primefac-fork
