@@ -25,7 +25,7 @@ class Unit(units.NotEnglishUnit):
 		with io.TextIOWrapper(self.target.stream, encoding='utf-8') as stream:
 			for c in iter(lambda: stream.read(1), ''):
 				if c in string.ascii_letters:
-					return
+					break
 
 		raise NotApplicable("no english letters")
 
