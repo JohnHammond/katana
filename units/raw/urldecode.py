@@ -16,6 +16,8 @@ import urllib.request
 
 class Unit(units.PrintableDataUnit):
 
+	PRIORITY = 25
+
 	def evaluate(self, katana, case):
 		
 		try:

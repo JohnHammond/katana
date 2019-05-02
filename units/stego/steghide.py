@@ -77,6 +77,8 @@ class Unit(units.FileUnit):
 		with open(output_path, 'r') as f:
 			thing = f.read()
 
+		katana.locate_flags(self, thing)
+
 		katana.recurse(self, output_path)
 
 		katana.add_results(self, {

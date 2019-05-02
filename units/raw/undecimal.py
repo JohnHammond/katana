@@ -19,6 +19,8 @@ DECIMAL_REGEX   = re.compile( DECIMAL_PATTERN, flags=re.MULTILINE | \
 
 class Unit(BaseUnit):
 
+	PRIORITY = 25
+
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 

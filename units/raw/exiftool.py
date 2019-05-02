@@ -14,6 +14,8 @@ DEPENDENCIES = [ 'exiftool' ]
 
 class Unit(FileUnit):
 
+	PRIORITY = 25
+
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
