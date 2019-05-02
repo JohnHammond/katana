@@ -10,6 +10,9 @@ class BaseUnit(object):
 	# protected unit
 	PROTECTED_RECURSE = False
 
+	# The unit priority. 50 is default. 1 is highest. 100 is lowest.
+	PRIORITY = 50
+
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		""" Add whatever arguments are needed by this unit to the given

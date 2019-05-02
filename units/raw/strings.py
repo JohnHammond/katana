@@ -15,6 +15,8 @@ DEPENDENCIES = [ 'strings' ]
 
 class Unit(BaseUnit):
 
+	PRIORITY = 25
+
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--strings-length', '-sl', type=int,

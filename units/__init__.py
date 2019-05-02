@@ -11,6 +11,13 @@ import traceback
 import string
 import re
 import utilities
+from dataclasses import dataclass, field
+from typing import Any
+
+@dataclass(order=True)
+class UnitWorkWrapper(object):
+	priority: int
+	item: Any=field(compare=False)
 
 class NotApplicable(Exception):
 	pass

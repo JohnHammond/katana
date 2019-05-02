@@ -22,6 +22,7 @@ import binascii
 import base64
 import subprocess
 import units
+from units import UnitWorkWrapper
 import clipboard
 import jinja2
 import shutil
@@ -229,7 +230,7 @@ class Katana(object):
 			self.flag_pattern = None
 
 		# Setup the work queue
-		self.work = queue.Queue(maxsize=self.config['threads']*2)
+		self.work = queue.PriorityQueue(maxsize=self.config['threads']*2)
 
 		# Don't run if the output directory exists
 		if os.path.exists(self.config['outdir']):
@@ -489,7 +490,7 @@ class Katana(object):
 
 		# Notify threads of completion
 		for n in range(self.config['threads']):
-			self.work.put((None, None, None))
+			self.work.put(UnitWorkWrapper(1,(None, None, None)))
 
 		# Wait for threads to exit
 		for t in self.threads:
@@ -523,7 +524,10 @@ class Katana(object):
 				case_no = 0
 				for case in unit.enumerate(self):
 					if not unit.completed and not self.completed:
-						self.work.put((unit, case_no, case))
+						self.work.put(UnitWorkWrapper(
+							unit.PRIORITY, 
+							(unit, case_no, case)
+						))
 						self.total_work += 1
 						case_no += 1
 					else:
@@ -702,7 +706,8 @@ class Katana(object):
 
 		while True:
 			# Grab the next item
-			unit,name,case = self.work.get()
+			work = self.work.get()
+			unit,name,case = work.item # extract the data from the priority wrapper
 
 			# This means we are done. It's a signal from the 
 			# main thread to exit.
