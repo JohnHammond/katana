@@ -296,7 +296,8 @@ class Katana(object):
 			# correct
 			while True:
 				if asdir:
-					os.mkdir(path)
+					os.makedirs(path, exist_ok = True)
+					break
 				else:
 					if ( not os.path.exists(path) ):
 						file_handle = open(path, mode)

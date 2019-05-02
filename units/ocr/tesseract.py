@@ -14,11 +14,20 @@ import pytesseract
 from PIL import Image
 import traceback
 
+DEPENDENCIES = [ 'tesseract' ]
+
 def attempt_ocr(image_path):
+
 	try:
 		ocr_data = pytesseract.image_to_string(Image.open(image_path))
+
+	# This is function is meant to run as a standalone, so catch this exception
+	# in case we aren't doing dependency checking...
+	except pytesseract.pytesseract.TesseractNotFoundError:
+		ocr_data = None
+
 	# JOHN: I don't know when this will go wrong, but when it does....
-	except:
+	except :
 		traceback.print_exc()
 		ocr_data = None
 
