@@ -15,8 +15,8 @@ import traceback
 import base64
 import binascii
 
-BASE64_PATTERN = rb'[a-zA-Z0-9+/]+={0,2}'
-BASE64_REGEX = re.compile(BASE64_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
+BASE32_PATTERN = rb'[A-Z2-7+/]+={0,6}'
+BASE32_REGEX = re.compile(BASE32_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
 
 class Unit(BaseUnit):
 
@@ -26,14 +26,14 @@ class Unit(BaseUnit):
 		if not self.target.is_printable:
 			raise NotApplicable("not printable data")
 
-		self.matches = BASE64_REGEX.findall(self.target.raw)
+		self.matches = BASE32_REGEX.findall(self.target.raw)
 		if self.matches is None:
-			raise NotApplicable("no base64 text found")
+			raise NotApplicable("no base32 text found")
 
 	def evaluate(self, katana, case):
 		for match in self.matches:
 			try:
-				decoded = base64.b64decode(match)
+				decoded = base64.b32decode(match)
 
 				katana.recurse(self, decoded)
 				katana.add_results(self, decoded)

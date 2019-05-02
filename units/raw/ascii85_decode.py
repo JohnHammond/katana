@@ -31,5 +31,6 @@ class Unit(BaseUnit):
 			katana.add_results(self, decoded)
 		
 		except (UnicodeDecodeError, binascii.Error, ValueError):
-			# This won't decode right... must not be right! Ignore it.				
-			return 
+			# This won't decode right... must not be right! Ignore it.
+			# I return here because we are only trying to decode ONE string
+			return
