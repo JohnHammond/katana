@@ -12,15 +12,13 @@ import re
 from units import NotApplicable
 import units
 import traceback
-import base64
 import binascii
+import base58
 
-BASE64_PATTERN = rb'[a-zA-Z0-9+/]+={0,2}'
-BASE64_REGEX = re.compile(BASE64_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
+BASE58_PATTERN = rb'[a-zA-Z0-9+/]+'
+BASE58_REGEX = re.compile(BASE58_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
 
 class Unit(BaseUnit):
-
-	PRIORITY = 25
 
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
@@ -31,18 +29,32 @@ class Unit(BaseUnit):
 		if self.target.is_english:
 			raise NotApplicable("seemingly english")
 
-		self.matches = BASE64_REGEX.findall(self.target.raw)
+		self.matches = BASE58_REGEX.findall(self.target.raw)
 		if self.matches is None:
-			raise NotApplicable("no base64 text found")
+			raise NotApplicable("no base58 text found")
 
 	def evaluate(self, katana, case):
 		for match in self.matches:
 			try:
-				decoded = base64.b64decode(match)
+				decoded = base58.b58decode(match)
 
 				katana.recurse(self, decoded)
 				katana.add_results(self, decoded)
-			
+				
+			except (UnicodeDecodeError, binascii.Error, ValueError):
+				# This won't decode right... must not be right! Ignore it.				
+				# I pass here because there might be more than one string to decode
+				pass
+
+			# Base58 can also include error checking... so try to "check" as well!
+			# -----------------------------------------------------------------------
+
+			try:
+				decoded = base58.b58decode_check(match)
+
+				katana.recurse(self, decoded)
+				katana.add_results(self, decoded)
+				
 			except (UnicodeDecodeError, binascii.Error, ValueError):
 				# This won't decode right... must not be right! Ignore it.				
 				# I pass here because there might be more than one string to decode

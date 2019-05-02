@@ -25,6 +25,9 @@ class Unit(BaseUnit):
 
 		if not self.target.is_printable:
 			raise NotApplicable("not printable data")
+			
+		if self.target.is_english:
+			raise NotApplicable("seemingly english")
 
 		self.matches = BASE32_REGEX.findall(self.target.raw)
 		if self.matches is None:

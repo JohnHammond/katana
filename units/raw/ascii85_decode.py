@@ -23,6 +23,9 @@ class Unit(BaseUnit):
 		if not self.target.is_printable:
 			raise NotApplicable("not printable data")
 
+		if self.target.is_english:
+			raise NotApplicable("seemingly english")
+
 	def evaluate(self, katana, case):
 		try:
 			decoded = base64.a85decode(self.target.raw)
