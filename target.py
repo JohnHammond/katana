@@ -90,7 +90,8 @@ class Target(object):
 
 		# JOHN: Add a test to determine if this is in fact an image
 		if 'image' in self.magic.lower():
-			katana.add_image(os.path.abspath(self.path.decode('utf-8')))
+			if self.path:
+				katana.add_image(os.path.abspath(self.path.decode('utf-8')))
 			self.is_image = True
 
 		# CALEB: This used to happen in a separate unit but it was silly

@@ -17,7 +17,7 @@ Virtual Environment
 We recommend running this with the latest version of Python and inside of virtual environment.
 
 ```
-sudo apt-get install -y python3.7 python3-pip python3-setuptools python3.7-dev python3-venv libffi-dev libssl-dev pandoc libgmp3-dev libzbar-dev tesseract-ocr
+sudo apt-get install -y python3.7 python3-pip python3-setuptools python3.7-dev python3-venv libffi-dev libssl-dev pandoc libgmp3-dev libzbar-dev tesseract-ocr xsel
 python3.7 -m venv env
 source env/bin/activate
 ```
