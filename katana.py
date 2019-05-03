@@ -351,6 +351,8 @@ class Katana(object):
 		return r
 
 	def clean_result(self, d):
+		if len(d) < self.config['data_length']:
+				return None
 		if isinstance(d, str):
 			if len(d) < self.config['data_length']:
 				return None

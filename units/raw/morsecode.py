@@ -142,7 +142,20 @@ class Unit(units.PrintableDataUnit):
 						token = b''
 				elif c not in whitespace:
 					token += c
-		
+
+			if len(token) > 0:
+				token = token.decode('utf-8')
+				if token in international_morse_code_mapping:
+					count += 1
+					final_morse_code.append(
+						international_morse_code_mapping[token]
+					)
+				elif token in inverse_morse_alphabet:
+					count += 1
+					final_morse_code.append(
+						inverse_morse_alphabet[token]
+					)
+				token = b''
 		if ( count ):
 			final_morse_code = ''.join(final_morse_code).upper().strip()
 

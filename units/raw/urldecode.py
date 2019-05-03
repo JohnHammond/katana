@@ -26,7 +26,8 @@ class Unit(units.PrintableDataUnit):
 			return None
 
 		# We only want to work with this if it something new. 
-		if new_result != self.target:
+		if new_result.encode('utf-8') != self.target.raw:
+			# print(new_result, self.target.raw)
 			katana.recurse(self, new_result)
 			katana.locate_flags(self, new_result )
 			katana.add_results(self, new_result )

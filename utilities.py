@@ -10,9 +10,20 @@ import re
 import html
 import threading
 import enchant
+import traceback
+import string
 
 dictionary = enchant.Dict()
 english_words_threshold = 1
+
+def isprintable(data):
+	if type(data) is not bytes:
+		data = data.encode('utf-8')
+	for c in data:
+		if c not in bytes(string.printable,'ascii'):
+			return False
+
+	return True
 
 # This subclass of argparse will print the help whenever there
 # is a syntactic error in the options parsing

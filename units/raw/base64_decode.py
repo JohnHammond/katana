@@ -14,6 +14,7 @@ import units
 import traceback
 import base64
 import binascii
+import magic
 
 BASE64_PATTERN = rb'[a-zA-Z0-9+/]+={0,2}'
 BASE64_REGEX = re.compile(BASE64_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
@@ -33,11 +34,21 @@ class Unit(BaseUnit):
 	def evaluate(self, katana, case):
 		for match in self.matches:
 			try:
-				decoded = base64.b64decode(match)
+				decoded = base64.b64decode(match).decode('utf-8')
 
-				katana.recurse(self, decoded)
-				katana.add_results(self, decoded)
-			
+				# We want to know about this if it is printable!
+				if utilities.isprintable(decoded):
+					katana.recurse(self, decoded)
+					katana.add_results(self, decoded)
+
+				# if it's not printable, we might only want it if it is a file...
+				else:
+					magic_info = magic.from_buffer(decoded)
+					if magic_info != 'data':
+						katana.recurse(self, decoded)
+						katana.add_results(self, decoded)
+
+				
 			except (UnicodeDecodeError, binascii.Error, ValueError):
 				# This won't decode right... must not be right! Ignore it.				
 				pass
