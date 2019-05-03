@@ -18,6 +18,8 @@ import json
 
 class Unit(units.FileUnit):
 
+	PRIORITY = 25
+
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target, keywords = 'image')
 

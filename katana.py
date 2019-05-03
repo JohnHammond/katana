@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 from pwn import *
 import argparse
 import json
@@ -230,7 +229,7 @@ class Katana(object):
 			self.flag_pattern = None
 
 		# Setup the work queue
-		self.work = queue.PriorityQueue(maxsize=self.config['threads']*2)
+		self.work = queue.PriorityQueue(maxsize=self.config['threads']*4)
 
 		# Don't run if the output directory exists
 		if os.path.exists(self.config['outdir']):
@@ -296,7 +295,8 @@ class Katana(object):
 			# correct
 			while True:
 				if asdir:
-					os.mkdir(path)
+					os.makedirs(path, exist_ok = True)
+					break
 				else:
 					if ( not os.path.exists(path) ):
 						file_handle = open(path, mode)
@@ -462,7 +462,7 @@ class Katana(object):
 		# 	# We want to give the threads time to execute
 		# 	time.sleep(0.5)
 
-			while True:
+			while not self.completed:
 				try:
 					unit,data = self.recurse_queue.get(block=False)
 				except queue.Empty:
@@ -490,14 +490,17 @@ class Katana(object):
 
 		self.progress.status('all units complete. waiting for thread exit')
 
+		# GO AWAY
+		while not self.work.empty():
+			self.work.get()
+
 		# Notify threads of completion
 		for n in range(self.config['threads']):
-			self.work.put(UnitWorkWrapper(1,(None, None, None)))
+			self.work.put(UnitWorkWrapper(-10000,(None, None, None)))
 
 		# Wait for threads to exit
 		for t in self.threads:
 			t.join()
-
 
 		self.progress.success('threads exited. evaluation complete')
 
@@ -695,7 +698,7 @@ class Katana(object):
 			if self.total_work > 0:
 				left = self.work.qsize()
 				done = self.total_work - left
-				self.progress.status('{0:.2f}% work queue utilization; {1} total items queued'.format((float(done)/float(self.total_work))*100, self.total_work, done))
+				self.progress.status('{0:.2f}% work queue utilization; {1} total items queued'.format((float(self.work.qsize())/float(self.config['threads']*4))*100, self.total_work, done))
 			time.sleep(0.5)
 
 	def worker(self):

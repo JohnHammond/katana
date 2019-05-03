@@ -112,8 +112,10 @@ class Unit(units.FileUnit):
 			# We won't recurse on this, because it does too much stuff..
 			# But we can still try and hunt for flags in any found text
 			# I replace newlines in here incase the flag spans multiple lines
-			if katana.locate_flags(self, attempt_ocr(os.path.abspath(output_path)).replace('\n', '')):
-			# If we do find a flag, stop this unit!!
-				self.completed = True
-			
+			ocr_text = attempt_ocr(os.path.abspath(output_path))
+			if ocr_text:
+				if katana.locate_flags(self, ocr_text.replace('\n', '')):
+				# If we do find a flag, stop this unit!!
+					self.completed = True
+				
 			katana.add_image(os.path.abspath(output_path))

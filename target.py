@@ -90,7 +90,12 @@ class Target(object):
 
 		# JOHN: Add a test to determine if this is in fact an image
 		if 'image' in self.magic.lower():
+			if self.path:
+				katana.add_image(os.path.abspath(self.path.decode('utf-8')))
 			self.is_image = True
+		
+		# CALEB: if we do this, do we need strings?
+		#katana.locate_flags(parent, self.raw)
 
 		# CALEB: This used to happen in a separate unit but it was silly
 		katana.locate_flags(parent, self.magic)

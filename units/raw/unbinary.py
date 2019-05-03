@@ -18,6 +18,8 @@ BINARY_REGEX = re.compile(BINARY_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECA
 
 class Unit(BaseUnit):
 
+	PRIORITY = 25
+
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 

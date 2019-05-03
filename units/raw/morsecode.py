@@ -14,6 +14,8 @@ import units
 
 class Unit(units.PrintableDataUnit):
 
+	PRIORITY = 60
+
 	def evaluate(self, katana, case):
 
 		international_morse_code_mapping = {

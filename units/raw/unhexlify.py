@@ -18,6 +18,8 @@ HEX_REGEX = re.compile(HEX_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
 
 class Unit(BaseUnit):
 
+	PRIORITY = 25
+
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
