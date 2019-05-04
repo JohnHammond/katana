@@ -602,10 +602,15 @@ class Katana(object):
 	
 		# If the data is not a flag, go ahead and recurse on it!
 		if not self.locate_flags(unit, data):
-			self.work.put(UnitWorkWrapper(
-				100, (data, unit, None)
-			))
-
+			# Build target object
+			target = Target(self, data, parent=unit)
+			# Enumerate valid units
+			units = self.locate_units(target, parent=unit, recurse=True)
+			# Add units to work queue
+			self.add_to_work(units)
+			# Keep track of images if we see them as a target.
+			if target.is_image and target.path is not None: 
+				self.add_image(os.path.abspath(target.path.decode('utf-8')))
 
 	def locate_units(self, target, parent=None, recurse=False):
 
@@ -673,24 +678,6 @@ class Katana(object):
 			# main thread to exit.
 			if unit is None and name is None and generator is None:
 				break
-
-			# if this isn't a unit object, it must be a target
-			if not isinstance(unit, BaseUnit):
-				# extract data and parent information
-				data = unit
-				parent = name
-				# Build target object
-				target = Target(self, data, parent=parent)
-				# Enumerate valid units
-				units = self.locate_units(target, parent=parent, recurse=True)
-				# Add units to work queue
-				self.add_to_work(units)
-				# Keep track of images if we see them as a target.
-				if target.is_image and target.path is not None: 
-					self.add_image(os.path.abspath(target.path.decode('utf-8')))
-				# Signal task completion
-				self.work.task_done()
-				continue
 
 			# Check if this unit (or katana) is already completed (by another thread)
 			if self.completed or unit.completed:
