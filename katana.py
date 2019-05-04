@@ -351,8 +351,6 @@ class Katana(object):
 		return r
 
 	def clean_result(self, d):
-		if len(d) < self.config['data_length']:
-				return None
 		if isinstance(d, str):
 			if len(d) < self.config['data_length']:
 				return None
@@ -378,6 +376,8 @@ class Katana(object):
 				r = d.decode('utf-8')
 			except UnicodeError:
 				r = repr(d)
+			if len(r) < self.config['data_length']:
+				return None
 		else:
 			r = d
 		return r
