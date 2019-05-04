@@ -30,6 +30,7 @@ from PIL import Image
 from hashlib import md5
 import signal
 from target import Target
+from unit import BaseUnit
 
 class Katana(object):
 
@@ -45,7 +46,6 @@ class Katana(object):
 		self.total_work = 0
 		self.all_units = []
 		self.requested_units = []
-		self.recurse_queue = queue.Queue()
 		self.depth_lock = threading.Lock()
 		self.target_hashes = []
 		self.completed = False
@@ -231,7 +231,7 @@ class Katana(object):
 			self.flag_pattern = None
 
 		# Setup the work queue
-		self.work = queue.PriorityQueue(maxsize=self.config['threads']*4)
+		self.work = queue.Queue() #queue.PriorityQueue(maxsize=self.config['threads']*4)
 
 		# Don't run if the output directory exists
 		if os.path.exists(self.config['outdir']):
@@ -451,38 +451,7 @@ class Katana(object):
 		# Add the known units to the work queue
 		try:
 			self.add_to_work(self.units)
-
-		# Monitor the work queue and update the progress
-		# while True:
-		# 	# Grab the numer of items in the queue
-		# 	n = self.work.qsize()
-		# 	# End if we are done
-		# 	if n == 0:
-		# 		break
-		# 	# Print a nice percentage compelte
-		# 	self.progress.status('{0:.2f}% complete'.format((self.total_work-float(n)) / float(self.total_work)))
-		# 	# We want to give the threads time to execute
-		# 	time.sleep(0.5)
-
-			while not self.completed:
-				try:
-					unit,data = self.recurse_queue.get(block=False)
-				except queue.Empty:
-					self.work.join()
-					if self.completed or self.recurse_queue.empty():
-						break
-				else:
-					# Create the target
-					target = Target(self, data, parent=unit)
-					# Locate applicable units
-					units = self.locate_units(target, parent=unit, recurse=True)
-					# Add the units to the work queue
-					self.add_to_work(units)
-					# Keep track of images if we see them as a target.
-					if target.is_image and target.path is not None: 
-						self.add_image(os.path.abspath(target.path.decode('utf-8')))
-					# Notify that the recurse queue is finished
-					self.recurse_queue.task_done()
+			self.work.join()
 		except KeyboardInterrupt:
 			self.work.join()
 			log.failure("aborting early... ({} units not yet run)".format(self.recurse_queue.qsize()))
@@ -525,21 +494,14 @@ class Katana(object):
 
 	def add_to_work(self, units):
 		# Add all the cases to the work queue
-
 		for unit in units:
-			if not self.completed:
-				case_no = 0
-				for case in unit.enumerate(self):
-					if not unit.completed and not self.completed:
-						self.work.put(UnitWorkWrapper(
-							unit.PRIORITY, 
-							(unit, case_no, case)
-						))
-						self.total_work += 1
-						case_no += 1
-					else:
-						break
-
+			if self.completed:
+				break
+			self.work.put(UnitWorkWrapper(
+				unit.PRIORITY,
+				(unit, None, None)
+			))
+			self.total_work += 1
 
 	def add_flag(self, flag):
 
@@ -553,18 +515,6 @@ class Katana(object):
 				if len(self.results['flags']) == 0:
 					clipboard.copy(flag)
 				self.results['flags'].append(flag)
-
-	# JOHN: This is Caleb's function, which maintains a unit's scope when adding an image...
-	# def add_image(self, unit, image):
-
-	# 	with self.results_lock:
-	# 		r = self.get_unit_result(unit)
-			
-	# 		if 'images' not in r:
-	# 			r['images'] = [ image ]
-	# 		else:
-	# 			if image not in r['images']:
-	# 				r['images'].append(image)
 
 	# JOHN: I originally did not have the unit included.
 	def add_image(self, image):
@@ -652,7 +602,10 @@ class Katana(object):
 	
 		# If the data is not a flag, go ahead and recurse on it!
 		if not self.locate_flags(unit, data):
-			self.recurse_queue.put((unit,data))
+			self.work.put(UnitWorkWrapper(
+				100, (data, unit, None)
+			))
+
 
 	def locate_units(self, target, parent=None, recurse=False):
 
@@ -714,34 +667,70 @@ class Katana(object):
 		while True:
 			# Grab the next item
 			work = self.work.get()
-			unit,name,case = work.item # extract the data from the priority wrapper
+			unit,name,generator = work.item # extract the data from the priority wrapper
 
 			# This means we are done. It's a signal from the 
 			# main thread to exit.
-			if unit is None and name is None and case is None:
+			if unit is None and name is None and generator is None:
 				break
 
-			# Check if this unit is already completed (by another thread)
+			# if this isn't a unit object, it must be a target
+			if not isinstance(unit, BaseUnit):
+				# extract data and parent information
+				data = unit
+				parent = name
+				# Build target object
+				target = Target(self, data, parent=parent)
+				# Enumerate valid units
+				units = self.locate_units(target, parent=parent, recurse=True)
+				# Add units to work queue
+				self.add_to_work(units)
+				# Keep track of images if we see them as a target.
+				if target.is_image and target.path is not None: 
+					self.add_image(os.path.abspath(target.path.decode('utf-8')))
+				# Signal task completion
+				self.work.task_done()
+				continue
+
+			# Check if this unit (or katana) is already completed (by another thread)
 			if self.completed or unit.completed:
 				self.work.task_done()
 				continue
+			
+			# Create the generator if needed
+			if generator is None:
+				generator = unit.enumerate(self)
+
+			# Grab the next unit case
+			#try:
+			#	case = next(generator)
+			#except StopIteration:
+			#	self.work.task_done()
+			#	continue
+
+			# There are still cases left in this unit
+			#work.item = (unit, name, generator)
+			#self.work.put(work)
 
 			# Set the thread description base on target representation
 			target_repr = repr(unit.target)
 			threading.current_thread().setName('{0} -> {1}...'.format(
 				unit.unit_name,
 				target_repr[:62]+'...' if len(target_repr) > 65 else target_repr
-			))
-			
-			# Perform the evaluation
-			if progress is not None:
-				progress.status('entering {0}'.format(unit.unit_name))
-			try:
-				result = unit.evaluate(self, case)
-			except:
-				traceback.print_exc()
-			if progress is not None:
-				progress.status('exiting {0}'.format(unit.unit_name))
+			))	
+
+			for case in generator:
+				if self.completed or unit.completed:
+					break
+				# Perform the evaluation
+				if progress is not None:
+					progress.status('entering {0}'.format(unit.unit_name))
+				try:
+					result = unit.evaluate(self, case)
+				except:
+					traceback.print_exc()
+				if progress is not None:
+					progress.status('exiting {0}'.format(unit.unit_name))
 
 			# Notify boss that we are done
 			self.work.task_done()
