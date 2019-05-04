@@ -17,6 +17,7 @@ from typing import Any
 @dataclass(order=True)
 class UnitWorkWrapper(object):
 	priority: int
+	action: Any=field(compare=False)
 	item: Any=field(compare=False)
 
 class NotApplicable(Exception):

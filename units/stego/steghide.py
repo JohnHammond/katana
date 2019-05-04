@@ -11,6 +11,7 @@ import re
 import units.stego
 import magic
 import units
+import base64
 
 DEPENDENCIES = [ 'steghide' ]
 
@@ -32,7 +33,7 @@ class Unit(units.FileUnit):
 			# CALEB: Possible race condition if two units use the 'dict' argument for the same purpose...
 			katana.config['dict'].seek(0)
 			for line in katana.config['dict']:
-				yield line.rstrip('\n')
+				yield line.rstrip(b'\n')
 
 	def evaluate(self, katana, password):
 
@@ -43,11 +44,11 @@ class Unit(units.FileUnit):
 		if ( password == "" ):
 			output_path, _ = katana.create_artifact(self, "no_password", create=False)	
 		else:
-			output_path, _ = katana.create_artifact(self, password, create=False)
+			output_path, _ = katana.create_artifact(self, base64.b64encode(password).decode('utf-8'), create=False)
 
 		# Run steghide
 		p = subprocess.Popen(
-			['steghide', 'extract', '-sf', self.target.path, '-p', password, '-xf', output_path],
+			[b'steghide', b'extract', b'-sf', self.target.path, b'-p', password, b'-xf', output_path],
 			stdout = subprocess.PIPE, stderr = subprocess.PIPE
 		)
 

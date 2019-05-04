@@ -40,6 +40,7 @@ class Katana(object):
 		self.parsers = []
 		self.units = []
 		self.threads = []
+		self.threads_done = []
 		self.completed = False
 		self.results = { }
 		self.results_lock = threading.RLock()
@@ -49,6 +50,7 @@ class Katana(object):
 		self.depth_lock = threading.Lock()
 		self.target_hashes = []
 		self.completed = False
+		self.recurse_queue = queue.Queue()
 
 		# Initial parser is for unit directory. We need to process this argument first,
 		# so that the specified unit may be loaded
@@ -82,7 +84,7 @@ class Katana(object):
 			required=False, default = [], help='units to exclude in a recursive case')
 		parser.add_argument('--verbose', '-v', action='store_true',
 			default=False, help='show the running threads')
-		parser.add_argument('--dict', type=argparse.FileType('r'),
+		parser.add_argument('--dict', type=argparse.FileType('rb'),
 				required=False, default=None, help='dictionary for brute forcing tasks')
 		parser.add_argument('--data-length', '-l', default=10, type=int,
 			help="minimum number of characters for units results to be displayed")
@@ -108,6 +110,9 @@ class Katana(object):
 				help='specify a possible password for units that may need it')
 
 		args, remaining = parser.parse_known_args()
+
+		if args.verbose:
+			context.log_level = logging.DEBUG
 
 		# Add current arguments to the config
 		self.config.update(vars(args))
@@ -231,7 +236,7 @@ class Katana(object):
 			self.flag_pattern = None
 
 		# Setup the work queue
-		self.work = queue.Queue() #queue.PriorityQueue(maxsize=self.config['threads']*4)
+		self.work = queue.PriorityQueue(maxsize=self.config['threads']*4)
 
 		# Don't run if the output directory exists
 		if os.path.exists(self.config['outdir']):
@@ -440,9 +445,10 @@ class Katana(object):
 		# Create all the threads
 		for n in range(self.config['threads']):
 			self.progress.status('starting thread {0}'.format(n))
-			thread = threading.Thread(target=self.worker)
+			thread = threading.Thread(target=self.worker, args=(n,))
 			thread.start()
 			self.threads.append(thread)
+			self.threads_done.append(False)
 
 		status_done = threading.Event()
 		status_thread = threading.Thread(target=self.progress_worker, args=(status_done,))
@@ -453,21 +459,17 @@ class Katana(object):
 			self.add_to_work(self.units)
 			self.work.join()
 		except KeyboardInterrupt:
-			self.work.join()
-			log.failure("aborting early... ({} units not yet run)".format(self.recurse_queue.qsize()))
+			self.completed = True
+			log.failure("aborting early... ({} tasks not yet completed)".format(self.work.qsize()))
 
 		status_done.set()
 		status_thread.join()
 
 		self.progress.status('all units complete. waiting for thread exit')
 
-		# GO AWAY
-		while not self.work.empty():
-			self.work.get()
-
-		# Notify threads of completion
+		# Notify threads of completion (highest priority!)
 		for n in range(self.config['threads']):
-			self.work.put(UnitWorkWrapper(-10000,(None, None, None)))
+			self.work.put(UnitWorkWrapper(-10000,'done',(None, None)))
 
 		# Wait for threads to exit
 		for t in self.threads:
@@ -497,11 +499,15 @@ class Katana(object):
 		for unit in units:
 			if self.completed:
 				break
-			self.work.put(UnitWorkWrapper(
-				unit.PRIORITY,
-				(unit, None, None)
-			))
-			self.total_work += 1
+			for case in unit.enumerate(self):
+				if self.completed or unit.completed:
+					break
+				self.work.put(UnitWorkWrapper(
+					unit.PRIORITY,
+					'unit',
+					(unit, case)
+				))
+				self.total_work += 1
 
 	def add_flag(self, flag):
 
@@ -602,16 +608,11 @@ class Katana(object):
 	
 		# If the data is not a flag, go ahead and recurse on it!
 		if not self.locate_flags(unit, data):
-			# Build target object
-			target = Target(self, data, parent=unit)
-			# Enumerate valid units
-			units = self.locate_units(target, parent=unit, recurse=True)
-			# Add units to work queue
-			self.add_to_work(units)
-			# Keep track of images if we see them as a target.
-			if target.is_image and target.path is not None: 
-				self.add_image(os.path.abspath(target.path.decode('utf-8')))
+			self.work.put(UnitWorkWrapper(
+				200, 'recurse', (data, unit)
+			))
 
+	
 	def locate_units(self, target, parent=None, recurse=False):
 
 		units_so_far = []
@@ -660,71 +661,65 @@ class Katana(object):
 				done = self.total_work - left
 				self.progress.status('{0:.2f}% work queue utilization; {1} total items queued'.format((float(self.work.qsize())/float(self.config['threads']*4))*100, self.total_work, done))
 			time.sleep(0.5)
+	
+	def unit_worker(self, progress, unit, case):
 
-	def worker(self):
-		""" Katana worker thread to process unit execution """
+		# Check if this unit is done
+		if unit.completed:
+			return False
 		
-		if self.config['verbose']:
-			progress = log.progress('thread-{0} '.format(threading.get_ident()))
-		else:
-			progress = None
+		# Show progress if debug
+		progress.status('processing {0}'.format(unit.unit_name))
+		
+		try:
+			# Evaluate the target
+			result = unit.evaluate(self, case)
+		except:
+			traceback.print_exc()
 
-		while True:
-			# Grab the next item
-			work = self.work.get()
-			unit,name,generator = work.item # extract the data from the priority wrapper
+	def recurse_worker(self, data, parent):
+		""" Monitor the recurse queue, and create/add targets to work queue
+			for processing by worker threads
+		"""
 
-			# This means we are done. It's a signal from the 
-			# main thread to exit.
-			if unit is None and name is None and generator is None:
-				break
+		progress.status('processing recurse for {0}'.format(parent.unit_name))
 
-			# Check if this unit (or katana) is already completed (by another thread)
-			if self.completed or unit.completed:
+		# Build a target object for this data
+		target = Target(self, data, parent=parent)
+
+		# Locate matching units
+		units = self.locate_units(target, parent=parent, recurse=True)
+
+		# Add the units to the work queue
+		self.add_to_work(units)
+
+		# Keep track of images if we see them as a target.
+		if target.is_image and target.path is not None: 
+			self.add_image(os.path.abspath(target.path.decode('utf-8')))
+
+
+	def worker(self, thread_number):
+		""" Katana worker thread to process unit execution """
+
+		# Create progress montiro
+		with log.progress('thread {0}'.format(thread_number)) as progress:
+			while True:
+				work = self.work.get()
+
+				if work.action == 'done':
+					self.work.task_done()
+					break
+
+				if not self.completed:
+					if work.action == 'unit':
+						self.unit_worker(progress, *work.item)
+					elif work.action == 'recurse':
+						self.recurse_worker(progress, *work.item)
+					else:
+						log.warning('bad work action: {0}'.format(work.action))
+
+				# Notify parent we are done
 				self.work.task_done()
-				continue
-			
-			# Create the generator if needed
-			if generator is None:
-				generator = unit.enumerate(self)
-
-			# Grab the next unit case
-			try:
-				case = next(generator)
-			except StopIteration:
-				self.work.task_done()
-				continue
-
-			# There are still cases left in this unit
-			work.item = (unit, name, generator)
-			self.work.put(work)
-
-			# Set the thread description base on target representation
-			target_repr = repr(unit.target)
-			threading.current_thread().setName('{0} -> {1}...'.format(
-				unit.unit_name,
-				target_repr[:62]+'...' if len(target_repr) > 65 else target_repr
-			))	
-
-			#for case in generator:
-			if self.completed or unit.completed:
-				break
-			# Perform the evaluation
-			if progress is not None:
-				progress.status('entering {0}'.format(unit.unit_name))
-			try:
-				result = unit.evaluate(self, case)
-			except:
-				traceback.print_exc()
-			if progress is not None:
-				progress.status('exiting {0}'.format(unit.unit_name))
-
-			# Notify boss that we are done
-			self.work.task_done()
-
-		if progress is not None:
-			progress.success('complete. exiting')
-
 
 # Make sure we find the local packages (first current directory)
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
