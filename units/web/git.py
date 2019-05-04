@@ -172,12 +172,13 @@ def process_tasks(initial_tasks, worker, jobs, args=(), tasks_done=None):
 class DownloadWorker(Worker):
 	''' Download a list of files '''
 
-	def init(self, url, directory, retry, timeout):
+	def init(self, url, directory, retry, timeout, unit, katana):
+		self.unit = unit
 		self.session = requests.Session()
 		self.session.verify = False
 		self.session.mount(url, requests.adapters.HTTPAdapter(max_retries=retry))
 
-	def do_task(self, filepath, url, directory, retry, timeout):
+	def do_task(self, filepath, url, directory, retry, timeout, unit, katana):
 		with closing(self.session.get('%s/%s' % (url, filepath),
 									  allow_redirects=False,
 									  stream=True,
@@ -201,7 +202,7 @@ class DownloadWorker(Worker):
 class RecursiveDownloadWorker(DownloadWorker):
 	''' Download a directory recursively '''
 
-	def do_task(self, filepath, url, directory, retry, timeout):
+	def do_task(self, filepath, url, directory, retry, timeout, unit, katana):
 		with closing(self.session.get('%s/%s' % (url, filepath),
 									  allow_redirects=False,
 									  stream=True,
@@ -235,7 +236,7 @@ class RecursiveDownloadWorker(DownloadWorker):
 class FindRefsWorker(DownloadWorker):
 	''' Find refs/ '''
 
-	def do_task(self, filepath, url, directory, retry, timeout):
+	def do_task(self, filepath, url, directory, retry, timeout, unit, katana):
 		response = self.session.get('%s/%s' % (url, filepath),
 									allow_redirects=False,
 									timeout=timeout)
@@ -250,6 +251,7 @@ class FindRefsWorker(DownloadWorker):
 		# write file
 		with open(abspath, 'w') as f:
 			f.write(response.text)
+
 
 		# find refs
 		tasks = []
@@ -266,7 +268,7 @@ class FindRefsWorker(DownloadWorker):
 class FindObjectsWorker(DownloadWorker):
 	''' Find objects '''
 
-	def do_task(self, obj, url, directory, retry, timeout):
+	def do_task(self, obj, url, directory, retry, timeout, unit, katana):
 		filepath = '.git/objects/%s/%s' % (obj[:2], obj[2:])
 		response = self.session.get('%s/%s' % (url, filepath),
 									allow_redirects=False,
@@ -282,13 +284,14 @@ class FindObjectsWorker(DownloadWorker):
 		# write file
 		with open(abspath, 'wb') as f:
 			f.write(response.content)
+		
 
 		# parse object file to find other objects
 		obj_file = dulwich.objects.ShaFile.from_path(abspath)
 		return get_referenced_sha1(obj_file)
 
 
-def fetch_git(url, directory, jobs, retry, timeout):
+def fetch_git( unit, url, directory, jobs, retry, timeout, katana):
 	''' Dump a git repository into the output directory '''
 
 	assert os.path.isdir(directory), '%s is not a directory' % directory
@@ -328,7 +331,7 @@ def fetch_git(url, directory, jobs, retry, timeout):
 		process_tasks(['.git/', '.gitignore'],
 					  RecursiveDownloadWorker,
 					  jobs,
-					  args=(url, directory, retry, timeout))
+					  args=(url, directory, retry, timeout, unit, katana))
 
 		# printf('[-] Running git checkout .\n')
 		# os.chdir(directory)
@@ -412,7 +415,7 @@ def fetch_git(url, directory, jobs, retry, timeout):
 	# printf('[-] Finding objects\n')
 	objs = set()
 	packed_objs = set()
-
+	
 	# .git/packed-refs, .git/info/refs, .git/refs/*, .git/logs/*
 	files = [
 		os.path.join(directory, '.git', 'packed-refs'),
@@ -474,8 +477,8 @@ def fetch_git(url, directory, jobs, retry, timeout):
 	# os.chdir(directory)
 
 	# ignore errors
-	subprocess.call(['git', 'checkout', '.'], stderr=open(os.devnull, 'wb'), cwd = directory)
 
+	subprocess.call(['git', 'checkout', '.'], stderr=open(os.devnull, 'wb'), cwd = directory)
 	return 0
 
 
@@ -558,16 +561,17 @@ class Unit(WebUnit):
 	
 	def evaluate(self, katana, case):
 
-		# JOHN: I do still need to add the functionality to download
-		#	   the repo. Right now, if it sees that it exists, though
-		#	   just tell the user.
-
-		# Say that have in fact found the directory
-		# katana.add_results( self,  self.target.url_root.rstrip('/') + '/.git' )
-		
 		git_directory = katana.get_artifact_path(self)
 		
 		# Download the repository	
-		fetch_git(self.target.url_root, git_directory, katana.config['git_jobs'], katana.config['git_retry'], katana.config['git_timeout'])
+		fetch_git( self, self.target.url_root, git_directory, katana.config['git_jobs'], katana.config['git_retry'], katana.config['git_timeout'], katana)
+		katana.add_artifact( self, git_directory )
 
-		katana.add_artifact( self,  git_directory )
+		# JOHN: For some reason git grep does not like lazy searching
+		grep = subprocess.run("git grep -G {}".format(katana.config['flag_format'].replace('?','')).split(), cwd = git_directory, stdout = subprocess.PIPE)
+		
+
+		
+		katana.locate_flags(self, grep.stdout)
+
+
