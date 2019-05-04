@@ -16,12 +16,6 @@ DEPENDENCIES = [ 'steghide' ]
 
 class Unit(units.FileUnit):
 
-	@classmethod
-	def add_arguments(cls, katana, parser):
-		parser.add_argument('--steghide-password', type=str,
-			help="A password to try on the file", action="append",
-			default=[])
-
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target, keywords=['jpg ', 'jpeg '])
 
@@ -30,7 +24,7 @@ class Unit(units.FileUnit):
 		yield ''
 
 		# Check other passwords specified explicitly
-		for p in katana.config['steghide_password']:
+		for p in katana.config['password']:
 			yield p
 
 		# Add all the passwords from the dictionary file

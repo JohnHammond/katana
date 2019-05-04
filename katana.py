@@ -104,6 +104,8 @@ class Katana(object):
 				help='display images as katana finds them')
 		parser.add_argument('--continue', '-c', action="store_true", default=False,
 				help='continue after finding a flag')
+		parser.add_argument('--password', '-p', action='append', default=[],
+				help='specify a possible password for units that may need it')
 
 		args, remaining = parser.parse_known_args()
 
