@@ -22,6 +22,11 @@ import dulwich.objects
 import dulwich.pack
 import requests
 import socks
+from hashlib import md5
+import tempfile
+import shutil
+
+DEPENDENCIES = ['git']
 
 
 # JOHN: The code below is shamelessly ripped from 
@@ -560,18 +565,61 @@ class Unit(WebUnit):
 			self.response = r
 	
 	def evaluate(self, katana, case):
+		self.target.seen_files = []
+		temp_folder = tempfile.gettempdir()
 
 		git_directory = katana.get_artifact_path(self)
 		
 		# Download the repository	
-		fetch_git( self, self.target.url_root, git_directory, katana.config['git_jobs'], katana.config['git_retry'], katana.config['git_timeout'], katana)
+		try:
+			fetch_git( self, self.target.url_root, git_directory, katana.config['git_jobs'], katana.config['git_retry'], katana.config['git_timeout'], katana)
+		except AssertionError:
+			return # something went wrong. stop.
+
 		katana.add_artifact( self, git_directory )
 
-		# JOHN: For some reason git grep does not like lazy searching
-		grep = subprocess.run("git grep -G {}".format(katana.config['flag_format'].replace('?','')).split(), cwd = git_directory, stdout = subprocess.PIPE)
+		# Do a basic grep for flags
+		grep = subprocess.run("git grep -P {}".format(katana.config['flag_format']).split(), cwd = git_directory, stdout = subprocess.PIPE)
+		if katana.locate_flags(self, grep.stdout):
+			self.completed = True
+			return
+
+		# Start to look at the commit messages...
+		grep = subprocess.run("git log --pretty=oneline".split(), cwd = git_directory, stdout = subprocess.PIPE)
 		
+		line_number = 0
+		first_commit = ""
 
-		
-		katana.locate_flags(self, grep.stdout)
+		for line in grep.stdout.decode('utf-8').split('\n'):
+			commit, commit_message = line.split(' ')[0], ' '.join(line.split(' ')[1:])
+			if line_number == 0:
+				first_commit = commit
 
+			katana.add_results(self, f'commit {commit[:6]}: {commit_message}')
+			# katana.recurse(self, message)
+			if katana.locate_flags(self, commit_message):
+				self.completed = True
+				return 
 
+			# -----------------------------------------------------------------
+			# JOHN: I am really, REALLY sketched out about this...
+			commit_data = subprocess.run(f"git checkout {commit}".split(), cwd = git_directory, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+			# Look through all the files in the current commit
+			for (directory, dirs, files) in os.walk(git_directory, topdown=True):
+				# Ignore the .git directory for god's sake
+				dirs[:] = [d for d in dirs if d not in ['.git']]
+
+				for filename in files:
+					file_path = os.path.join(directory, filename)
+					# Hash the file to make sure if we have not seen it before
+					path_hash = md5(open(file_path, 'rb').read()).hexdigest()
+					
+					if path_hash not in self.target.seen_files:							
+						temp_path = os.path.join(temp_folder, path_hash)
+						shutil.move(file_path, temp_path)
+						katana.recurse(self, temp_path)
+						self.target.seen_files.append(path_hash)
+			
+			line_number += 1
+
+		commit_data = subprocess.run(f"git checkout {first_commit}".split(), cwd = git_directory, stdout = subprocess.PIPE, stderr = subprocess.PIPE)

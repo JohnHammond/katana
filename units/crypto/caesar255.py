@@ -39,6 +39,5 @@ class Unit(units.NotEnglishUnit):
 				if magic_info != 'data' \
 				and 'UTF-8 Unicode text' not in magic_info \
 				and 'International EBCDIC text' not in magic_info:
-					print(magic_info, result)
 					katana.recurse(self, result)
 					katana.add_results(self, result)
