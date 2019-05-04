@@ -702,15 +702,15 @@ class Katana(object):
 				generator = unit.enumerate(self)
 
 			# Grab the next unit case
-			#try:
-			#	case = next(generator)
-			#except StopIteration:
-			#	self.work.task_done()
-			#	continue
+			try:
+				case = next(generator)
+			except StopIteration:
+				self.work.task_done()
+				continue
 
 			# There are still cases left in this unit
-			#work.item = (unit, name, generator)
-			#self.work.put(work)
+			work.item = (unit, name, generator)
+			self.work.put(work)
 
 			# Set the thread description base on target representation
 			target_repr = repr(unit.target)
@@ -719,18 +719,18 @@ class Katana(object):
 				target_repr[:62]+'...' if len(target_repr) > 65 else target_repr
 			))	
 
-			for case in generator:
-				if self.completed or unit.completed:
-					break
-				# Perform the evaluation
-				if progress is not None:
-					progress.status('entering {0}'.format(unit.unit_name))
-				try:
-					result = unit.evaluate(self, case)
-				except:
-					traceback.print_exc()
-				if progress is not None:
-					progress.status('exiting {0}'.format(unit.unit_name))
+			#for case in generator:
+			if self.completed or unit.completed:
+				break
+			# Perform the evaluation
+			if progress is not None:
+				progress.status('entering {0}'.format(unit.unit_name))
+			try:
+				result = unit.evaluate(self, case)
+			except:
+				traceback.print_exc()
+			if progress is not None:
+				progress.status('exiting {0}'.format(unit.unit_name))
 
 			# Notify boss that we are done
 			self.work.task_done()
