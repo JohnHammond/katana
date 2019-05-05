@@ -93,7 +93,7 @@
 						<div id="collapse-images" class="collapse show" aria-labelledby="card-images" data-parent="content-accordion">
 							<div class="accordion-body">
 								{% if 'images' in results %}
-									{% for image, hash in results['images'].items() %}
+									{% for image in results['images'] %}
 										<figure class="figure">
 											<img src="{{image}}" class="figure-img img-fluid"/>
 											<figcaption class="figure-caption">{{image}}</figcaption>
