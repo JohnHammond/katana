@@ -30,7 +30,8 @@ class Unit(units.FileUnit):
 		
 		# Look for flags, if we found them...
 		response = utilities.process_output(p)
-		if 'stdout' in response:
-			for line in response['stdout']:
-				katana.locate_flags(self, line)
-			katana.add_results(self, response)
+		if response:
+			if 'stdout' in response:
+				for line in response['stdout']:
+					katana.locate_flags(self, line)
+				katana.add_results(self, response)

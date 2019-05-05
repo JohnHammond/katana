@@ -12,6 +12,7 @@ import os
 from units import NotApplicable
 import binascii
 import traceback
+import magic
 
 DECIMAL_PATTERN = rb'[0-9]{1,3}'
 DECIMAL_REGEX   = re.compile( DECIMAL_PATTERN, flags=re.MULTILINE | \
@@ -56,11 +57,11 @@ class Unit(BaseUnit):
 		# if it's not printable, we might only want it if it is a file...
 		else:
 			magic_info = magic.from_buffer(result)
-			if magic_info != 'data':
+			if magic_info != 'data' and len(result) > katana.config['data_length']:
 				
 				katana.add_results(self, result)
 
 				filename, handle = katana.create_artifact(self, "decoded", mode='wb', create=True)
-				handle.write(result)
+				handle.write(bytes(result,'utf-8'))
 				handle.close()
 				katana.recurse(self, filename)
