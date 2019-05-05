@@ -39,7 +39,7 @@ class Unit(BaseUnit):
 	def evaluate(self, katana, case):
 		for match in self.matches:
 			try:
-				decoded = base64.b64decode(match).decode('utf-8')
+				decoded = base64.b64decode(match)
 
 				# We want to know about this if it is printable!
 				if utilities.isprintable(decoded):
@@ -50,11 +50,16 @@ class Unit(BaseUnit):
 				else:
 					magic_info = magic.from_buffer(decoded)
 					if magic_info != 'data':
-						katana.recurse(self, decoded)
+						
 						katana.add_results(self, decoded)
 
+						filename, handle = katana.create_artifact(self, "decoded", mode='wb', create=True)
+						handle.write(decoded)
+						handle.close()
+						katana.recurse(self, filename)
 				
 			except (UnicodeDecodeError, binascii.Error, ValueError):
+				
 				# This won't decode right... must not be right! Ignore it.				
 				# I pass here because there might be more than one string to decode
 				pass

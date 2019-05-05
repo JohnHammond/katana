@@ -6,3 +6,4 @@ tests
 env/
 *.pyc
 test-results
+savedstate.sav

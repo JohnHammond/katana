@@ -31,6 +31,7 @@ class Unit(units.FileUnit):
 			raise NotApplicable('failed to open/read file')
 
 	def enumerate(self, katana):
+		
 		# The default is to check an empty password
 		yield b''
 
@@ -61,3 +62,4 @@ class Unit(units.FileUnit):
 			if pdf.decrypt(password):
 				katana.add_results(self, '{0}: {1}'.format(self.target.path, password))
 				self.completed = True
+

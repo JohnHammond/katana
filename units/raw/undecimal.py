@@ -40,7 +40,7 @@ class Unit(BaseUnit):
 	def evaluate(self, katana, case):
 	
 		try:
-			new_result = ''.join(chr(int(d)) for d in self.matches)
+			result = ''.join(chr(int(d)) for d in self.matches)
 		# If this fails, it's probably not decimal we can deal with...
 		except (UnicodeDecodeError, binascii.Error):
 			return None
@@ -49,5 +49,18 @@ class Unit(BaseUnit):
 		#       printables came up when we worked on XOR...
 		#       ... but we left it raw, because what if it uncovers a file?
 		# if new_result.replace('\n', '').isprintable():
-		katana.recurse(self, new_result)
-		katana.add_results(self, new_result )
+		if utilities.isprintable(result):
+			katana.recurse(self, result)
+			katana.add_results(self, result)
+
+		# if it's not printable, we might only want it if it is a file...
+		else:
+			magic_info = magic.from_buffer(result)
+			if magic_info != 'data':
+				
+				katana.add_results(self, result)
+
+				filename, handle = katana.create_artifact(self, "decoded", mode='wb', create=True)
+				handle.write(result)
+				handle.close()
+				katana.recurse(self, filename)
