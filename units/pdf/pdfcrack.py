@@ -9,8 +9,8 @@ import os
 import utilities
 import units
 import tempfile
-from pdfminer.pdfparser import PDFParser
-from pdfminer.pdfdocument import *
+from PyPDF2 import PdfFileReader
+import time
 
 # DEPENDENCIES = [ 'qpdf' ]
 
@@ -20,109 +20,44 @@ class Unit(units.FileUnit):
 		# This ensures it is a PDF
 		super(Unit, self).__init__(katana, parent, target, keywords=['pdf document'])
 
+		try:
+			with open(self.target.path, 'rb') as f:
+				pdf = PdfFileReader(f)
+				if not pdf.isEncrypted:
+					raise NotApplicable('pdf is not encrypted')
+		except NotApplicable as e:
+			raise e
+		except:
+			raise NotApplicable('failed to open/read file')
+
 	def enumerate(self, katana):
 		# The default is to check an empty password
-		yield ''
+		yield b''
 
 		# Check other passwords specified explicitly
 		for p in katana.config['password']:
-			yield p
+			yield p.encode('utf-8')
 
 		# Add all the passwords from the dictionary file
 		if 'dict' in katana.config and katana.config['dict'] is not None:
 			# CALEB: Possible race condition if two units use the 'dict' argument for the same purpose...
-			katana.config['dict'].seek(0)
-			for line in katana.config['dict']:
-				yield line.rstrip('\n')
+			with open(katana.config['dict'].name, 'rb') as f:
+				for line in iter(lambda: f.readline(), ''):
+					yield line.rstrip(b'\n')
 
 	def evaluate(self, katana, password):
 		
-		# output_path, _ = katana.create_artifact(self, f'{password}.pdf', create=False)
-		
-		f = open(self.target.path, 'rb')
-		parser = PDFParser(f)
+		with open(self.target.path, 'rb') as f:
+			pdf = PdfFileReader(f)
 
-		try:
-			document = PDFDocument(parser, password)
-			del document
-			print(repr(password))
+			try:
+				password = password.decode('utf-8')
+			except AttributeError:
+				pass
+			except UnicodeDecodeError:
+				# Apparently, pdf can't handle bytes passwords...
+				return
 
-			self.completed = True
-			return
-		
-		except PDFPasswordIncorrect:
-			pass
-			# print("incorrect password")
-
-		# p = subprocess.Popen([ 'qpdf', '--password={}'.format(password), self.target.path.decode('utf-8'), '--decrypt', output_path ], shell =False)
-		# p.wait()
-		# if p.stderr.read() == b'':
-			# print("we got it")
-		# output_path = '/home/john/poop'
-		# with subprocess.Popen([ 'qpdf', '--password={}'.format(password), self.target.path.decode('utf-8'), '--decrypt', output_path ],stdout = subprocess.PIPE, stderr = subprocess.PIPE, shell =False) as process:
-		# 	try:
-		# 		stdout, stderr = process.communicate()
-		# 	except JobTimeoutException:
-		# 		# logger.error('Process was killed by timeout.')
-		# 		raise
-		# 	finally:
-		# 		if process.poll() is None:
-		# 			process.kill()
-		# 			stdout, stderr = process.communicate()
-		# 	# print(stdout)
-
-		# # p = subprocess.Popen([ 'qpdf', '--password={}'.format(password), self.target.path.decode('utf-8'), '--decrypt', output_path ],
-		# 	# stdout = tempfile.TemporaryFile(), stderr = tempfile.TemporaryFile(), shell =False)
-		# 		# Run steghide
-		# # p.wait()
-		# # p.kill()
-		# # Grab the output
-		# # output = bytes.decode(p.stdout.read(),'ascii')
-		# # error = bytes.decode(p.stderr.read(),'ascii')
-		# # print(p)
-		# # Check if it succeeded
-		# if (process.returncode != 2):
-		# 	print('as')
-		# 	katana.add_results(self, "success")
-		# 	katana.locate_flags(self, "hello")
-		# 	self.completed = True
-		# 	return
-		# if ( b'invalid password' not in stderr ):
-		# # 	# print("right password")
-		# if os.path.exists(output_path):
-		# 	sys.stdout.write('yes')
-		# 	self.completed = True
-		# 	return
-		
-
-		# # # if ( os.path.exists(output_path) ):
-		# # 	print('We got it!', password)
-		# # 	self.completed = False
-		# # 	return
-
-
-		# # Grab the output
-		# # output = bytes.decode(p.stdout.read(),'ascii')
-		# # error = bytes.decode(p.stderr.read(),'ascii')
-
-		# # # Check if it succeeded
-		# # if p.returncode != 0:
-		# # 	return None
-
-		# # katana.add_artifact(self, output_path)
-	
-		# # # Grab the file type
-		# # typ = magic.from_file(output_path)
-		# # thing = '<BINARY_DATA>'
-		
-		# # with open(output_path, 'r') as f:
-		# # 	thing = f.read()
-
-		# # katana.locate_flags(self, thing)
-
-		# # katana.recurse(self, output_path)
-
-		# # katana.add_results(self, {
-		# # 	'file': output_path,
-		# # 	'type': typ
-		# # })
+			if pdf.decrypt(password):
+				katana.add_results(self, '{0}: {1}'.format(self.target.path, password))
+				self.completed = True
