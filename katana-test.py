@@ -114,16 +114,25 @@ if __name__ == "__main__":
 			prog.failure('non-zero return code: {0}'.format(result.returncode))
 			continue
 
-		# Load test results
-		with open(os.path.join(args.output, test['name'], 'katana.json')) as f:
-			results = json.load(f)
+		ellapsed = 'unknown'
+		with open(os.path.join(args.output, test['name']+'.txt'), 'rb') as f:
+			for line in f:
+				if b'threads exited in' in line:
+					ellapsed = float(line.split(b'in ')[1].split(b's.')[0])
 
-		if 'flags' not in results or len(results['flags']) == 0:
-			prog.failure('test failed: flag not found in output!')
-		elif 'flag' not in test:
-			prog.success('flags found, but no correct flag specified; check results')
-		elif test['flag'] in results['flags']:
-			prog.success('flag found')
+		# Load test results
+		try:
+			with open(os.path.join(args.output, test['name'], 'katana.json')) as f:
+				results = json.load(f)
+		except:
+			prog.failure('no results found')
 		else:
-			prog.failure('flags found, but correct flag not found')
+			if 'flags' not in results or len(results['flags']) == 0:
+				prog.failure('flag not found in output (run time: {0}s)'.format(ellapsed))
+			elif 'flag' not in test:
+				prog.success('flags found, but no correct flag specified; check results (runtime: {0}s)'.format(ellapsed))
+			elif test['flag'] in results['flags']:
+				prog.success('flag found (runtime: {0}s)'.format(ellapsed))
+			else:
+				prog.failure('flags found, but correct flag not found (runtime: {0}s)'.format(ellapsed))
 
