@@ -13,6 +13,7 @@ import collections
 class Unit(units.NotEnglishUnit):
 
 	PROTECTED_RECURSE = True
+	PRIORITY = 60
 
 	@classmethod
 	def add_arguments(cls, katana, parser):

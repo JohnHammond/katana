@@ -16,6 +16,8 @@ import time
 
 class Unit(units.FileUnit):
 
+	PRIORITY = 70
+
 	def __init__(self, katana, parent, target):
 		# This ensures it is a PDF
 		super(Unit, self).__init__(katana, parent, target, keywords=['pdf document'])

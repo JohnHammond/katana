@@ -15,6 +15,7 @@ import collections
 class Unit(units.NotEnglishUnit):
 
 	PROTECTED_RECURSE = True
+	PRIORITY = 45
 
 	# Shamelessly stolen from https://rot47.net/_py/rot47.txt
 	def do_rot47(self, s):

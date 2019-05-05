@@ -15,6 +15,8 @@ DEPENDENCIES = [ 'tcpflow' ]
 
 class Unit(units.pcap.PcapUnit):
 
+	PRIORITY = 25
+
 	# JOHN: This MUST be in the class... 
 	PROTECTED_RECURSE = True
 	

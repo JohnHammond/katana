@@ -38,6 +38,8 @@ def decrypt( ciphertext, a = 1, b = 1, alphabet = alphabet):
 # class Unit(units.PrintableDataUnit):
 class Unit(units.NotEnglishUnit):
 
+	PRIORITY = 65
+
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 

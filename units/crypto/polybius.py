@@ -36,6 +36,7 @@ def decrypt(table, numbers):
 class Unit(units.PrintableDataUnit):
 
 	PROTECTED_RECURSE = True
+	PRIORITY = 40
 
 	def __init__( self, katana, parent, target ):
 		super(Unit, self).__init__(katana, parent, target)

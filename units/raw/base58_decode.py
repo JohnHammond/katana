@@ -21,6 +21,8 @@ BASE58_REGEX = re.compile(BASE58_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECA
 
 class Unit(BaseUnit):
 
+	PRIORITY = 60
+
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 

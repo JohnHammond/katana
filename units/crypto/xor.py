@@ -20,6 +20,8 @@ PROTECTED_RECURSE = True
 # JOHN: I inherit from FileOrData unit, because this may very well not be printable text!
 class Unit(units.BaseUnit):
 
+	PRIORITY = 70
+
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--xor-key', type=str,

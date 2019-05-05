@@ -24,6 +24,7 @@ class Unit(units.FileUnit):
 
 	# JOHN: This MUST be in the class... 
 	PROTECTED_RECURSE = True
+	PRIORITY = 55
 	
 	def evaluate(self, katana, case):
 

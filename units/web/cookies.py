@@ -6,6 +6,8 @@ from web import WebUnit
 
 class Unit(WebUnit):
 
+	PRIORITY = 30
+
 	# We do not need to include the constructor here because
 	# the WebUnit parent will already ensure this is a 
 	# URL beginning with either http:// or https://

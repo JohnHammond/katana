@@ -12,6 +12,8 @@ DEPENDENCIES = [ 'pdfinfo' ]
 
 class Unit(units.FileUnit):
 
+	PRIORITY = 60
+
 	def __init__(self, katana, parent, target):
 		# This ensures it is a PDF
 		super(Unit, self).__init__(katana, parent, target, keywords=['pdf document'])

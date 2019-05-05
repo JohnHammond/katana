@@ -15,6 +15,8 @@ DEPENDENCIES = [ 'apktool' ]
 
 class Unit(units.FileUnit):
 
+	PRIORITY = 40
+
 	# JOHN: This MUST be in the class... 
 	PROTECTED_RECURSE = True
 	

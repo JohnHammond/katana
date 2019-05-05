@@ -44,6 +44,8 @@ def get_plane(img, data, channel, index = 0):
 
 class Unit(units.FileUnit):
 
+	PRIORITY = 40
+
 	@classmethod
 	def add_arguments(cls, katana, parser):
 

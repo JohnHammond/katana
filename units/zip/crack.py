@@ -7,6 +7,8 @@ DEPENDENCIES = [ 'unzip' ]
 
 class Unit(units.FileUnit):
 
+	PRIORITY = 40
+
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--zip-password', type=str,

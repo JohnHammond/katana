@@ -15,6 +15,8 @@ DEPENDENCIES = [ 'pdftotext' ]
 
 class Unit(units.FileUnit):
 
+	PRIORITY = 50
+
 	# JOHN: This MUST be in the class... 
 	PROTECTED_RECURSE = True
 	
