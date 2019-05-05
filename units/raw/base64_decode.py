@@ -49,7 +49,8 @@ class Unit(BaseUnit):
 				# if it's not printable, we might only want it if it is a file...
 				else:
 					magic_info = magic.from_buffer(decoded)
-					if magic_info != 'data' and len(decoded) > katana.config['data_length']:
+					if utilities.is_good_magic(magic_info):
+
 						
 						katana.add_results(self, decoded)
 
@@ -57,6 +58,8 @@ class Unit(BaseUnit):
 						handle.write(decoded)
 						handle.close()
 						katana.recurse(self, filename)
+						if 'image' in magic_info:
+							print(magic_info, filename)
 				
 			except (UnicodeDecodeError, binascii.Error, ValueError):
 				

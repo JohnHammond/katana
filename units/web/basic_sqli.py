@@ -83,13 +83,14 @@ class Unit(web.WebUnit):
 		else:
 			last_location = self.target.upstream.decode('utf-8').rstrip('/') + '/'
 
-		r = method(self.target.upstream.decode('utf-8') + action, data = { username: payload, password : payload })
+		r = method(self.target.upstream.decode('utf-8') + action, data = { username: payload, password : payload }, timeout=2)
 		
 		# Hunt for flags. If we found one, stop all other requests!
 		hit = katana.locate_flags(self, r.text)
 
 		if hit:
 			self.completed = True
+			return
 
 		# You should ONLY return what is "interesting" 
 		# Since we cannot gauge the results of this payload versus the others,

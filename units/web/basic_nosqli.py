@@ -16,6 +16,8 @@ import traceback
 
 class Unit(web.WebUnit):
 
+	PRIORITY = 40
+
 	def __init__(self, katana, parent, target):
 
 		# Run the parent constructor, to ensure this is a valid URL

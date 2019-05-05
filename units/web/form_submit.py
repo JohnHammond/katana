@@ -15,6 +15,8 @@ import units
 
 class Unit(web.WebUnit):
 
+	PRIORITY = 20
+
 	def __init__(self, katana, parent, target):
 
 		# Run the parent constructor, to ensure this is a valid URL

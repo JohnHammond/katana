@@ -13,6 +13,12 @@ import enchant
 import traceback
 import string
 
+good_magic_strings = [
+	'image', 'document', 'archive', 'file', 'database',
+	'package', 'binary', 'video', 'executable', 'format',
+	'certificate', 'bytecode'
+]
+
 dictionary = enchant.Dict()
 english_words_threshold = 1
 
@@ -24,6 +30,12 @@ def isprintable(data):
 			return False
 
 	return True
+
+def is_good_magic(magic_string):
+	for good in good_magic_strings:
+		if magic_string in good_magic_strings:
+			return True
+	return False
 
 # This subclass of argparse will print the help whenever there
 # is a syntactic error in the options parsing

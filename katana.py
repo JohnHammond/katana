@@ -32,6 +32,7 @@ import signal
 from target import Target
 from unit import BaseUnit
 from collections import deque
+import time
 
 class Katana(object):
 
@@ -461,6 +462,7 @@ class Katana(object):
 
 	def evaluate(self):
 		""" Start processing all units """
+		start = time.time()
 
 		def show_status(signal_number, frame):
 			log.info("working \u001b[33;01m{0}\u001b[0m->\u001b[34;01m{1}\u001b[0m".format(*self.threads[0].getName().split('->')))
@@ -505,7 +507,8 @@ class Katana(object):
 		for t in self.threads:
 			t.join()
 
-		self.progress.success('threads exited. evaluation complete')
+		finish = time.time()
+		self.progress.success(f'threads exited in {round(finish-start,1)}s. evaluation complete')
 
 		# Build the results dictionary from the queues
 		self.build_results()
@@ -661,7 +664,7 @@ class Katana(object):
 				except units.NotApplicable:
 					pass
 
-		return units_so_far
+		return sorted(units_so_far)
 
 	def progress_worker(self, done_event):
 		while not done_event.is_set():
@@ -678,7 +681,7 @@ class Katana(object):
 			return False
 		
 		# Show progress if debug
-		progress.status('processing {0}'.format(unit.unit_name))
+		progress.status('processing {0} priority {1}'.format(unit.unit_name, unit.PRIORITY))
 		
 		try:
 			# Evaluate the target
@@ -773,7 +776,7 @@ sys.path.insert(0, os.getcwd())
 
 if __name__ == '__main__':
 
-	# Create the katana
+	# Create the Katana
 	katana = Katana()
 
 	# Run katana against all units

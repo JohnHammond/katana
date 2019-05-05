@@ -22,6 +22,10 @@ class Unit(units.FileUnit):
 	# because the ForensicsUnit parent will pull from FileUnit, 
 	# to ensure the target is in fact a file.
 
+	def __init__(self, katana, parent, target):
+		# This ensures it is a PDF
+		super(Unit, self).__init__(katana, parent, target, keywords=['pdf document'])
+
 	def evaluate(self, katana, case):
 
 		# Find/create the output artifact directory

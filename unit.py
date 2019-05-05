@@ -13,6 +13,9 @@ class BaseUnit(object):
 	# The unit priority. 50 is default. 1 is highest. 100 is lowest.
 	PRIORITY = 50
 
+	def __lt__(self, other):
+		return self.PRIORITY < other.PRIORITY
+
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		""" Add whatever arguments are needed by this unit to the given

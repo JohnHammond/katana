@@ -17,6 +17,8 @@ DEPENDENCIES = [ 'steghide' ]
 
 class Unit(units.FileUnit):
 
+	PRIORITY = 20
+
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target, keywords=['jpg ', 'jpeg '])
 

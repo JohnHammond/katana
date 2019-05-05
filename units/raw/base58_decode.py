@@ -47,7 +47,7 @@ class Unit(BaseUnit):
 				# if it's not printable, we might only want it if it is a file...
 				else:
 					magic_info = magic.from_buffer(result)
-					if magic_info != 'data' and len(result) > katana.config['data_length']:
+					if utilities.is_good_magic(magic_info):
 						
 						katana.add_results(self, result)
 
@@ -74,7 +74,7 @@ class Unit(BaseUnit):
 				# if it's not printable, we might only want it if it is a file...
 				else:
 					magic_info = magic.from_buffer(result)
-					if magic_info != 'data':
+					if utilities.is_good_magic(magic_info):
 						
 						katana.add_results(self, result)
 

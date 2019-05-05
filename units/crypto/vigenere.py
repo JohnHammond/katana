@@ -10,19 +10,21 @@ def vigenere(plaintext, key):
 	plaintext = plaintext.upper()
 	key = key.upper()
 
-	valid_chars = string.ascii_uppercase
+	valid_chars = bytes(string.ascii_uppercase,'ascii')
 
 	idx = 0
 	ciphertext = ''
 
-	for c in plaintext:
+	for c in bytes(plaintext,'ascii'):
 		if c not in valid_chars:
-			ciphertext += c
+			ciphertext += chr(c)
 		else:
 			if key[idx] not in valid_chars:
 				idx = (idx + 1) % len(key)
-			v1 = ord(c) - ord('A')
-			v2 = ord(key[idx]) - ord('A')
+			# v1 = ord(c) - ord('A')
+			# v2 = ord(key[idx]) - ord('A')
+			v1 = c - ord('A')
+			v2 = key[idx] - ord('A')
 			ciphertext += chr(((v1 - v2) % 26)+ord('A'))
 			idx = (idx + 1) % len(key)
 
@@ -52,14 +54,14 @@ class Unit(NotEnglishUnit):
 			yield p
 
 		# Add all passwords from the dictionary file
-		if 'dict' in katana.config and katana.config['dict'] is not None:
-			katana.config['dict'].seek(0)
-			try:
-				for line in katana.config['dict']:
-					yield line.rstrip('\n')
-			except UnicodeDecodeError:
-				# JOHN: This happens sometimes on line 54 and I DON'T KNOW WHY
-				return
+		# if 'dict' in katana.config and katana.config['dict'] is not None:
+		# 	katana.config['dict'].seek(0)
+		# 	try:
+		# 		for line in katana.config['dict']:
+		# 			yield line.rstrip(b'\n')
+		# 	except UnicodeDecodeError:
+		# 		# JOHN: This happens sometimes on line 54 and I DON'T KNOW WHY
+		# 		return
 
 	def evaluate(self, katana, case):
 
