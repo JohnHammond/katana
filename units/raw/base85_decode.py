@@ -14,6 +14,7 @@ import units
 import traceback
 import base64
 import binascii
+import magic
 
 class Unit(BaseUnit):
 
@@ -27,8 +28,17 @@ class Unit(BaseUnit):
 		try:
 			decoded = base64.b85decode(self.target.raw)
 
-			katana.recurse(self, decoded)
-			katana.add_results(self, decoded)
+			# We want to know about this if it is printable!
+			if utilities.isprintable(decoded):
+				katana.recurse(self, decoded)
+				katana.add_results(self, decoded)
+
+			# if it's not printable, we might only want it if it is a file...
+			else:
+				magic_info = magic.from_buffer(decoded)
+				if magic_info != 'data':
+					katana.recurse(self, decoded)
+					katana.add_results(self, decoded)
 		
 		except (UnicodeDecodeError, binascii.Error, ValueError):
 			# This won't decode right... must not be right! Ignore it.				

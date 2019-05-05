@@ -602,24 +602,28 @@ class Unit(WebUnit):
 				return 
 
 			# -----------------------------------------------------------------
-			# JOHN: I am really, REALLY sketched out about this...
-			commit_data = subprocess.run(f"git checkout {commit}".split(), cwd = git_directory, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-			# Look through all the files in the current commit
-			for (directory, dirs, files) in os.walk(git_directory, topdown=True):
-				# Ignore the .git directory for god's sake
-				dirs[:] = [d for d in dirs if d not in ['.git']]
+			# JOHN: This next procedure is HEAVY
+			#       It loops through every commit, grabs files and recurses
+			#       on EVERY NEW FILE it finds.... soooooo
+			#       I limit this to only run if a flag file is specified.
+			if katana.config['flag_format']:
+				commit_data = subprocess.run(f"git checkout {commit}".split(), cwd = git_directory, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+				# Look through all the files in the current commit
+				for (directory, dirs, files) in os.walk(git_directory, topdown=True):
+					# Ignore the .git directory for god's sake
+					dirs[:] = [d for d in dirs if d not in ['.git']]
 
-				for filename in files:
-					file_path = os.path.join(directory, filename)
-					# Hash the file to make sure if we have not seen it before
-					path_hash = md5(open(file_path, 'rb').read()).hexdigest()
-					
-					if path_hash not in self.target.seen_files:							
-						temp_path = os.path.join(temp_folder, path_hash)
-						shutil.move(file_path, temp_path)
-						katana.recurse(self, temp_path)
-						self.target.seen_files.append(path_hash)
-			
-			line_number += 1
+					for filename in files:
+						file_path = os.path.join(directory, filename)
+						# Hash the file to make sure if we have not seen it before
+						path_hash = md5(open(file_path, 'rb').read()).hexdigest()
+						
+						if path_hash not in self.target.seen_files:							
+							temp_path = os.path.join(temp_folder, path_hash)
+							shutil.move(file_path, temp_path)
+							katana.recurse(self, temp_path)
+							self.target.seen_files.append(path_hash)
+				
+				line_number += 1
 
-		commit_data = subprocess.run(f"git checkout {first_commit}".split(), cwd = git_directory, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+			commit_data = subprocess.run(f"git checkout {first_commit}".split(), cwd = git_directory, stdout = subprocess.PIPE, stderr = subprocess.PIPE)

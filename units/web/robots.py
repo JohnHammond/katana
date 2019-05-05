@@ -52,10 +52,7 @@ class Unit(WebUnit):
 		new_url = '{0}/{1}'.format(self.target.url_root.rstrip('/'), url.lstrip('/'))
 		r = requests.get(new_url, headers = headers)
 
-		katana.locate_flags(self, r.text)
-
-		# JOHN: I do not recurse in here, because this is a whole new page I am retrieving...
-		#       And I do not add results, because that is done in the `enumerate` function
-		#       in this case, interestingly enough.
-		# katana.recurse(self, line)
-		# katana.add_results(self, line)
+		# I DO recurse on this, in case there are base64 things to catch...
+		# Might be dangerous, but fuck it
+		katana.recurse(self, r.text)
+		

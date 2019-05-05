@@ -14,6 +14,7 @@ import units
 import traceback
 import binascii
 import base58
+import magic
 
 BASE58_PATTERN = rb'[a-zA-Z0-9+/]+'
 BASE58_REGEX = re.compile(BASE58_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
@@ -38,8 +39,17 @@ class Unit(BaseUnit):
 			try:
 				decoded = base58.b58decode(match)
 
-				katana.recurse(self, decoded)
-				katana.add_results(self, decoded)
+				# We want to know about this if it is printable!
+				if utilities.isprintable(decoded):
+					katana.recurse(self, decoded)
+					katana.add_results(self, decoded)
+
+				# if it's not printable, we might only want it if it is a file...
+				else:
+					magic_info = magic.from_buffer(decoded)
+					if magic_info != 'data':
+						katana.recurse(self, decoded)
+						katana.add_results(self, decoded)
 				
 			except (UnicodeDecodeError, binascii.Error, ValueError):
 				# This won't decode right... must not be right! Ignore it.				
@@ -52,8 +62,17 @@ class Unit(BaseUnit):
 			try:
 				decoded = base58.b58decode_check(match)
 
-				katana.recurse(self, decoded)
-				katana.add_results(self, decoded)
+				# We want to know about this if it is printable!
+				if utilities.isprintable(decoded):
+					katana.recurse(self, decoded)
+					katana.add_results(self, decoded)
+
+				# if it's not printable, we might only want it if it is a file...
+				else:
+					magic_info = magic.from_buffer(decoded)
+					if magic_info != 'data':
+						katana.recurse(self, decoded)
+						katana.add_results(self, decoded)
 				
 			except (UnicodeDecodeError, binascii.Error, ValueError):
 				# This won't decode right... must not be right! Ignore it.				
