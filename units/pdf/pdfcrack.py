@@ -21,6 +21,7 @@ class Unit(units.FileUnit):
 		super(Unit, self).__init__(katana, parent, target, keywords=['pdf document'])
 
 	def enumerate(self, katana):
+		
 		# The default is to check an empty password
 		yield ''
 
@@ -33,10 +34,9 @@ class Unit(units.FileUnit):
 			# CALEB: Possible race condition if two units use the 'dict' argument for the same purpose...
 			katana.config['dict'].seek(0)
 			for line in katana.config['dict']:
-				yield line.rstrip('\n')
+				yield line.decode('utf-8').rstrip('\n')
 
 	def evaluate(self, katana, password):
-		
 		# output_path, _ = katana.create_artifact(self, f'{password}.pdf', create=False)
 		
 		f = open(self.target.path, 'rb')
@@ -44,15 +44,11 @@ class Unit(units.FileUnit):
 
 		try:
 			document = PDFDocument(parser, password)
-			del document
-			print(repr(password))
-
-			self.completed = True
-			return
-		
+			print(password)
 		except PDFPasswordIncorrect:
 			pass
-			# print("incorrect password")
+			if password == 'iloveyou':
+				print("incorrect password")
 
 		# p = subprocess.Popen([ 'qpdf', '--password={}'.format(password), self.target.path.decode('utf-8'), '--decrypt', output_path ], shell =False)
 		# p.wait()

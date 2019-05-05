@@ -59,5 +59,10 @@ class Unit(BaseUnit):
 				else:
 					magic_info = magic.from_buffer(result)
 					if magic_info != 'data':
-						katana.recurse(self, result)
+						
 						katana.add_results(self, result)
+
+						filename, handle = katana.create_artifact(self, "decoded", mode='wb', create=True)
+						handle.write(result)
+						handle.close()
+						katana.recurse(self, filename)
