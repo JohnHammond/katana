@@ -495,6 +495,8 @@ def fetch_git( unit, url, directory, jobs, retry, timeout, katana):
 
 class Unit(WebUnit):
 
+	PRIORITY = 40
+
 	@classmethod
 	def add_arguments(cls, katana, parser):
 

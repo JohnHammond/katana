@@ -13,6 +13,8 @@ DEPENDENCIES = [ 'snow' ]
 
 class Unit(units.FileUnit):
 
+	PRIORITY = 30
+
 	def evaluate(self, katana, case):
 
 		p = subprocess.Popen(['snow', self.target.path ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)

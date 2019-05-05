@@ -17,6 +17,7 @@ class Unit(units.FileUnit):
 
 	# JOHN: This MUST be in the class... 
 	PROTECTED_RECURSE = True
+	PRIORITY = 55
 	
 	# We do not need to include the constructor here 
 	# because the ForensicsUnit parent will pull from FileUnit, 

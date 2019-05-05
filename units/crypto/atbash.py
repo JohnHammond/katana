@@ -14,6 +14,7 @@ import io
 class Unit(units.NotEnglishUnit):
 
 	PROTECTED_RECURSE = True
+	PRIORITY = 60
 
 	def __init__(self, *args, **kwargs):
 		super(Unit, self).__init__(*args, **kwargs)	

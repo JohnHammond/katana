@@ -10,6 +10,8 @@ headers = { 'User-Agent': 'Googlebot/2.1' }
 
 class Unit(WebUnit):
 
+	PRIORITY = 30
+
 	def __init__(self, katana, parent, target):
 
 		# Run the parent constructor, to ensure this is a valid URL

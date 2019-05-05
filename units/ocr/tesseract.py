@@ -38,6 +38,7 @@ class Unit(units.FileUnit):
 
 	# JOHN: This MUST be in the class... 
 	PROTECTED_RECURSE = True
+	PRIORITY = 25
 	
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)

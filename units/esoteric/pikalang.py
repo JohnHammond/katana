@@ -350,6 +350,8 @@ def run(fileName, args):
 
 class Unit(PrintableDataUnit):
 
+	PRIORITY = 40
+
 	def __init__(self, katana, parent, target, keywords=[]):
 		super(Unit, self).__init__(katana, parent, target)
 

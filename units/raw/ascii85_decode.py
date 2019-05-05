@@ -18,6 +18,8 @@ import magic
 
 class Unit(BaseUnit):
 
+	PRIORITY = 60
+
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 

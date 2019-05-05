@@ -95,6 +95,8 @@ def evaluate_brainfuck(code, input_file, timeout = 1):
 
 class Unit(NotEnglishUnit):
 
+	PRIORITY = 60
+
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--brainfuck-input',  action='store_true', default=None, help='file to be read as input to brainfuck program')

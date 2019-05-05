@@ -115,6 +115,9 @@ class Katana(object):
 				help='continue after finding a flag')
 		parser.add_argument('--password', '-p', action='append', default=[],
 				help='specify a possible password for units that may need it')
+		parser.add_argument('--no-priority', '-np', action="store_true", default=False,
+				help='do not use the priority queue')
+
 
 		args, remaining = parser.parse_known_args()
 
@@ -243,7 +246,11 @@ class Katana(object):
 			self.flag_pattern = None
 
 		# Setup the work queue
-		self.work = queue.PriorityQueue(maxsize=500)
+		if self.config['no_priority']:
+			print('no priority')
+			self.work = queue.Queue(maxsize=500)
+		else:
+			self.work = queue.PriorityQueue(maxsize=500)
 
 		# Don't run if the output directory exists
 		if os.path.exists(self.config['outdir']):
@@ -353,7 +360,7 @@ class Katana(object):
 			return
 
 		# CALEB: This is a race condition... but it's not a big deal...
-		log.success(str('potential flag found '+ '(copied)'*(len(self.flag_queue) == 0) +': {0}').format('\u001b[32;1m' + flag + '\u001b[0m') )	
+		log.success(str(f'({round(time.time()-self.start,2)}s) potential flag found '+ '(copied)'*(len(self.flag_queue) == 0) +': {0}').format('\u001b[32;1m' + flag + '\u001b[0m') )	
 		if len(self.flag_queue) == 0:
 			clipboard.copy(flag)
 
@@ -462,7 +469,7 @@ class Katana(object):
 
 	def evaluate(self):
 		""" Start processing all units """
-		start = time.time()
+		self.start = time.time()
 
 		def show_status(signal_number, frame):
 			log.info("working \u001b[33;01m{0}\u001b[0m->\u001b[34;01m{1}\u001b[0m".format(*self.threads[0].getName().split('->')))
@@ -508,7 +515,7 @@ class Katana(object):
 			t.join()
 
 		finish = time.time()
-		self.progress.success(f'threads exited in {round(finish-start,1)}s. evaluation complete')
+		self.progress.success(f'threads exited in {round(finish-self.start,1)}s. evaluation complete')
 
 		# Build the results dictionary from the queues
 		self.build_results()
@@ -664,7 +671,10 @@ class Katana(object):
 				except units.NotApplicable:
 					pass
 
-		return sorted(units_so_far)
+		if self.config['no_priority']:
+			return units_so_far
+		else:
+			return sorted(units_so_far)
 
 	def progress_worker(self, done_event):
 		while not done_event.is_set():

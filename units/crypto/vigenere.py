@@ -34,6 +34,7 @@ def vigenere(plaintext, key):
 class Unit(NotEnglishUnit):
 
 	PROTECTED_RECURSE = True
+	PRIORITY = 65
 
 	@classmethod
 	def add_arguments(cls, katana, parser):

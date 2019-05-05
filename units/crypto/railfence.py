@@ -50,6 +50,7 @@ def decryptFence(cipher, rails, offset=0):
 class Unit(units.NotEnglishUnit):
 
 	PROTECTED_RECURSE = True
+	PRIORITY = 70
 
 	@classmethod
 	def add_arguments(cls, katana, parser):

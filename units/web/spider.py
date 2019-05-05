@@ -18,6 +18,8 @@ def has_a_bad_start(link):
 
 class Unit(WebUnit):
 
+	PRIORITY = 30
+
 	# We don't really want to spider on EVERYTHING and start an infinite loop..
 	# We can protect against this once we create a target object
 	# and start to "keep track" of links we find in one specific website target

@@ -16,6 +16,8 @@ permutations = list(set([ "b1,rgb,lsb,xy", "b1,r,lsb,xy", "b1,rgb,msb,yx", "b2,r
 
 class Unit(units.FileUnit):
 
+	PRIORITY = 40
+
 	def __init__(self, katana, parent, target):
 		# This ensures it is a PNG
 		super(Unit, self).__init__(katana, parent, target, keywords=['png image'])

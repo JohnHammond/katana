@@ -21,6 +21,8 @@ BASE32_REGEX = re.compile(BASE32_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECA
 
 class Unit(BaseUnit):
 
+	PRIORITY = 60
+
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
