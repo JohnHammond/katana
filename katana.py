@@ -120,8 +120,6 @@ class Katana(object):
 				help='specify a possible password for units that may need it')
 		parser.add_argument('--no-priority', '-np', action="store_true", default=False,
 				help='do not use the priority queue')
-
-
 		args, remaining = parser.parse_known_args()
 
 		if args.verbose:
@@ -238,7 +236,7 @@ class Katana(object):
 			self.config['target'] = temp_path
 
 		# We want the "-" target to signify stdin
-		if len(self.original_target) == 1 and self.original_target[0] == '-':
+		if self.original_target == '-':
 			self.config['target'] = sys.stdin.read()
 
 		# Compile the flag format if given
@@ -250,7 +248,7 @@ class Katana(object):
 
 		# Setup the work queue
 		if self.config['no_priority']:
-			print('no priority')
+			log.info('disabling prioritized work queue')
 			self.work = queue.Queue(maxsize=500)
 		else:
 			self.work = queue.PriorityQueue(maxsize=500)
@@ -304,6 +302,10 @@ class Katana(object):
 				If the requested name already exists, the name will have a number
 				appended between the name and the extension. The actual path created
 				is returned along with the open file reference for created files.
+
+			NOTE 2: The number appending only works if `create` is True. if it isn't,
+				then no existence checks are performed. You should handle this on
+				your own during creation...
 		"""
 
 		# Add the name of the artifact
@@ -328,42 +330,45 @@ class Katana(object):
 					else:
 						n += 1
 						path = '{0}-{1}{2}'.format(name, n, ext)
-				# try:
-				# 	if asdir:
-				# 		os.mkdir(path)
-				# 	else:
-				# 		file_handle = open(path, mode)
-				# except OSError:
-				# 	n += 1
-				# 	path = '{0}-{1}{2}'.format(name, n, ext)
-				# else:
-				# 	break
 
+			# We don't add directories to the artifact list by default...
+			# CALEB: But should we? :?
 			if not asdir:
 				self.add_artifact(unit, path)
 		
+		# Return both the open file handle (if created) and the path
 		return (path, file_handle)
 
+	# Register an artifact with the results
 	def add_artifact(self, unit, path):
 		self.artifact_queue.append((unit, path))
-	
+
+	# Add some results to the result object
 	def add_results(self, unit, d):
+		# Clean the results
 		d = self.clean_result(d)
+		
+		# Only add if the clean didn't demolish it
 		if d is None or not d:
 			return
+
+		# Add it to the queue to be added lattteeerrrrr
 		self.result_queue.append((unit, d))
 	
+	# Queue an image to be added to the final results
 	def add_image(self, image):
-		if ( self.config['display_images'] ):
-			if self.gui is not None:
-				try:
-					self.gui.insert(image)
-				except RuntimeError:
-					# The user must have closed the window.. that's fine!
-					pass
+		# Display the image if the user asked to
+		if ( self.config['display_images'] ) and self.gui is not None:
+			try:
+				self.gui.insert(image)
+			except RuntimeError:
+				# The user must have closed the window.. that's fine!
+				pass
 
+		# Add the image to the queue
 		self.image_queue.append(image)
 	
+	# Add a potential flag to the flag queue
 	def add_flag(self, flag):
 
 		# Technically a race condition, but will be handled by "set" below in build_results
@@ -371,13 +376,25 @@ class Katana(object):
 			return
 
 		# CALEB: This is a race condition... but it's not a big deal...
-		log.success(str(f'({round(time.time()-self.start,2)}s) potential flag found '+ '(copied)'*(len(self.flag_queue) == 0) +': {0}').format('\u001b[32;1m' + flag + '\u001b[0m') )	
+		# CALEB: Also, this is fucking disgusting...
+		log.success((f'({round(time.time()-self.start,2)}s) potential flag found ' + 
+			'(copied)'*(len(self.flag_queue) == 0) +': {0}').format('\u001b[32;1m' +
+			flag + '\u001b[0m')
+		)
+
+		# Copy the flag to the clipboard, if it's the first flag
 		if len(self.flag_queue) == 0:
 			clipboard.copy(flag)
 
+		# Add to list of found flags
 		self.flag_queue.append(flag)
 
 	def build_results(self):
+		""" This should run after exiting the main loop. It will take the contents of the
+			`flag_queue`, `image_queue`, `result_queue`, and `artifact_queue` then consolidate
+			them into a nice dictionary suitable for output as JSON and formatting into the
+			HTML output with Jinja2.
+		"""
 
 		# Build initial results structure
 		self.results = {
@@ -422,61 +439,129 @@ class Katana(object):
 		with self.results_lock:
 			# Start at the global results
 			r = self.results
+
+			# Iterate through parents to find the correct
+			# results item in the dictionary
 			for p in parents:
+				# Create the children entry if it doesn't exist
 				if not 'children' in r:
-					r['children'] = { p.unit_name: { 'uuid': str(uuid.uuid4()), 'results': [] } }
+					r['children'] = {
+						p.unit_name: {
+							'uuid': str(uuid.uuid4()),
+							'results': []
+						}
+					}
+				# Create this child if it doesn't exist
 				elif p.unit_name not in r['children']:
-					r['children'][p.unit_name] = { 'uuid': str(uuid.uuid4()), 'results': [] }
+					r['children'][p.unit_name] = {
+						'uuid': str(uuid.uuid4()),
+						'results': []
+					}
+				# We found it! We found the last parent!
 				r = r['children'][p.unit_name]
+
+			# Add the children if needed
 			if 'children' not in r:
-				r['children'] = { unit.unit_name: { 'uuid': str(uuid.uuid4()), 'results': [] } }
+				r['children'] = {
+					unit.unit_name: {
+						'uuid': str(uuid.uuid4()),
+						'results': [] 
+					}
+				}
+			# Add this child if needed
 			elif unit.unit_name not in r['children']:
-				r['children'][unit.unit_name] = {'uuid': str(uuid.uuid4()), 'results': []}
+				r['children'][unit.unit_name] = {
+					'uuid': str(uuid.uuid4()),
+					'results': []
+				}
+
+			# Create this child
 			r = r['children'][unit.unit_name]
 
+		# Return the result reference
 		return r
 
 	def clean_result(self, d):
+		""" Remove results we don't want, and normalize the format. 
+
+			This function will ensure that the string results are greater
+			than `data_length` characters. Also, it ensures there are no bytes
+			strings in the result (either decoding with utf-8 or using repr)
+		"""
+
 		if isinstance(d, str):
+			# Only allow strings of at least `data_length` length.
 			if len(d) < self.config['data_length']:
 				return None
 			return d
 		elif isinstance(d, list) or isinstance(d, tuple):
+			# Recurse through tuples and lists
 			r = []
 			for i in d:
 				x = self.clean_result(i)
 				if x is not None:
 					r.append(x)
+			# Ignore the tuple if it is empty after cleaning
 			if len(r) == 0:
 				r = None
 		elif isinstance(d, dict):
+			# Recurse through dictionaries
 			r = {}
 			for name in d:
 				x = self.clean_result(d[name])
 				if x is not None:
 					r[name] = x
+			# Ignore the dict if it is empty after cleaning
 			if len(r) == 0:
 				r = None
 		elif isinstance(d, bytes):
+			# Attempt to decode the bytes array
 			try:
 				r = d.decode('utf-8')
 			except UnicodeError:
-				r = repr(d)
+				# Fall back to `repr`, and remove the `b'{0}'` bullshit
+				r = repr(d)[2:-1]
+			# Ensure it is long enough
 			if len(r) < self.config['data_length']:
 				return None
 		else:
+			# For all other types, just use as-is.
 			r = d
 		return r
 
 	def render(self):
-		""" Normalize and render results using the specified jinja2 template """
+		""" Render the results dictionary to a nice HTML view via Jinja2
+			templating. The templates are stored in `./templates`, and 
+			the specific template to use is specified via the `template`
+			argument
+		"""
+
+		# Create a new Jinja2 environment from the templates.
+		# Specify html/xml processing.
 		env = jinja2.Environment(loader=jinja2.FileSystemLoader('./templates'),
 				autoescape=jinja2.select_autoescape(['html', 'xml'])
 			)
+
+		# Expose a custom JSON pretty printing filter
 		env.filters['pretty_json'] = utilities.jinja_pretty_json
+
+		# Load the template specified in the configuration
 		template = env.get_template(self.config['template']+'.html')
-		shutil.copyfile(os.path.join('./templates', self.config['template']+'.css'), os.path.join(self.config['outdir'], self.config['template']+'.css'))
-		template.stream(results=self.results, target=self.original_target).dump(os.path.join(self.config['outdir'], 'katana.html'))
+
+		# Ensure the CSS file is available in the output directory
+		shutil.copyfile(
+			os.path.join('./templates', self.config['template']+'.css'),
+			os.path.join(self.config['outdir'], self.config['template']+'.css')
+		)
+
+		# Render the template with our results and initial target data
+		stream = template.stream(
+			results=self.results,
+			target=self.original_target
+		)
+
+		# Dump the rendered view to the output directory
+		stream.dump(os.path.join(self.config['outdir'], 'katana.html'))
 
 	def evaluate(self):
 		""" Start processing all units """
@@ -557,8 +642,11 @@ class Katana(object):
 			# Use the raw json to process out HTML
 			self.render()
 			
-			# JOHN: Maybe this defeats the purpose of --show, but I like it anyway...
-			log.success('wrote output to {0}, note minimum data length is {1}'.format(os.path.join(self.config['outdir'], 'katana.json and html'), self.config['data_length']))
+			# Close out the progress object
+			log.success('wrote output to {0}, note minimum data length is {1}'.format(
+				os.path.join(self.config['outdir'], 'katana.json and html'),
+				self.config['data_length']
+			))
 		else:
 			log.failure("no units returned results")
 
@@ -636,14 +724,11 @@ class Katana(object):
 			return
 
 		try:
-			if os.path.isfile(data):
-				verify_length = False
+			if not os.path.isfile(data) and len(data) >= self.config['data_length']:
+				return
 		except ValueError:
 			pass
 
-		if verify_length and len(data) < self.config['data_length']:
-			return
-	
 		# If the data is not a flag, go ahead and recurse on it!
 		if not self.locate_flags(parent, data):
 
@@ -659,6 +744,7 @@ class Katana(object):
 	
 	def locate_units(self, target, parent=None, recurse=False):
 
+		# We are building a list of units for this target
 		units_so_far = []
 		
 		if target.hash.hexdigest() in self.target_hashes:
@@ -686,9 +772,6 @@ class Katana(object):
 					if unit_class.PROTECTED_RECURSE and parent is not None:
 						if parent.PROTECTED_RECURSE:
 							raise units.NotApplicable()
-#						for p in ([ parent ] + parent.family_tree):
-#							if p.PROTECTED_RECURSE:
-#								raise units.NotApplicable
 
 					# Run this if we HAVE NOT seen it before...
 					unit = unit_class(self, parent, target)
@@ -696,18 +779,22 @@ class Katana(object):
 				except units.NotApplicable:
 					pass
 
+		# Prioritize resultant units, if requested
 		if self.config['no_priority']:
 			return units_so_far
 		else:
+			# Internal Unit comparisons account for prioritization
 			return sorted(units_so_far)
 
 	def progress_worker(self, done_event):
-		while not done_event.is_set():
+		""" This is the thread that monitors status, and prints a nice message """
+
+		while not self.completed:
 			if self.total_work > 0:
 				left = self.work.qsize()
 				done = self.total_work - left
 				self.progress.status('{0:.2f}% work queue utilization; {1} total items queued'.format((float(self.work.qsize())/float(self.config['threads']*4))*100, self.total_work, done))
-			time.sleep(0.5)
+			time.sleep(1.0)
 	
 	def unit_worker(self, progress, unit, case):
 
@@ -716,7 +803,9 @@ class Katana(object):
 			return False
 		
 		# Show progress if debug
-		progress.status('processing {0} priority {1}'.format(unit.unit_name, unit.PRIORITY))
+		progress.status('processing {0} priority {1}'.format(
+			unit.unit_name, unit.PRIORITY
+		))
 		
 		try:
 			# Evaluate the target
@@ -724,44 +813,25 @@ class Katana(object):
 		except:
 			traceback.print_exc()
 
-	def recurse_worker(self, progress, data, parent):
-		""" Monitor the recurse queue, and create/add targets to work queue
-			for processing by worker threads
-		"""
-
-		progress.status('processing recurse for {0}'.format(parent.unit_name))
-
-		# Build a target object for this data
-		target = Target(self, data, parent=parent)
-
-		# Locate matching units
-		units = self.locate_units(target, parent=parent, recurse=True)
-
-		# Add the units to the work queue
-		self.add_to_work(units)
-
-		# Keep track of images if we see them as a target.
-		if target.is_image and target.path is not None: 
-			self.add_image(os.path.abspath(target.path.decode('utf-8')))
-
-
 	def worker(self, thread_number):
 		""" Katana worker thread to process unit execution """
 
 		# Create progress montiro
 		with log.progress('thread {0}'.format(thread_number)) as progress:
 			while True:
+				
+				# Grab the next work item from the queue
 				work = self.work.get()
 
+				# Exit cleanly when the parent asks us to
 				if work.action == 'done':
 					self.work.task_done()
 					break
 
+				# Process the request if we are still running
 				if not self.completed:
 					if work.action == 'unit':
 						self.unit_worker(progress, *work.item)
-					elif work.action == 'recurse':
-						self.recurse_worker(progress, *work.item)
 					else:
 						log.warning('bad work action: {0}'.format(work.action))
 
@@ -773,6 +843,7 @@ class Katana(object):
 							self.work.put(UnitWorkWrapper(
 								unit.PRIORITY, 'unit', (unit, case)
 							), block=False)
+							self.total_work += 1
 						except queue.Full:
 							self.lost_queue.append((unit, case))
 							full = True
@@ -792,6 +863,7 @@ class Katana(object):
 									self.work.put(UnitWorkWrapper(
 										unit.PRIORITY, 'unit', (unit, case)
 									), block=False)
+									self.total_work += 1
 								except queue.Full:
 									self.lost_queue.append((unit, case))
 									self.recurse_queue.append((unit, gen))
