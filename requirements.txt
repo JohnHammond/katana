@@ -15,3 +15,4 @@ base58
 pysocks
 git+https://github.com/arthaud/python3-pwntools.git
 git+https://github.com/elliptic-shiho/primefac-fork
+pypdf2
