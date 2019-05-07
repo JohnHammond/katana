@@ -33,6 +33,8 @@ from target import Target
 from unit import BaseUnit
 from collections import deque
 import time
+import tkinter
+from PIL import ImageTk, Image
 
 class Katana(object):
 
@@ -58,6 +60,7 @@ class Katana(object):
 		self.artifact_queue = deque()
 		self.image_queue = deque()
 		self.flag_queue = deque()
+		self.gui = None
 
 		# Initial parser is for unit directory. We need to process this argument first,
 		# so that the specified unit may be loaded
@@ -352,9 +355,13 @@ class Katana(object):
 	
 	def add_image(self, image):
 		if ( self.config['display_images'] ):
-			i = Image.open(image)
-			i.show()
-			i.close()
+			if self.gui is not None:
+				try:
+					self.gui.insert(image)
+				except RuntimeError:
+					# The user must have closed the window.. that's fine!
+					pass
+
 		self.image_queue.append(image)
 	
 	def add_flag(self, flag):
@@ -478,7 +485,7 @@ class Katana(object):
 		def show_status(signal_number, frame):
 			log.info("working \u001b[33;01m{0}\u001b[0m->\u001b[34;01m{1}\u001b[0m".format(*self.threads[0].getName().split('->')))
 
-		signal.signal(signal.SIGTSTP, show_status)
+		# signal.signal(signal.SIGTSTP, show_status)
 
 		if not self.config['flag_format']:
 			log.warn("no flag format was specified, advise looking at saved results")
@@ -798,6 +805,78 @@ class Katana(object):
 				# Notify parent we are done
 				self.work.task_done()
 
+class GUIThread(threading.Thread):
+
+	def __init__(self, tk_root, katana):
+		self.root = tk_root
+		self.katana = katana
+		threading.Thread.__init__(self)
+		self.start()
+
+	def run(self):
+		loop_active = True
+		self.katana.evaluate()
+		while loop_active:
+			time.sleep(0.5)
+
+class GUIKatana(tkinter.Tk):
+
+	def __init__( self, katana ):
+		super(GUIKatana, self).__init__()
+
+		self.katana = katana
+		self.katana.gui = self
+		self.geometry('900x600')
+		self.title('Katana - Image Results')
+		self.thread = GUIThread(self, self.katana )
+
+		self.left_frame = tkinter.Frame(self)
+		self.left_frame.pack(side = tkinter.BOTTOM, expand=False, fill = tkinter.BOTH)
+
+
+		self.listbox = tkinter.Listbox(self.left_frame)
+		self.listbox.pack(anchor='s', fill=tkinter.X, expand=False)
+		self.listbox.focus_set()
+		
+		self.right_frame = tkinter.Frame(self)
+		self.right_frame.pack(side = tkinter.TOP, expand=True, fill = tkinter.BOTH)
+
+		self.image_label = tkinter.Label(self.right_frame, text = "No Images Found Yet")
+		self.image_label.pack(expand = True, fill = tkinter.BOTH )
+
+		def list_select(event):
+			listbox = event.widget
+			try:
+				index = int(listbox.curselection()[0])
+			except IndexError:
+				return
+			value = listbox.get(index)
+
+			if os.path.exists( value ):
+				image = ImageTk.PhotoImage(Image.open(value))
+				self.image_label.configure(image = image)
+				self.image_label.image = image
+
+		self.listbox.bind('<<ListboxSelect>>', list_select)
+
+	def insert(self, filename):
+		self.listbox.insert(tkinter.END, filename)
+		if len(self.listbox.curselection()) == 0:
+			self.listbox.selection_set(0)
+			try:
+				index = int(self.listbox.curselection()[0])
+			except IndexError:
+				return
+			value = self.listbox.get(index)
+
+			if os.path.exists( value ):
+				image = ImageTk.PhotoImage(Image.open(value))
+				self.image_label.configure(image = image)
+				self.image_label.image = image
+
+	def evaluate(self):
+		tkinter.mainloop()
+
 # Make sure we find the local packages (first current directory)
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.getcwd())
@@ -807,6 +886,10 @@ if __name__ == '__main__':
 	# Create the Katana
 	katana = Katana()
 
-	# Run katana against all units
-	
-	katana.evaluate()
+	if katana.config['display_images']:
+		# Create a Tkinter window to show images
+		gui_katana = GUIKatana(katana)
+		gui_katana.evaluate()
+	else:
+		# Run katana against all units
+		katana.evaluate()
