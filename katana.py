@@ -351,6 +351,10 @@ class Katana(object):
 		self.result_queue.append((unit, d))
 	
 	def add_image(self, image):
+		if ( self.config['display_images'] ):
+			i = Image.open(image)
+			i.show()
+			i.close()
 		self.image_queue.append(image)
 	
 	def add_flag(self, flag):
@@ -500,6 +504,20 @@ class Katana(object):
 		except KeyboardInterrupt:
 			self.completed = True
 			log.failure("aborting early... ({} tasks not yet completed)".format(self.work.qsize()))
+			# Build the results dictionary from the queues
+			self.build_results()
+
+			# Make sure we can create the results file
+			results = json.dumps(self.results, indent=4, sort_keys=True)
+
+			if results != "{}":
+				with open(os.path.join(self.config['outdir'], 'katana.json'), 'w') as f:
+					f.write(results)
+				if self.config['show']:
+					print(results)
+
+				# Use the raw json to process out HTML
+				self.render()
 
 		status_done.set()
 		status_thread.join()
