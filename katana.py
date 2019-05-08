@@ -101,6 +101,8 @@ class Katana(object):
 			help="print the results on stdout as well as save to file")
 		parser.add_argument('--download', '-d', action="store_true", default=False,
 				help='consider the argument to be a download link and pull it down')
+		parser.add_argument('--no-download', '-nd', action="store_true", default=False,
+				help='do not download URLs, just treat them as locations')
 		parser.add_argument('--template', default='default',
 				help='Jinja2 template for html results output')
 		parser.add_argument('--functions', default='win,get_flag,print_flag,show_flag,flag',
@@ -715,7 +717,10 @@ class Katana(object):
 			return False
 		
 		# Show progress if debug
-		progress.status('processing {0} priority {1}'.format(unit.unit_name, unit.PRIORITY))
+		progress.status('{0} -> {1}... ({2})'.format(
+			'\u001b[33;1m' + unit.unit_name + '\u001b[0m',
+			'\u001b[34;1m' + unit.target[:60].replace('\n','') + '\u001b[0m',
+			unit.PRIORITY))
 		
 		try:
 			# Evaluate the target

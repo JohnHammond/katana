@@ -16,7 +16,7 @@ import units
 
 class Unit(web.WebUnit):
 
-	PRIORITY = 20
+	PRIORITY = 25
 
 	def __init__(self, katana, parent, target):
 
@@ -86,8 +86,10 @@ class Unit(web.WebUnit):
 			last_location = self.target.upstream.decode('utf-8').rstrip('/') + '/'
 
 		try:
-			r = method(self.target.upstream.decode('utf-8') + action, data = { username: payload, password : payload }, timeout=2)
-		except requests.exceptions.ConnectionError:
+			r = method(self.target.upstream.decode('utf-8') + action,
+			 data = { username: payload, password : payload }, timeout=2, 
+			 headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0'})
+		except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError):
 			# We can't reach the site... stop!
 			return
 		
