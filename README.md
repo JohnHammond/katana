@@ -84,7 +84,7 @@ __strings__
 
 
 ```
-rm -r results/ ; ./katana.py --unit raw ./tests/orchestra -ff USCGA{.*?}
+rm -r results/ ; ./katana.py --unit raw ./tests/orchestra -ff 'USCGA{.*?}'
 ```
 
 __exiftool__

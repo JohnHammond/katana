@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-05-07 17:57:40
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-05-07 20:17:35
+# @Last Modified time: 2019-05-07 20:23:33
 
 import time
 import tkinter
@@ -79,9 +79,12 @@ class GUIKatana(tkinter.Tk):
 			value = listbox.get(index)
 
 			if os.path.exists( value ):
-				image = ImageTk.PhotoImage(Image.open(value))
-				self.image_label.configure(image = image)
-				self.image_label.image = image
+				try:
+					image = ImageTk.PhotoImage(Image.open(value))
+					self.image_label.configure(image = image, text = '')
+					self.image_label.image = image
+				except OSError as e:
+					self.image_label.configure(text = e.args, image = '')
 
 		# Bind the selection function, and start the thread so Katana runs!
 		self.listbox.bind('<<ListboxSelect>>', list_select)
