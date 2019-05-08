@@ -13,7 +13,7 @@ import binascii
 import traceback
 import magic
 
-HEX_PATTERN = rb'((0x)?[a-f0-9]+)'
+HEX_PATTERN = rb'((0x)?[a-f0-9]{4,})'
 HEX_REGEX = re.compile(HEX_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
 
 class Unit(BaseUnit):

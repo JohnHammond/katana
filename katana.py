@@ -208,7 +208,7 @@ class Katana(object):
 			exit()
 
 		# Notify the user if the requested units are overridden by recursion
-		if self.config['auto'] and len(self.requested_units) > 0 and not recurse:
+		if self.config['auto'] and len(self.requested_units) > 0 and not self.config['recurse']:
 			log.warning('ignoring --unit options in favor of --auto')
 
 		# Final argument parsing. This includes all unit arguments
