@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-05-07 17:57:40
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-05-07 18:08:46
+# @Last Modified time: 2019-05-07 20:17:35
 
 import time
 import tkinter
@@ -29,8 +29,11 @@ class GUIThread(threading.Thread):
 		# Call katana.evaluate, so the real application runs.
 		self.katana.evaluate()
 		# Loop forever, so this thread stays alive.
-		while 1:
-			time.sleep(1)
+		try:
+			while 1:
+				time.sleep(1)
+		except KeyboardInterrupt:
+			return
 
 class GUIKatana(tkinter.Tk):
 	'''
@@ -110,4 +113,7 @@ class GUIKatana(tkinter.Tk):
 		This function just lets Tkinter run. It is named "evaluate" just to
 		match the format of what Katana already uses.
 		'''
-		tkinter.mainloop()
+		try:
+			tkinter.mainloop()
+		except KeyboardInterrupt:
+			return

@@ -85,7 +85,11 @@ class Unit(web.WebUnit):
 		else:
 			last_location = self.target.upstream.decode('utf-8').rstrip('/') + '/'
 
-		r = method(self.target.upstream.decode('utf-8') + action, data = { username: payload, password : payload }, timeout=2)
+		try:
+			r = method(self.target.upstream.decode('utf-8') + action, data = { username: payload, password : payload }, timeout=2)
+		except requests.exceptions.ConnectionError:
+			# We can't reach the site... stop!
+			return
 		
 		# Hunt for flags. If we found one, stop all other requests!
 		hit = katana.locate_flags(self, r.text)

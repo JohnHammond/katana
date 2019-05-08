@@ -354,8 +354,6 @@ class Katana(object):
 				except RuntimeError:
 					# The user must have closed the window.. that's fine!
 					pass
-			else:
-				print("still None", id())
 
 		self.image_queue.append(image)
 	
@@ -609,7 +607,7 @@ class Katana(object):
 					self.add_flag(found)
 			
 			# Stop the unit if they asked
-			if stop:
+			if stop and unit is not None:
 				unit.completed = True
 
 			# Stop everything if we have requested that

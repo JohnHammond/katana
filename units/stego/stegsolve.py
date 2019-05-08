@@ -44,7 +44,7 @@ def get_plane(img, data, channel, index = 0):
 
 class Unit(units.FileUnit):
 
-	PRIORITY = 40
+	PRIORITY = 70
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
@@ -65,6 +65,18 @@ class Unit(units.FileUnit):
 
 		try:
 			self.img = Image.open(self.target.path)
+
+			resizing = False
+			new_size = list(self.img.size)
+			if self.img.size[0] > 1000:
+				resizing = True
+				new_size[0] = 500
+			if self.img.size[1] > 1000:
+				resizing = True
+				new_size[1] = 500
+			if resizing:
+				self.img = self.img.resize(tuple(new_size), Image.ANTIALIAS)
+
 			self.data = self.img.load()
 
 		# If we don't know what this is, don't bother with it.
