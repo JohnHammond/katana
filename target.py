@@ -50,6 +50,22 @@ class Target(object):
 		
 		self.magic = 'data'
 
+		if self.is_file:
+			is_sub_target = True
+			is_sub_results = True
+			results_path = os.path.realpath(katana.config['outdir'])
+			if katana.original_target is not None and katana.original_target.is_file:
+				base_target_path = os.path.dirname(katana.original_target.path)
+				base_target_path = os.path.realpath(base_target_path)
+				if not upstream.startswith(base_target_path+b'/'):
+					is_sub_target = False
+			if not upstream.startswith(bytes(results_path+'/', 'utf-8')):
+				is_sub_results = False
+
+			if not is_sub_results and not is_sub_target:
+				self.is_file = False
+			
+
 		# Download the target of a URL
 		if self.is_url:
 			self.url_root = '/'.join(upstream.decode('utf-8').split('/')[:3]) + '/'

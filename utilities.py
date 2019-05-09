@@ -22,6 +22,9 @@ good_magic_strings = [
 dictionary = enchant.Dict()
 english_words_threshold = 1
 
+class FoundFlag(Exception):
+	pass
+
 def isprintable(data):
 	if type(data) is not bytes:
 		data = data.encode('utf-8')

@@ -237,7 +237,7 @@ class Katana(object):
 			self.config['target'] = temp_path
 
 		# We want the "-" target to signify stdin
-		if self.original_target == '-':
+		if self.config['target'] == '-':
 			self.config['target'] = sys.stdin.read()
 
 		# Compile the flag format if given
@@ -271,6 +271,8 @@ class Katana(object):
 	@property
 	def original_target(self):
 		""" Shorthand for grabbing the target """
+		if isinstance(self.config['target'], str):
+			return None
 		return self.config['target']
 
 	def get_artifact_path(self, unit):
@@ -704,6 +706,8 @@ class Katana(object):
 			if not self.config['continue']:
 				self.completed = True
 
+			raise utilities.FoundFlag
+
 			return True
 
 		return False
@@ -725,7 +729,7 @@ class Katana(object):
 			return
 
 		try:
-			if not os.path.isfile(data) and len(data) >= self.config['data_length']:
+			if not os.path.isfile(data) and len(data) < self.config['data_length']:
 				return
 		except ValueError:
 			pass
@@ -812,6 +816,8 @@ class Katana(object):
 		try:
 			# Evaluate the target
 			result = unit.evaluate(self, case)
+		except utilities.FoundFlag:
+			pass
 		except:
 			traceback.print_exc()
 

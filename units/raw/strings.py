@@ -34,18 +34,26 @@ class Unit(BaseUnit):
 		p = subprocess.Popen(['strings', self.target.path, '-n', str(katana.config['strings_length'])], 
 			stdout = subprocess.PIPE, stderr=subprocess.PIPE )
 
+		lines = []
+		for line in p.stdout:
+			katana.locate_flags(self, line)
+			lines.append(line)
+
+		for line in lines:
+			katana.recurse(self, line)
+
 		# Look for flags, if we found them...
-		response = utilities.process_output(p)
-		if response:
-			if 'stdout' in response:
-				
-				# If we see anything interesting in here... scan it again!
-				for line in response['stdout']:
-					katana.locate_flags(self, line)
-					katana.recurse(self, line)
+#		response = utilities.process_output(p)
+#		if response:
+#			if 'stdout' in response:
+#				
+#				# If we see anything interesting in here... scan it again!
+#				for line in response['stdout']:
+#					katana.locate_flags(self, line)
+#					katana.recurse(self, line)
+#
+#			if 'stderr' in response:
+#				katana.locate_flags(self, str(response['stderr']))
 
-			if 'stderr' in response:
-				katana.locate_flags(self, str(response['stderr']))
-
-			katana.add_results(self, response)
+#			katana.add_results(self, response)
 			
