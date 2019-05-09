@@ -26,13 +26,13 @@ class Unit(web.WebUnit):
 		if not katana.config['flag_format']:
 			raise units.NotApplicable('no flag format supplied')
 
-		raw_content = self.target.content.decode('utf-8')
+		# raw_content = self.target.content.decode('utf-8')
 
-		self.action = re.findall(r"<\s*form.*action\s*=\s*['\"](.+?)['\"]", raw_content, flags=re.IGNORECASE)
-		self.method = re.findall(r"<\s*form.*method\s*=\s*['\"](.+?)['\"]", raw_content, flags=re.IGNORECASE)
+		self.action = re.findall(rb'<\s*form.*action\s*=\s*[\'"](.+?)[\'"]', self.target.content, flags=re.IGNORECASE)
+		self.method = re.findall(rb'<\s*form.*method\s*=\s*[\'"](.+?)[\'"]', self.target.content, flags=re.IGNORECASE)
 
-		self.username = re.findall(web.user_regex, raw_content, flags=re.IGNORECASE)
-		self.password = re.findall(web.pass_regex, raw_content, flags=re.IGNORECASE)
+		self.username = re.findall(web.user_regex, self.target.content, flags=re.IGNORECASE)
+		self.password = re.findall(web.pass_regex, self.target.content, flags=re.IGNORECASE)
 	
 			# Only run this if we have potential information...
 		if not (self.action and self.method and self.username and self.password):
