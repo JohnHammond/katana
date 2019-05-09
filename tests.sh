@@ -25,11 +25,11 @@ rm -r results/; ./katana.py  -ff 'USCGA{.*?}' -a ./tests/orchestra -v
 
 
 BLUE "exiftool"
-rm -r results/; ./katana.py  -ff 'USCGA{.*?}' -a ./tests/woof64.jpg -v
+rm -r results/; ./katana.py  -ff 'USCGA{.*?}' -a ./tests/woof64.jpg -v --exclude crypto
 
 
 BLUE "morsecode"
-rm -r results/; ./katana.py  -ff 'gigem{.*?}' -a ./tests/tamuctf_morsecode.txt -v
+rm -r results/; ./katana.py  -ff 'gigem{.*?}' -a ./tests/tamuctf_morsecode.txt -v --exclude crypto
 
 
 BLUE "QR code"
@@ -52,11 +52,11 @@ rm -r results/; ./katana.py -ff "USCGA{.*?}" -a ./tests/pierre.png -v
 
 
 BLUE "robots.txt"
-rm -r results/; ./katana.py -ff "gigem{.*?}" -a 'http://web5.tamuctf.com' -v 
+rm -r results/; ./katana.py -ff "FLAG{.*?}" -a 'https://johnhammond.org' -v 
 
 
 BLUE "basic SQL injection"
-rm -r results/; ./katana.py -ff "gigem{.*?}" -a 'http://web1.tamuctf.com' -v 
+rm -r results/ ; ./katana.py -a "http://2018shell.picoctf.com:53261/" -nd -ff 'picoCTF{.*?}'
 
 
 BLUE "ROT47"

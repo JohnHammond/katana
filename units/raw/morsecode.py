@@ -14,7 +14,7 @@ import units
 
 class Unit(units.PrintableDataUnit):
 
-	PRIORITY = 60
+	PRIORITY = 10
 
 	def evaluate(self, katana, case):
 

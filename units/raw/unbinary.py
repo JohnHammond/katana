@@ -12,6 +12,7 @@ import os
 from units import NotApplicable
 import binascii
 import traceback
+import magic
 
 BINARY_PATTERN = rb'[01]{8,}'
 BINARY_REGEX = re.compile(BINARY_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)

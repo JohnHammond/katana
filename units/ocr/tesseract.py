@@ -27,6 +27,8 @@ def attempt_ocr(image_path):
 		ocr_data = None
 
 	# JOHN: I don't know when this will go wrong, but when it does....
+	# except pytesseract.pytesseract.TesseractError:
+	 
 	except :
 		traceback.print_exc()
 		ocr_data = None

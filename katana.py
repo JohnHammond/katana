@@ -33,8 +33,7 @@ from target import Target
 from unit import BaseUnit
 from collections import deque
 import time
-import tkinter
-from PIL import ImageTk, Image
+from imagegui import GUIKatana
 
 class Katana(object):
 
@@ -102,6 +101,8 @@ class Katana(object):
 			help="print the results on stdout as well as save to file")
 		parser.add_argument('--download', '-d', action="store_true", default=False,
 				help='consider the argument to be a download link and pull it down')
+		parser.add_argument('--no-download', '-nd', action="store_true", default=False,
+				help='do not download URLs, just treat them as locations')
 		parser.add_argument('--template', default='default',
 				help='Jinja2 template for html results output')
 		parser.add_argument('--functions', default='win,get_flag,print_flag,show_flag,flag',
@@ -205,7 +206,7 @@ class Katana(object):
 			exit()
 
 		# Notify the user if the requested units are overridden by recursion
-		if self.config['auto'] and len(self.requested_units) > 0 and not recurse:
+		if self.config['auto'] and len(self.requested_units) > 0 and not self.config['recurse']:
 			log.warning('ignoring --unit options in favor of --auto')
 
 		# Final argument parsing. This includes all unit arguments
@@ -266,12 +267,6 @@ class Katana(object):
 				exit()
 
 		self.progress.status('initialization complete')
-
-		# Evaluate the given target as a target object
-		self.config['target'] = Target(self,self.config['target'])
-
-		# Find units which match this target
-		self.units = self.locate_units(self.config['target'])
 
 	@property
 	def original_target(self):
@@ -567,6 +562,12 @@ class Katana(object):
 		""" Start processing all units """
 		self.start = time.time()
 
+		# Evaluate the given target as a target object
+		self.config['target'] = Target(self,self.config['target'])
+
+		# Find units which match this target
+		self.units = self.locate_units(self.config['target'])
+
 		def show_status(signal_number, frame):
 			log.info("working \u001b[33;01m{0}\u001b[0m->\u001b[34;01m{1}\u001b[0m".format(*self.threads[0].getName().split('->')))
 
@@ -696,7 +697,7 @@ class Katana(object):
 					self.add_flag(found)
 			
 			# Stop the unit if they asked
-			if stop:
+			if stop and unit is not None:
 				unit.completed = True
 
 			# Stop everything if we have requested that
@@ -803,9 +804,10 @@ class Katana(object):
 			return False
 		
 		# Show progress if debug
-		progress.status('processing {0} priority {1}'.format(
-			unit.unit_name, unit.PRIORITY
-		))
+		progress.status('{0} -> {1}... ({2})'.format(
+			'\u001b[33;1m' + unit.unit_name + '\u001b[0m',
+			'\u001b[34;1m' + unit.target[:60].replace('\n','') + '\u001b[0m',
+			unit.PRIORITY))
 		
 		try:
 			# Evaluate the target
@@ -876,78 +878,6 @@ class Katana(object):
 
 				# Notify parent we are done
 				self.work.task_done()
-
-class GUIThread(threading.Thread):
-
-	def __init__(self, tk_root, katana):
-		self.root = tk_root
-		self.katana = katana
-		threading.Thread.__init__(self)
-		self.start()
-
-	def run(self):
-		loop_active = True
-		self.katana.evaluate()
-		while loop_active:
-			time.sleep(0.5)
-
-class GUIKatana(tkinter.Tk):
-
-	def __init__( self, katana ):
-		super(GUIKatana, self).__init__()
-
-		self.katana = katana
-		self.katana.gui = self
-		self.geometry('900x600')
-		self.title('Katana - Image Results')
-		self.thread = GUIThread(self, self.katana )
-
-		self.left_frame = tkinter.Frame(self)
-		self.left_frame.pack(side = tkinter.BOTTOM, expand=False, fill = tkinter.BOTH)
-
-
-		self.listbox = tkinter.Listbox(self.left_frame)
-		self.listbox.pack(anchor='s', fill=tkinter.X, expand=False)
-		self.listbox.focus_set()
-		
-		self.right_frame = tkinter.Frame(self)
-		self.right_frame.pack(side = tkinter.TOP, expand=True, fill = tkinter.BOTH)
-
-		self.image_label = tkinter.Label(self.right_frame, text = "No Images Found Yet")
-		self.image_label.pack(expand = True, fill = tkinter.BOTH )
-
-		def list_select(event):
-			listbox = event.widget
-			try:
-				index = int(listbox.curselection()[0])
-			except IndexError:
-				return
-			value = listbox.get(index)
-
-			if os.path.exists( value ):
-				image = ImageTk.PhotoImage(Image.open(value))
-				self.image_label.configure(image = image)
-				self.image_label.image = image
-
-		self.listbox.bind('<<ListboxSelect>>', list_select)
-
-	def insert(self, filename):
-		self.listbox.insert(tkinter.END, filename)
-		if len(self.listbox.curselection()) == 0:
-			self.listbox.selection_set(0)
-			try:
-				index = int(self.listbox.curselection()[0])
-			except IndexError:
-				return
-			value = self.listbox.get(index)
-
-			if os.path.exists( value ):
-				image = ImageTk.PhotoImage(Image.open(value))
-				self.image_label.configure(image = image)
-				self.image_label.image = image
-
-	def evaluate(self):
-		tkinter.mainloop()
 
 # Make sure we find the local packages (first current directory)
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))

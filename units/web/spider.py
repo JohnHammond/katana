@@ -18,7 +18,7 @@ def has_a_bad_start(link):
 
 class Unit(WebUnit):
 
-	PRIORITY = 30
+	PRIORITY = 20
 
 	# We don't really want to spider on EVERYTHING and start an infinite loop..
 	# We can protect against this once we create a target object
@@ -28,13 +28,13 @@ class Unit(WebUnit):
 	def evaluate(self, katana, url):
 
 		links = re.findall(r'href=[\'"](.+?)[\'"]', self.target.content.decode('utf-8'), flags = re.IGNORECASE)
-
+		
 		# Remove anything that might not be local
 		links = list(filter(has_a_bad_start, links))
 		
 		url_form = self.target.upstream.decode('utf-8').split('/')
 		if len(url_form) > 3:
-			last_location = '/'.join(url_form[:-1]) + '/'
+			last_location = '/'.join(url_form[:-1])
 		else:
 			last_location = self.target.upstream.decode('utf-8').rstrip('/')
 

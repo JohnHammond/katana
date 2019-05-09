@@ -52,27 +52,40 @@ class Target(object):
 
 		# Download the target of a URL
 		if self.is_url:
-			try:
-				url_accessible = True
-				self.request = requests.get(upstream)
-			except requests.exceptions.ConnectionError:
-				url_accessible = False
-			if url_accessible:
-				self.content = self.request.content
-				self.path, filp = katana.create_artifact(parent,
-						hashlib.md5(upstream).hexdigest(),
-						mode='wb', create=True
-					)
-				# JOHN: This used to happen in web.request but it was silly
-				katana.locate_flags(parent, self.content)
-				with filp:
-					filp.write(self.content)
-				self.is_file = True
-				# Carve out the root of the URL
+			self.url_root = '/'.join(upstream.decode('utf-8').split('/')[:3]) + '/'
+			if not katana.config['no_download']:
+				try:
+					url_accessible = True
+					self.request = requests.get(upstream)
+				except requests.exceptions.ConnectionError:
+					url_accessible = False
+					self.is_url = False
+				
 				self.url_root = '/'.join(upstream.decode('utf-8').split('/')[:3]) + '/'
+				
+				if url_accessible:
+					self.content = self.request.content
+					self.path, filp = katana.create_artifact(parent,
+							hashlib.md5(upstream).hexdigest(),
+							mode='wb', create=True
+						)
+					# JOHN: This used to happen in web.request but it was silly
+					katana.locate_flags(parent, self.content)
+					with filp:
+						filp.write(self.content)
+					self.is_file = True
+					# Carve out the root of the URL
+				else:
+					# This is if we COULDN'T download the page...
+					# we just treat the content as the upstream
+					self.content = self.upstream
 			else:
-				self.is_url = False
-				self.content = b""
+				self.content = self.upstream
+				try:
+					self.request = requests.get(self.upstream)
+				except requests.exceptions.ConnectionError:
+					self.is_url = False
+
 		# Save the path to the file
 		elif self.is_file:
 			self.content = None
@@ -146,6 +159,11 @@ class Target(object):
 			return self.upstream.decode('utf-8')
 		except:
 			return repr(self.upstream)
+
+	def __getitem__(self, key):
+		if isinstance(key, slice):
+			return ''.join([ self.upstream.decode('utf-8')[ii] for ii in
+					range(*key.indices(len(self.upstream.decode('utf-8')))) ])
 
 	@property
 	def raw(self):

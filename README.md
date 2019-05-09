@@ -14,10 +14,10 @@ A lot of the context and ideas from this stem from the living document at [https
 Virtual Environment
 -------------
 
-We recommend running this with the latest version of Python and inside of virtual environment.
+We recommend running this with the latest version of Python and inside of virtual environment. If you need a hand getting the latest version of Python, I've found some help [here](https://tecadmin.net/install-python-3-7-on-ubuntu-linuxmint/).
 
 ```
-sudo apt-get install -y python3.7 python3-pip python3-setuptools python3.7-dev python3-venv libffi-dev libssl-dev pandoc libgmp3-dev libzbar-dev tesseract-ocr xsel
+sudo apt-get install -y python3.7-tk tk-dev python3.7 python3-pip python3-setuptools python3.7-dev python3-venv libffi-dev libssl-dev pandoc libgmp3-dev libzbar-dev tesseract-ocr xsel
 python3.7 -m venv env
 source env/bin/activate
 ```
@@ -84,7 +84,7 @@ __strings__
 
 
 ```
-rm -r results/ ; ./katana.py --unit raw ./tests/orchestra -ff USCGA{.*?}
+rm -r results/ ; ./katana.py --unit raw ./tests/orchestra -ff 'USCGA{.*?}'
 ```
 
 __exiftool__
@@ -92,7 +92,7 @@ __exiftool__
 This detects the Base64 encoded flag.
 
 ```
-rm -r results/ ; ./katana.py --unit raw ./tests/woof64.jpg --flag-format 'USCGA{.*?}'
+rm -r results/ ; ./katana.py --unit raw ./tests/woof64.jpg --flag-format 'USCGA{.*?}' --exclude crypto
 ```
 
 __Morsecode__
@@ -100,7 +100,7 @@ __Morsecode__
 This detects the hex encoded flag
 
 ```
-rm -r results/ ; ./katana.py --unit raw ./tests/tamuctf_morsecode.txt --flag-format 'gigem{.*?}'
+rm -r results/ ; ./katana.py --unit raw ./tests/tamuctf_morsecode.txt --flag-format 'gigem{.*?}' --exclude crypto
 ```
 
 __QR code__
@@ -157,21 +157,21 @@ rm -r results/; ./katana.py --unit web.cookies http://johnhammond.org -ff "FLAG{
 __Crypto__
 
 ```
-rm -r results/ ; ./katana.py --unit raw --unit crypto ./tests/welcome_crypto.txt -ff sun{.*?}
+rm -r results/ ; ./katana.py --unit raw --unit crypto ./tests/welcome_crypto.txt -ff 'sun{.*?}'
 ```
 
 __Brainfuck__
 
 ```
-rm -r results/ ; ./katana.py --unit esoteric.brainfuck ./tests/brainmeat.txt -ff sun{.*?}
-rm -r results/ ; ./katana.py -a ./tests/brainfuck.txt -ff USCGA{.*?}
+rm -r results/ ; ./katana.py --unit esoteric.brainfuck ./tests/brainmeat.txt -ff 'sun{.*?}'
+rm -r results/ ; ./katana.py -a ./tests/brainfuck.txt -ff 'USCGA{.*?}'
 ```
 
 __Pikalang__
 
 ```
 rm -r results/ ; ./katana.py --unit esoteric ./tests/it.pokeball -ff "HELLO WORLD"
-rm -r results/ ; ./katana.py --unit esoteric ./tests/pikalang.pokeball -ff USCGA{.*?}
+rm -r results/ ; ./katana.py --unit esoteric ./tests/pikalang.pokeball -ff 'USCGA{.*?}'
 ```
 
 __Malbolge__
@@ -179,3 +179,104 @@ __Malbolge__
 ```
 rm -r results/ ; ./katana.py --unit esoteric ./tests/malbolge.txt -ff "Hello World"
 ```
+
+PicoCTF Cookbook
+================
+
+__Resources__
+
+```
+rm -r results/ ; ./katana.py -a "https://picoctf.com/resources" -ff 'picoCTF{.*?}'
+```
+
+__Crypto Warmup 2__
+
+```
+rm -r results/ ; ./katana.py -a "cvpbPGS{guvf_vf_pelcgb!}" -ff 'picoCTF{.*?}'
+```
+
+__grep 1__
+
+```
+rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/805ac70722810caa0b1c02bc88ef68d8/file" -ff 'picoCTF{.*?}'
+```
+
+__strings__
+
+```
+rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/a3d311b507256d5d9299c0e94dfc4fc5/strings" -ff 'picoCTF{.*?}'
+```
+
+__Logon__
+
+```
+rm -r results/ ; ./katana.py -a "http://2018shell.picoctf.com:5477/" -ff 'picoCTF{.*?}'
+```
+
+__Reading Between the Eyes__
+
+```
+rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/9129761dbc4bf494c47429f85ddf7434/husky.png" -ff 'picoCTF{.*?}'
+```
+
+__Recovering from the Snap__
+
+```
+rm -r results/ ; ./katana.py -a -i -d "https://2018shell.picoctf.com/static/b8561b04f5c7107ecb2f15c9a8c79fb8/animals.dd" -ff 'picoCTF{.*?}'
+```
+
+__admin panel__
+
+```
+rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/1a6db339e11fa100ef52d944edaa9612/data.pcap" -ff 'picoCTF{.*?}'
+```
+
+__caesar cipher 1__
+
+```
+rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/9c305b1460312c3bcfc6dd5741990c26/ciphertext" -ff 'picoCTF{.*?}'
+```
+
+__hex editor__
+
+```
+rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/ccad03a151a0edac8bd01e665a595b7a/hex_editor.jpg" -ff 'picoCTF{.*?}'
+```
+
+__Irish Name Repo__
+
+```
+rm -r results/ ; ./katana.py --unit web.spider "http://2018shell.picoctf.com:52135/" -ff 'picoCTF{.*?}' -nd
+```
+
+__Mr. Robots__
+
+```
+rm -r results/ ; ./katana.py -a "http://2018shell.picoctf.com:10157/" -ff 'picoCTF{.*?}'
+```
+
+__Truly an Artist__
+
+```
+rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/69b2020b48082fb24714bf93707183e8/2018.png" -ff 'picoCTF{.*?}'
+```
+
+
+__now you don't__
+
+```
+rm -r results/ ; ./katana.py -a "https://2018shell.picoctf.com/static/eee00c8559a93bfde1241d5e00c2df37/nowYouDont.png" -d -ff 'picoCTF{.*?}'
+```
+
+__The Vault__
+
+```
+rm -r results/ ; ./katana.py -a "http://2018shell.picoctf.com:53261/" -nd -ff 'picoCTF{.*?}'
+```
+
+__What's my Name?__
+
+```
+rm -r results/ ; ./katana.py -a "https://2018shell.picoctf.com/static/6ae91abb9e70e527e32729413103af90/myname.pcap" -d -ff 'picoCTF{.*?}'
+```
+

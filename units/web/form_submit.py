@@ -49,7 +49,6 @@ class Unit(web.WebUnit):
 			last_location = '/'.join(url_form[:-1]) + '/'
 		else:
 			last_location = self.target.upstream.decode('utf-8') + '/'
-
 		r = method(last_location + action, allow_redirects = True)
 		
 		# Keep hunting on the new location...
