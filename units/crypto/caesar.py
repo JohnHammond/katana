@@ -22,6 +22,9 @@ class Unit(units.NotEnglishUnit):
 	def __init__(self, katana, parent, target):
 		super(Unit, self).__init__(katana, parent, target)
 
+		if target.is_url:
+			raise NotApplicable('target is a URL')
+
 		# DO NOT run this if the string does not contain any letters.
 		with io.TextIOWrapper(self.target.stream, encoding='utf-8') as stream:
 			for c in iter(lambda: stream.read(1), ''):
