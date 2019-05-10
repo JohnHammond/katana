@@ -21,8 +21,8 @@ class Unit(web.WebUnit):
 		super(Unit, self).__init__(katana, parent, target)
 
 		# Check if there is even file upload functionality present
-		self.raw_content = self.target.content.decode('utf-8')
-		self.upload = re.findall(r"enctype=['\"]multipart/form-data['\"]", self.raw_content, flags=re.IGNORECASE)
+		# self.raw_content = self.target.content.decode('utf-8')
+		self.upload = re.findall(rb'enctype=[\'"]multipart/form-data[\'"]', self.target.content, flags=re.IGNORECASE)
 
 		if not self.upload:
 			# If not, don't bother with this unit
@@ -34,12 +34,12 @@ class Unit(web.WebUnit):
 		# This should "yield 'name', (params,to,pass,to,evaluate)"
 		# evaluate will see this second argument as only one variable and you will need to parse them out
 		
-		action = re.findall(r"<\s*form.*action\s*=\s*['\"](.+?)['\"]", self.raw_content, flags=re.IGNORECASE)
-		method = re.findall(r"<\s*form.*method\s*=\s*['\"](.+?)['\"]", self.raw_content, flags=re.IGNORECASE)
+		action = re.findall(rb'<\s*form.*action\s*=\s*[\'"](.+?)[\'"]', self.target.content, flags=re.IGNORECASE)
+		method = re.findall(rb'<\s*form.*method\s*=\s*[\'"](.+?)[\'"]', self.target.content, flags=re.IGNORECASE)
 		upload = self.upload
 
-		file_regex = "<\s*input.*name\s*=\s*['\"](%s)['\"]" % "|".join(web.potential_file_variables)
-		file = re.findall(file_regex, self.raw_content, flags=re.IGNORECASE)
+		file_regex = rb'<\s*input.*name\s*=\s*[\'"](%s)[\'"]' % b"|".join(web.potential_file_variables)
+		file = re.findall(file_regex, self.target.content, flags=re.IGNORECASE)
 
 		if not file:
 			# JOHN: We can't find a filename variable. Maybe it's not in our list yet!

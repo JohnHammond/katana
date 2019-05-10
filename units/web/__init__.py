@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-04-30 19:28:15
+# @Last Modified time: 2019-05-08 23:39:40
 
 from pwn import *
 from unit import BaseUnit
@@ -13,26 +13,26 @@ from units import NotApplicable
 # JOHN: This may be used across mutliple units, so I place them here
 #       to prevent duplicate code
 potential_username_variables = [
-			'username', 'user', 'uname', 'un', 'name', 'user1', 'input1', 'uw1', 'username1', 'uname1', 'tbUsername', 'usern', 'id'
+			b'username', b'user', b'uname', b'un', b'name', b'user1', b'input1', b'uw1', b'username1', b'uname1', b'tbUsername', b'usern', b'id'
 ]
 potential_password_variables = [
-	'password', 'pass', 'pword', 'pw', 'pass1', 'input2', 'password1', 'pw1', 'pword1', 'tbPassword'
+	b'password', b'pass', b'pword', b'pw', b'pass1', b'input2', b'password1', b'pw1', b'pword1', b'tbPassword'
 ]
 
 potential_file_variables = [
-	'fileToUpload', 'file', 'upload_file', 'file_to_upload',
+	b'fileToUpload', b'file', b'upload_file', b'file_to_upload',
 ]
 
 
-user_regex = "<\s*input.*name\s*=\s*['\"](%s)['\"]" % "|".join(potential_username_variables)
-pass_regex = "<\s*input.*name\s*=\s*['\"](%s)['\"]" % "|".join(potential_password_variables)
+user_regex = rb'<\s*input.*name\s*=\s*[\'"](%s)[\'"]' % b"|".join(potential_username_variables)
+pass_regex = rb'<\s*input.*name\s*=\s*[\'"](%s)[\'"]' % b"|".join(potential_password_variables)
 
-potential_cookie_names = [ 'admin', 'is_admin', 'isadmin', 'administrator', 'isAdmin' ]
+potential_cookie_names = [ b'admin', b'is_admin', b'isadmin', b'administrator', b'isAdmin' ]
 
 delim = '@@DELIMETER@@'
 special = '@@SPECIAL@@'
 
-potential_flag_names = ['flag', 'flag.txt']
+potential_flag_names = [b'flag', b'flag.txt']
 
 
 class WebUnit(BaseUnit):
