@@ -26,8 +26,8 @@ class Unit(units.FileUnit):
 			with open(self.target.path, 'rb') as f:
 				pdf = PdfFileReader(f)
 				if not pdf.isEncrypted:
-					raise NotApplicable('pdf is not encrypted')
-		except NotApplicable as e:
+					raise units.NotApplicable('pdf is not encrypted')
+		except units.NotApplicable as e:
 			raise e
 		except:
 			raise NotApplicable('failed to open/read file')
