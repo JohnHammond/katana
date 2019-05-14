@@ -154,7 +154,7 @@ __Cookies__
 rm -r results/; ./katana.py --unit web.cookies http://johnhammond.org -ff "FLAG{.*?}"
 ```
 
-__Crypto__
+__ROT47__
 
 ```
 rm -r results/ ; ./katana.py --unit raw --unit crypto ./tests/welcome_crypto.txt -ff 'sun{.*?}'

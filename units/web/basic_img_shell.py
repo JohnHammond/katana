@@ -46,10 +46,10 @@ class Unit(web.WebUnit):
 			return # This will tell THE WHOLE UNIT to stop... it will no longer generate cases.
 
 		if action and method and upload and file:
-			if action: action = action[0]
-			if action.startswith(self.target.url_root): action = action[len(self.target.url_root):]
-			if method: method = method[0]
-			if file: file = file[0]
+			if action: action = action[0].decode('utf-8')
+			if action.startswith(self.target.url_root): action = action[len(self.target.url_root):].decode('utf-8')
+			if method: method = method[0].decode('utf-8')
+			if file: file = file[0].decode('utf-8')
 
 			try:
 				method = vars(requests)[method.lower()]

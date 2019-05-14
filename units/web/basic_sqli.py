@@ -43,10 +43,10 @@ class Unit(web.WebUnit):
 		# This should "yield 'name', (params,to,pass,to,evaluate)"
 		# evaluate will see this second argument as only one variable and you will need to parse them out
 		if self.action and self.method and self.username and self.password:
-			if self.action: action = self.action[0]
-			if self.method: method = self.method[0]
-			if self.username: username = self.username[0]
-			if self.password: password = self.password[0]
+			if self.action: action = self.action[0].decode('utf-8')
+			if self.method: method = self.method[0].decode('utf-8')
+			if self.username: username = self.username[0].decode('utf-8')
+			if self.password: password = self.password[0].decode('utf-8')
 
 			try:
 				method = vars(requests)[method.lower()]

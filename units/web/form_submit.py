@@ -36,8 +36,8 @@ class Unit(web.WebUnit):
 	def evaluate(self, katana, case):
 
 		if self.action and self.method:
-			if self.action: action = self.action[0]
-			if self.method: method = self.method[0]
+			if self.action: action = self.action[0].decode('utf-8')
+			if self.method: method = self.method[0].decode('utf-8')
 			try:
 				method = vars(requests)[method.lower()]
 			except IndexError:
