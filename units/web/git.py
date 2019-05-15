@@ -28,6 +28,9 @@ import shutil
 
 DEPENDENCIES = ['git']
 
+def printf(a):
+	# print(a)
+	pass
 
 # JOHN: The code below is shamelessly ripped from 
 # https://github.com/arthaud/git-dumper
@@ -332,19 +335,19 @@ def fetch_git( unit, url, directory, jobs, retry, timeout, katana):
 	# printf('[%d]\n', response.status_code)
 
 	if response.status_code == 200 and is_html(response) and 'HEAD' in get_indexed_files(response):
-		# printf('[-] Fetching .git recursively\n')
+		printf('[-] Fetching .git recursively\n')
 		process_tasks(['.git/', '.gitignore'],
 					  RecursiveDownloadWorker,
 					  jobs,
 					  args=(url, directory, retry, timeout, unit, katana))
 
-		# printf('[-] Running git checkout .\n')
+		printf('[-] Running git checkout .\n')
 		# os.chdir(directory)
 		subprocess.check_call(['git', 'checkout', '.'], cwd = directory)
 		return 0
 
 	# no directory listing
-	# printf('[-] Fetching common files\n')
+	printf('[-] Fetching common files\n')
 	tasks = [
 		'.gitignore',
 		'.git/COMMIT_EDITMSG',
@@ -370,10 +373,10 @@ def fetch_git( unit, url, directory, jobs, retry, timeout, katana):
 	process_tasks(tasks,
 				  DownloadWorker,
 				  jobs,
-				  args=(url, directory, retry, timeout))
+				  args=(url, directory, retry, timeout, unit, katana))
 
 	# find refs
-	# printf('[-] Finding refs/\n')
+	printf('[-] Finding refs/\n')
 	tasks = [
 		'.git/FETCH_HEAD',
 		'.git/HEAD',
@@ -395,10 +398,10 @@ def fetch_git( unit, url, directory, jobs, retry, timeout, katana):
 	process_tasks(tasks,
 				  FindRefsWorker,
 				  jobs,
-				  args=(url, directory, retry, timeout))
+				  args=(url, directory, retry, timeout, unit, katana))
 
 	# find packs
-	# printf('[-] Finding packs\n')
+	printf('[-] Finding packs\n')
 	tasks = []
 
 	# use .git/objects/info/packs to find packs
@@ -414,10 +417,10 @@ def fetch_git( unit, url, directory, jobs, retry, timeout, katana):
 	process_tasks(tasks,
 				  DownloadWorker,
 				  jobs,
-				  args=(url, directory, retry, timeout))
+				  args=(url, directory, retry, timeout, unit, katana))
 
 	# find objects
-	# printf('[-] Finding objects\n')
+	printf('[-] Finding objects\n')
 	objs = set()
 	packed_objs = set()
 	
@@ -470,15 +473,15 @@ def fetch_git( unit, url, directory, jobs, retry, timeout, katana):
 					objs |= set(get_referenced_sha1(obj_file))
 
 	# fetch all objects
-	# printf('[-] Fetching objects\n')
+	printf('[-] Fetching objects\n')
 	process_tasks(objs,
 				  FindObjectsWorker,
 				  jobs,
-				  args=(url, directory, retry, timeout),
+				  args=(url, directory, retry, timeout, unit, katana),
 				  tasks_done=packed_objs)
 
 	# git checkout
-	# printf('[-] Running git checkout .\n')
+	printf('[-] Running git checkout .\n')
 	# os.chdir(directory)
 
 	# ignore errors
@@ -570,12 +573,14 @@ class Unit(WebUnit):
 		self.target.seen_files = []
 		temp_folder = tempfile.gettempdir()
 
-		git_directory = katana.get_artifact_path(self)
+		# git_directory = katana.get_artifact_path(self)
+		git_directory = tempfile.mkdtemp()
+		# git_directory = git_directory.name
 		
-		# Download the repository	
+		# Download the repository
 		try:
 			fetch_git( self, self.target.url_root, git_directory, katana.config['git_jobs'], katana.config['git_retry'], katana.config['git_timeout'], katana)
-		except AssertionError:
+		except AssertionError as e:
 			return # something went wrong. stop.
 
 		katana.add_artifact( self, git_directory )
@@ -599,6 +604,7 @@ class Unit(WebUnit):
 
 			katana.add_results(self, f'commit {commit[:6]}: {commit_message}')
 			# katana.recurse(self, message)
+			
 			if katana.locate_flags(self, commit_message):
 				self.completed = True
 				return 
@@ -617,6 +623,8 @@ class Unit(WebUnit):
 
 					for filename in files:
 						file_path = os.path.join(directory, filename)
+
+
 						# Hash the file to make sure if we have not seen it before
 						path_hash = md5(open(file_path, 'rb').read()).hexdigest()
 						
