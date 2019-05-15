@@ -47,6 +47,8 @@ class Unit(BaseUnit):
 				results.append(binascii.unhexlify(match[0:-1]))
 
 				results.append(binascii.unhexlify(match[1:]))
+
+		katana.locate_flags(self, results)
 				
 		for result in results:
 			if result:
