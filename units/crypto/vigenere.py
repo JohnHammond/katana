@@ -8,7 +8,7 @@ import string
 def vigenere(plaintext, key):
 
 	plaintext = plaintext.upper()
-	key = key.upper()
+	key = bytes(key.upper(), 'ascii')
 
 	valid_chars = bytes(string.ascii_uppercase,'ascii')
 
