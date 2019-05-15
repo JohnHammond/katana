@@ -65,7 +65,7 @@ class Unit(web.WebUnit):
 					for delimeter in delimeter_possibilities:
 						for test in test_possibilities:
 
-							payload = quote + delimeter + test.replace(' ' ,delimeter) + delimeter + '1' + delimeter + comment
+							payload = quote + delimeter + test.replace(' ', delimeter) + delimeter + '1' + delimeter + comment
 							count_attempt += 1
 							yield (method, action, username, password, payload)
 
