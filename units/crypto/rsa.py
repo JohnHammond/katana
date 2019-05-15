@@ -24,7 +24,10 @@ def parse_int(given):
 	try:
 		found = int(given)
 	except ValueError:
-		found = int(given, 16)
+		try:
+			found = int(given, 16)
+		except ValueError:
+			pass
 	return found
 
 
@@ -49,7 +52,10 @@ class Unit(units.NotEnglishUnit):
 
 		self.c = parse_int(self.target.raw)
 		if self.c == -1:
-			return NotApplicable('could not determine ciphertext')
+			raise NotApplicable('could not determine ciphertext')
+
+		if not katana.config['rsa_n'] or ( not katana.config['rsa_p'] and not katana.config['rsa_q'] ):
+			raise NotApplicable('no means to determine modulus (no n, or no p and q)')
 		
 	# def enumerate(self, katana):
 	# 	if katana.config['caesar_shift'] == -1:

@@ -1,4 +1,3 @@
-from unit import BaseUnit
 from collections import Counter
 import sys
 from io import StringIO
@@ -45,7 +44,7 @@ class Unit(units.NotEnglishUnit):
 
 		# We won't have non-printable characters in an affine cipher...
 		if not self.target.is_printable:
-			raise unit.NotApplicable("not printable characters")
+			raise NotApplicable("not printable characters")
 	
 	PROTECTED_RECURSE = True
 
