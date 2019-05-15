@@ -79,12 +79,9 @@ class Unit(units.NotEnglishUnit):
 	def evaluate(self, katana, case):
 		a, b = case
 		raw_target = self.target.stream.read()
-		try:
-			plaintext = decrypt( raw_target, a, b, katana.config['affine_alphabet'] )
-			if plaintext != raw_target:
-				katana.recurse(self, plaintext)
-				katana.add_results(self, plaintext)
-		except Exception:
-			# JOHN: I don't know if or when or why this will error, but when IT DOES... we 
-			#       we should see it so we can support it.
-			traceback.print_exc()
+		
+		plaintext = decrypt( raw_target, a, b, katana.config['affine_alphabet'] )
+		if plaintext != raw_target:
+			katana.recurse(self, plaintext)
+			katana.add_results(self, plaintext)
+	

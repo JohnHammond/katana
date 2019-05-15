@@ -26,10 +26,11 @@ class Unit(units.NotEnglishUnit):
 			raise NotApplicable('target is a URL')
 
 		# DO NOT run this if the string does not contain any letters.
+
 		with io.TextIOWrapper(self.target.stream, encoding='utf-8') as stream:
 			for c in iter(lambda: stream.read(1), ''):
 				if c in string.ascii_letters:
-					break
+					return
 
 		raise NotApplicable("no english letters")
 
@@ -57,6 +58,7 @@ class Unit(units.NotEnglishUnit):
 
 		with io.TextIOWrapper(self.target.stream, encoding='utf-8') as stream:
 			for c in iter(lambda: stream.read(1), ''):
+				# print(c, end='')
 				idx = string.ascii_uppercase.find(c)
 				if c != -1:
 					result.append(string.ascii_uppercase[(idx+case) % len(string.ascii_uppercase)])
@@ -66,7 +68,8 @@ class Unit(units.NotEnglishUnit):
 						result.append(string.ascii_lowercase[(idx+case) % len(string.ascii_lowercase)])
 					else:
 						result.append(c)
-
+		# print("")
 		result = ''.join(result)
+		# print(result)
 		katana.recurse(self, result)
 		katana.add_results(self, result)
