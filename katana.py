@@ -675,6 +675,12 @@ class Katana(object):
 	def locate_flags(self, unit, output, stop=True, strict=False):
 		""" Look for flags in the given data/output """
 
+		if isinstance(output, list) or isinstance(output, tuple):
+			count = 0
+			for item in output:
+				count += int(self.locate_flags(unit, item, stop, strict))
+			return count > 0
+
 		# If the user didn't supply a pattern, there's nothing to do.
 		if self.flag_pattern == None:
 			return False
@@ -850,14 +856,14 @@ class Katana(object):
 				# Try to grab the orphaned unit case combos
 				full = False
 				try:
-					for unit,case in iter(lambda: self.lost_queue.pop(), None):
+					for unit,case in iter(lambda: self.lost_queue.popleft(), None):
 						try:
 							self.work.put(UnitWorkWrapper(
 								unit.PRIORITY, 'unit', (unit, case)
 							), block=False)
 							self.total_work += 1
 						except queue.Full:
-							self.lost_queue.append((unit, case))
+							self.lost_queue.appendleft((unit, case))
 							full = True
 				except IndexError:
 					pass
@@ -867,7 +873,7 @@ class Katana(object):
 				if not full:
 					# Try to grab the recursed items if there is space available
 					try:
-						for unit,gen in iter(lambda: self.recurse_queue.pop(), None):
+						for unit,gen in iter(lambda: self.recurse_queue.popleft(), None):
 							if gen is None:
 								gen = unit.enumerate(self)
 							for case in gen:
@@ -878,7 +884,7 @@ class Katana(object):
 									self.total_work += 1
 								except queue.Full:
 									self.lost_queue.append((unit, case))
-									self.recurse_queue.append((unit, gen))
+									self.recurse_queue.appendleft((unit, gen))
 									gen = None
 									break
 							if gen is None:
