@@ -565,70 +565,74 @@ class Katana(object):
 		self.start = time.time()
 
 		# Evaluate the given target as a target object
-		self.config['target'] = Target(self,self.config['target'])
-
-		# Find units which match this target
-		self.units = self.locate_units(self.config['target'])
-
-		def show_status(signal_number, frame):
-			log.info("working \u001b[33;01m{0}\u001b[0m->\u001b[34;01m{1}\u001b[0m".format(*self.threads[0].getName().split('->')))
-
-		# signal.signal(signal.SIGTSTP, show_status)
-
-		if not self.config['flag_format']:
-			log.warn("no flag format was specified, advise looking at saved results")
-
-		self.progress.status('starting threads')
-
-		# Create all the threads
-		for n in range(self.config['threads']):
-			self.progress.status('starting thread {0}'.format(n))
-			thread = threading.Thread(target=self.worker, args=(n,))
-			thread.start()
-			self.threads.append(thread)
-			self.threads_done.append(False)
-
-		status_done = threading.Event()
-		status_thread = threading.Thread(target=self.progress_worker, args=(status_done,))
-		status_thread.start()
-
-		# Add the known units to the work queue
 		try:
-			self.add_to_work(self.units)
-			self.work.join()
-		except KeyboardInterrupt:
-			self.completed = True
-			log.failure("aborting early... ({} tasks not yet completed)".format(self.work.qsize()))
-			# Build the results dictionary from the queues
-			self.build_results()
+			self.config['target'] = Target(self,self.config['target'])
+		except utilities.FoundFlag:
+			pass
+		else:
 
-			# Make sure we can create the results file
-			results = json.dumps(self.results, indent=4, sort_keys=True)
+			# Find units which match this target
+			self.units = self.locate_units(self.config['target'])
 
-			if results != "{}":
-				with open(os.path.join(self.config['outdir'], 'katana.json'), 'w') as f:
-					f.write(results)
-				if self.config['show']:
-					print(results)
+			def show_status(signal_number, frame):
+				log.info("working \u001b[33;01m{0}\u001b[0m->\u001b[34;01m{1}\u001b[0m".format(*self.threads[0].getName().split('->')))
 
-				# Use the raw json to process out HTML
-				self.render()
+			# signal.signal(signal.SIGTSTP, show_status)
 
-		status_done.set()
-		status_thread.join()
+			if not self.config['flag_format']:
+				log.warn("no flag format was specified, advise looking at saved results")
 
-		self.progress.status('all units complete. waiting for thread exit')
+			self.progress.status('starting threads')
 
-		# Notify threads of completion (highest priority!)
-		for n in range(self.config['threads']):
-			self.work.put(UnitWorkWrapper(-10000,'done',(None, None)))
+			# Create all the threads
+			for n in range(self.config['threads']):
+				self.progress.status('starting thread {0}'.format(n))
+				thread = threading.Thread(target=self.worker, args=(n,))
+				thread.start()
+				self.threads.append(thread)
+				self.threads_done.append(False)
 
-		# Wait for threads to exit
-		for t in self.threads:
-			t.join()
+			status_done = threading.Event()
+			status_thread = threading.Thread(target=self.progress_worker, args=(status_done,))
+			status_thread.start()
 
-		finish = time.time()
-		self.progress.success(f'threads exited in {round(finish-self.start,1)}s. evaluation complete')
+			# Add the known units to the work queue
+			try:
+				self.add_to_work(self.units)
+				self.work.join()
+			except KeyboardInterrupt:
+				self.completed = True
+				log.failure("aborting early... ({} tasks not yet completed)".format(self.work.qsize()))
+				# Build the results dictionary from the queues
+				self.build_results()
+
+				# Make sure we can create the results file
+				results = json.dumps(self.results, indent=4, sort_keys=True)
+
+				if results != "{}":
+					with open(os.path.join(self.config['outdir'], 'katana.json'), 'w') as f:
+						f.write(results)
+					if self.config['show']:
+						print(results)
+
+					# Use the raw json to process out HTML
+					self.render()
+
+			status_done.set()
+			status_thread.join()
+
+			self.progress.status('all units complete. waiting for thread exit')
+
+			# Notify threads of completion (highest priority!)
+			for n in range(self.config['threads']):
+				self.work.put(UnitWorkWrapper(-10000,'done',(None, None)))
+
+			# Wait for threads to exit
+			for t in self.threads:
+				t.join()
+
+			finish = time.time()
+			self.progress.success(f'threads exited in {round(finish-self.start,1)}s. evaluation complete')
 
 		# Build the results dictionary from the queues
 		self.build_results()
