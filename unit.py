@@ -3,6 +3,7 @@ import hashlib
 import re
 import base64
 import binascii
+import units
 
 class BaseUnit(object):
 
@@ -12,6 +13,9 @@ class BaseUnit(object):
 
 	# The unit priority. 50 is default. 1 is highest. 100 is lowest.
 	PRIORITY = 50
+
+	# Recursion is fine
+	NO_RECURSE = False
 
 	def __lt__(self, other):
 		return self.PRIORITY < other.PRIORITY
@@ -25,6 +29,21 @@ class BaseUnit(object):
 
 	# Unit constructor (saves the config)
 	def __init__(self, katana, parent, target):
+
+		if parent is not None and self.PROTECTED_RECURSE and parent.PROTECTED_RECURSE:
+			# Protected recursion means that two protected recurse units
+			# can't follow one another. This protects recurse swapping
+			# in things like crypto modules or strings modules.
+			raise units.NotApplicable('protected recurse violation')
+		elif self.NO_RECURSE:
+			# No recurse means that a unit cannot recurse into itself.
+			unit = parent
+			while unit is not None:
+				if isinstance(unit, type(self)):
+					raise units.NotApplicable('no recurse')
+				unit = unit.parent
+
+
 		self._completed = False
 		self.parent = parent
 		self.target = target

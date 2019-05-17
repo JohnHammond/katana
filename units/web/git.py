@@ -370,7 +370,7 @@ def fetch_git( unit, url, directory, jobs, retry, timeout, katana):
 	process_tasks(tasks,
 				  DownloadWorker,
 				  jobs,
-				  args=(url, directory, retry, timeout))
+				  args=(url, directory, retry, timeout, unit, katana))
 
 	# find refs
 	# printf('[-] Finding refs/\n')
@@ -395,7 +395,7 @@ def fetch_git( unit, url, directory, jobs, retry, timeout, katana):
 	process_tasks(tasks,
 				  FindRefsWorker,
 				  jobs,
-				  args=(url, directory, retry, timeout))
+				  args=(url, directory, retry, timeout, unit, katana))
 
 	# find packs
 	# printf('[-] Finding packs\n')
@@ -414,7 +414,7 @@ def fetch_git( unit, url, directory, jobs, retry, timeout, katana):
 	process_tasks(tasks,
 				  DownloadWorker,
 				  jobs,
-				  args=(url, directory, retry, timeout))
+				  args=(url, directory, retry, timeout, unit, katana))
 
 	# find objects
 	# printf('[-] Finding objects\n')
@@ -474,7 +474,7 @@ def fetch_git( unit, url, directory, jobs, retry, timeout, katana):
 	process_tasks(objs,
 				  FindObjectsWorker,
 				  jobs,
-				  args=(url, directory, retry, timeout),
+				  args=(url, directory, retry, timeout, unit, katana),
 				  tasks_done=packed_objs)
 
 	# git checkout

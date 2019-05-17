@@ -12,6 +12,7 @@ import threading
 import enchant
 import traceback
 import string
+import ctypes
 
 good_magic_strings = [
 	'image', 'document', 'archive', 'file', 'database',
@@ -39,6 +40,16 @@ def is_good_magic(magic_string):
 		if magic_string in good_magic_strings:
 			return True
 	return False
+
+def async_raise(tid, excobj):
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(excobj))
+    if res == 0:
+        raise ValueError("nonexistent thread id")
+    elif res > 1:
+        # """if it returns a number greater than one, you're in trouble, 
+        # and you should call it again with exc=NULL to revert the effect"""
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, 0)
+        raise SystemError("PyThreadState_SetAsyncExc failed")
 
 # This subclass of argparse will print the help whenever there
 # is a syntactic error in the options parsing

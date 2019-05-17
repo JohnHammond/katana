@@ -57,7 +57,7 @@ class Target(object):
 			if katana.original_target is not None and katana.original_target.is_file:
 				base_target_path = os.path.dirname(katana.original_target.path)
 				base_target_path = os.path.realpath(base_target_path)
-				if not upstream.startswith(base_target_path+b'/'):
+				if not upstream.startswith(bytes(base_target_path+'/', 'utf-8')):
 					is_sub_target = False
 			if not upstream.startswith(bytes(results_path+'/', 'utf-8')):
 				is_sub_results = False

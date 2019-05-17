@@ -623,13 +623,23 @@ class Katana(object):
 
 			self.progress.status('all units complete. waiting for thread exit')
 
-			# Notify threads of completion (highest priority!)
-			for n in range(self.config['threads']):
-				self.work.put(UnitWorkWrapper(-10000,'done',(None, None)))
-
 			# Wait for threads to exit
-			for t in self.threads:
-				t.join()
+			try:
+				# Notify threads of completion (highest priority!)
+				for n in range(self.config['threads']):
+					self.work.put(UnitWorkWrapper(-10000,'done',(None, None)))
+
+				# Ask the threads to exit
+				for t in self.threads:
+					t.join()
+			except KeyboardInterrupt:
+				# Kill the threads forceably... this is not nice...
+				for t in self.threads:
+					try:
+						utilities.async_raise(t.ident, SystemExit)
+					except ValueError:
+						# This thread didn't exit
+						pass
 
 			finish = time.time()
 			self.progress.success(f'threads exited in {round(finish-self.start,1)}s. evaluation complete')
