@@ -27,7 +27,8 @@ class FoundFlag(Exception):
 	pass
 
 def isprintable(data):
-	if type(data) is not bytes:
+	
+	if type(data) is str:
 		data = data.encode('utf-8')
 	for c in data:
 		if c not in bytes(string.printable,'ascii'):

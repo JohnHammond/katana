@@ -59,6 +59,7 @@ class Target(object):
 				base_target_path = os.path.realpath(base_target_path)
 				if not upstream.startswith(bytes(base_target_path+'/', 'utf-8')):
 					is_sub_target = False
+
 			if not upstream.startswith(bytes(results_path+'/', 'utf-8')):
 				is_sub_results = False
 

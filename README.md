@@ -77,6 +77,15 @@ Whenever Katana runs, it creates a `results` directory where it stores its findi
 
 If you are running Katana multiple times and just want to see the output, you may want to prepend a `rm -r results;` before your Katana command. **ENSURE THAT THE SEMI-COLON IS IN PLACE SO YOU DO NOT REMOVE KATANA AND YOUR FILES.**
 
+Contributions and Credits
+-------------------------
+
+As we got further along in development, we asked members of my Discord server if they would like to assist in creating units. The following is a list of units that were contributions from these members and their names, to offer our kudos and thank you. This project would not be what it is without your help!
+
+```
+crypto.dna - voidUpdate, Zwedgy
+```
+
 Cookbooks
 ----------
 
@@ -246,7 +255,7 @@ rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/ccad03a
 __Irish Name Repo__
 
 ```
-rm -r results/ ; ./katana.py --unit web.spider "http://2018shell.picoctf.com:52135/" -ff 'picoCTF{.*?}' -nd
+rm -r results/ ; ./katana.py --unit web.spider "http://2018shell.picoctf.com:52135/" -ff 'picoCTF{.*?}'
 ```
 
 __Mr. Robots__
@@ -271,7 +280,7 @@ rm -r results/ ; ./katana.py -a "https://2018shell.picoctf.com/static/eee00c8559
 __The Vault__
 
 ```
-rm -r results/ ; ./katana.py -a "http://2018shell.picoctf.com:53261/" -nd -ff 'picoCTF{.*?}'
+rm -r results/ ; ./katana.py -a "http://2018shell.picoctf.com:53261/" -ff 'picoCTF{.*?}'
 ```
 
 __What's my Name?__

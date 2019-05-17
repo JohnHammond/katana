@@ -26,12 +26,16 @@ class Unit(units.NotEnglishUnit):
 			raise NotApplicable('target is a URL')
 
 		# DO NOT run this if the string does not contain any letters.
+		try:
+			with io.TextIOWrapper(self.target.stream, encoding='utf-8') as stream:
+				for c in iter(lambda: stream.read(1), ''):
+					if c in string.ascii_letters:
+						# We found a letter -- that means we're good, we can run this unit.
+						return
+		except UnicodeDecodeError:
+			raise NotApplicable("seemingly binary data")
 
-		with io.TextIOWrapper(self.target.stream, encoding='utf-8') as stream:
-			for c in iter(lambda: stream.read(1), ''):
-				if c in string.ascii_letters:
-					return
-
+		# We should only reach this if we did not return from that loop above.
 		raise NotApplicable("no english letters")
 
 	def caesar(self, rotate_string, number_to_rotate_by):
