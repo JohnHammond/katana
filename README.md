@@ -84,6 +84,8 @@ As we got further along in development, we asked members of my Discord server if
 
 ```
 crypto.dna - voidUpdate, Zwedgy
+esoteric.ook - Liikt
+esoteric.cow - Drnkn
 ```
 
 Cookbooks
