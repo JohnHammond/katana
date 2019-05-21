@@ -57,7 +57,7 @@ class Target(object):
 			if katana.original_target is not None and katana.original_target.is_file:
 				base_target_path = os.path.dirname(katana.original_target.path)
 				base_target_path = os.path.realpath(base_target_path)
-				if not upstream.startswith(bytes(base_target_path+'/', 'utf-8')):
+				if not upstream.startswith(bytes(str(base_target_path), 'utf-8')+b'/'):
 					is_sub_target = False
 
 			if not upstream.startswith(bytes(results_path+'/', 'utf-8')):
@@ -179,8 +179,12 @@ class Target(object):
 
 	def __getitem__(self, key):
 		if isinstance(key, slice):
-			return ''.join([ self.upstream.decode('utf-8')[ii] for ii in
-					range(*key.indices(len(self.upstream.decode('utf-8')))) ])
+			try:
+				return ''.join([ self.upstream.decode('utf-8')[ii] for ii in
+						range(*key.indices(len(self.upstream.decode('utf-8')))) ])
+			except UnicodeDecodeError:
+				return ''.join([ self.upstream.decode('latin-1')[ii] for ii in
+						range(*key.indices(len(self.upstream.decode('latin-1')))) ])
 
 	@property
 	def raw(self):

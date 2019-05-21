@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-05-14 22:22:31
+# @Last Modified time: 2019-05-21 15:37:44
 from unit import BaseUnit
 from pwn import *
 import os
@@ -60,3 +60,11 @@ class NotEnglishUnit(BaseUnit):
 		
 		if self.target.is_english:
 			raise NotApplicable("potential english text")
+
+class NotEnglishAndPrintableUnit(BaseUnit):
+	
+	def __init__(self, katana, parent, target):
+		super(NotEnglishAndPrintableUnit, self).__init__(katana, parent, target)
+		
+		if self.target.is_english and not self.target.is_printable:
+			raise NotApplicable("not english and not printable")

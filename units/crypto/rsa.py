@@ -26,7 +26,7 @@ def parse_int(given):
 	except ValueError:
 		try:
 			found = int(given, 16)
-		except ValueError:
+		except (ValueError, TypeError):
 			pass
 	return found
 

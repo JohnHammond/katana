@@ -48,9 +48,12 @@ class Unit(NotEnglishUnit):
 	def __init__(self, katana, parent, target, keywords=[]):
 		super(Unit, self).__init__(katana, parent, target)
 
-		self.raw_target = self.target.stream.read().decode('utf-8').lower()
-		if ( self.raw_target.count('ook') < 10 ):
-			raise NotApplicable("less than 10 occurences of 'ook'")
+		try:
+			self.raw_target = self.target.stream.read().decode('utf-8').lower()
+			if ( self.raw_target.count('ook') < 10 ):
+				raise NotApplicable("less than 10 occurences of 'ook'")
+		except UnicodeDecodeError:
+			raise NotApplicable("unicode error, unlikely ook syntax")
 
 	@classmethod
 	def add_arguments(cls, katana, parser):

@@ -1,5 +1,5 @@
 from unit import BaseUnit
-from units import NotEnglishUnit, NotApplicable
+from units import NotEnglishUnit, NotApplicable, PrintableDataUnit, NotEnglishAndPrintableUnit
 from collections import Counter
 import sys
 from io import StringIO
@@ -131,7 +131,7 @@ def evaluate_cow(code, input_file, timeout = -1):
 	return ''.join(output)
 
 
-class Unit(NotEnglishUnit):
+class Unit(PrintableDataUnit):
 
 	PRIORITY = 60
 

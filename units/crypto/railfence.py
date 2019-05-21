@@ -52,6 +52,15 @@ class Unit(units.NotEnglishUnit):
 	PROTECTED_RECURSE = True
 	PRIORITY = 70
 
+	def __init__(self, katana, parent, target, keywords=[]):
+		super(Unit, self).__init__(katana, parent, target)
+
+		try:
+			self.raw_target = self.target.stream.read().decode('utf-8')
+		except UnicodeDecodeError:
+			raise NotApplicable("unicode error, unlikely usable cryptogram")
+
+
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--railfence-rails', type=int,
@@ -71,7 +80,7 @@ class Unit(units.NotEnglishUnit):
 
 		for i in number_of_rails:
 
-			plaintext = decryptFence(self.target.stream.read().decode('utf-8'), i, offset=0)
+			plaintext = decryptFence(self.raw_target, i, offset=0)
 			if plaintext not in seen_plaintext:
 
 				seen_plaintext.append(plaintext)

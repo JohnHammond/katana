@@ -6,16 +6,25 @@ import argparse
 from pwn import *
 import os
 import units.crypto
+import units
 
 import string
 import collections
 
 
 # class Unit(units.PrintableDataUnit):
-class Unit(units.NotEnglishUnit):
+class Unit(units.NotEnglishAndPrintableUnit):
 
 	PROTECTED_RECURSE = True
 	PRIORITY = 45
+
+	def __init__(self, katana, parent, target, keywords=[]):
+		super(Unit, self).__init__(katana, parent, target)
+
+		try:
+			self.raw_target = self.target.stream.read().decode('utf-8')
+		except UnicodeDecodeError:
+			raise units.NotApplicable("unicode error, unlikely usable cryptogram")
 
 	# Shamelessly stolen from https://rot47.net/_py/rot47.txt
 	def do_rot47(self, s):
@@ -30,7 +39,7 @@ class Unit(units.NotEnglishUnit):
 
 	def evaluate(self, katana, case):
 
-		content = self.do_rot47(self.target.stream.read().decode('utf-8'))
+		content = self.do_rot47(self.raw_target)
 		katana.recurse(self,content)
 		katana.locate_flags(self, content)
 		katana.add_results(self, content)

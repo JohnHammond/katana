@@ -1,5 +1,5 @@
 from unit import BaseUnit
-from units import NotEnglishUnit
+from units import NotEnglishUnit, NotEnglishAndPrintableUnit
 from collections import Counter
 import sys
 from io import StringIO
@@ -9,6 +9,7 @@ from pwn import *
 import threading
 import time
 import traceback
+from units import NotApplicable
 
 # JOHN: Below is part of Caleb's old code. I am keeping it here for
 #	   preservation's sake.
@@ -93,9 +94,25 @@ def evaluate_brainfuck(code, input_file, timeout = 1):
 	return ''.join(output)
 
 
-class Unit(NotEnglishUnit):
+class Unit(NotEnglishAndPrintableUnit):
 
 	PRIORITY = 60
+
+	def __init__(self, katana, parent, target, keywords=[]):
+		super(Unit, self).__init__(katana, parent, target)
+
+		try:
+			self.raw_target = self.target.stream.read().decode('utf-8')
+		except UnicodeDecodeError:
+			raise NotApplicable("unicode error, unlikely usable cryptogram")
+
+	def __init__(self, katana, parent, target, keywords=[]):
+		super(Unit, self).__init__(katana, parent, target)
+
+		try:
+			self.raw_target = self.target.stream.read().decode('utf-8').lower()
+		except UnicodeDecodeError:
+			raise NotApplicable("unicode error, unlikely brainfuck syntax")
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
@@ -105,7 +122,7 @@ class Unit(NotEnglishUnit):
 	def evaluate(self, katana, case):
 
 		try:
-			output = evaluate_brainfuck(self.target.stream.read().decode('utf-8'), katana.config['brainfuck_input'], katana.config['brainfuck_timeout'])
+			output = evaluate_brainfuck(self.raw_target, katana.config['brainfuck_input'], katana.config['brainfuck_timeout'])
 
 			# JOHN: Again, this is from Caleb's old code.
 			# output = evaluate_brainfuck(target, self.config['bf_map'], self.config['bf_input'])
