@@ -30,7 +30,10 @@ def get_plane(img, data, channel, index = 0):
 			for y in range(img.size[1]):
 				color = img_data[x, y]
 
-				channel = color[channel_index]
+				try:
+					channel = color[channel_index]
+				except TypeError:
+					channel = color
 
 				plane = bin(channel)[2:].zfill(8)
 				try:

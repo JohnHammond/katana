@@ -8,6 +8,7 @@ from hashlib import md5
 import clipboard
 import uuid
 import json
+import sys
 
 class KatanaHook(object):
 
@@ -261,7 +262,7 @@ class DefaultKatanaHook(KatanaHook):
 					h.update(chunk)
 			# Check for duplicate
 			if h.hexdigest() in image_hashes:
-				self.results['images'][i] = None
+				results['images'][i] = None
 			else:
 				image_hashes.append(h.hexdigest())
 		
@@ -394,5 +395,6 @@ class LoggingKatanaHook(JinjaKatanaHook):
 		# CALEB: I think we should raise a POSIX signal here os it makes it to
 		# the main thread vice raising an exception in the current thread.
 		# I'm unsure at this point, though.
-		raise RuntimeError('I\'m not sure what to do here')
+		# raise RuntimeError('I\'m not sure what to do here')
+		sys.exit(1)
 	

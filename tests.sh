@@ -21,38 +21,38 @@ function BLUE(){
 }
 
 BLUE "strings"
-rm -r results/; ./katana.py  -ff 'USCGA{.*?}' -a ./tests/orchestra -v
+rm -r results/; ./katana.py  -ff 'USCGA{.*?}' -a ./tests/orchestra  
 
 
 BLUE "exiftool"
-rm -r results/; ./katana.py  -ff 'USCGA{.*?}' -a ./tests/woof64.jpg -v --exclude crypto
+rm -r results/; ./katana.py  -ff 'USCGA{.*?}' -a ./tests/woof64.jpg  --exclude crypto
 
 
 BLUE "morsecode"
-rm -r results/; ./katana.py  -ff 'gigem{.*?}' -a ./tests/tamuctf_morsecode.txt -v --exclude crypto
+rm -r results/; ./katana.py  -ff 'gigem{.*?}' -a ./tests/tamuctf_morsecode.txt  --exclude crypto
 
 
 BLUE "QR code"
-rm -r results/; ./katana.py  -ff 'USCGA{.*?}' -a ./tests/qrcode.png -v
+rm -r results/; ./katana.py  -ff 'USCGA{.*?}' -a ./tests/qrcode.png  
 
 
 BLUE "steghide (no password)"
-rm -r results/; ./katana.py -ff "USCGA{.*?}" -a ./tests/rubber_ducky.jpg -v 
+rm -r results/; ./katana.py -ff "USCGA{.*?}" -a ./tests/rubber_ducky.jpg  
 
 BLUE "steghide (with password)"
-rm -r results/; ./katana.py -ff "USCGA{.*?}" -a ./tests/evil_ducky.jpg --dict /opt/rockyou.txt -v 
+rm -r results/; ./katana.py -ff "USCGA{.*?}" -a ./tests/evil_ducky.jpg --dict /opt/rockyou.txt  
 
 
 BLUE "snow"
-rm -r results/; ./katana.py -ff "USCGA{.*?}" -a ./tests/let_it_snow.txt -v 
+rm -r results/; ./katana.py -ff "USCGA{.*?}" -a ./tests/let_it_snow.txt  
 
 
 BLUE "zsteg"
-rm -r results/; ./katana.py -ff "USCGA{.*?}" -a ./tests/pierre.png -v 
+rm -r results/; ./katana.py -ff "USCGA{.*?}" -a ./tests/pierre.png  
 
 
 BLUE "robots.txt"
-rm -r results/; ./katana.py -ff "FLAG{.*?}" -a 'https://johnhammond.org' -v 
+rm -r results/; ./katana.py -ff "FLAG{.*?}" -a 'https://johnhammond.org'  
 
 
 BLUE "basic SQL injection"
@@ -60,12 +60,12 @@ rm -r results/ ; ./katana.py -a "http://2018shell.picoctf.com:53261/" -nd -ff 'p
 
 
 BLUE "ROT47"
-rm -r results/; ./katana.py -ff "sun{.*?}" -a './tests/welcome_crypto.txt' -v 
+rm -r results/; ./katana.py -ff "sun{.*?}" -a './tests/welcome_crypto.txt'  
 
 
 BLUE "Brainfuck"
-rm -r results/; ./katana.py -ff "USCGA{.*?}" -a './tests/brainfuck.txt' -v 
+rm -r results/; ./katana.py -ff "USCGA{.*?}" -a './tests/brainfuck.txt'  
 
 
 BLUE "pdftotext"
-rm -r results/; ./katana.py -ff "actf{.*?}" -a './tests/blank_paper.pdf' -v 
+rm -r results/; ./katana.py -ff "actf{.*?}" -a './tests/blank_paper.pdf'  
