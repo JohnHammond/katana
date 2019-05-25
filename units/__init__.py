@@ -218,9 +218,12 @@ class UnitFinder(object):
 				# Just ignore these
 				pass
 
+		if not katana.config['no_priority']:
+			valid_units = sorted(valid_units)
+
 		# We return a list of units that were not applicable
 		# if requested was specified, ignored_units will only
 		# contain units that were not applicable that appeared
 		# in the requested list.
-		return sorted(valid_units), ignored_units
+		return valid_units, ignored_units
 
