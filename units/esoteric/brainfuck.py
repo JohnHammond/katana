@@ -11,19 +11,12 @@ import time
 import traceback
 from units import NotApplicable
 
-# JOHN: Below is part of Caleb's old code. I am keeping it here for
-#	   preservation's sake.
-#
-# def BrainfuckMap(m):
-#	 if len(m) != 8:
-#		 raise argparse.ArgumentTypeError('{0}: not a valid brainfuck mapping (expected 8 commands)')
-#	 if len(Counter(m)) != len(m):
-#		 raise argparse.ArgumentTypeError('{0}: repeating characters are not allowed in brainfuck mapping')
-#	 return m
 
 def cleanup(code):
 	code = [ x.encode('utf-8') for x in code ]
-	return (b''.join(filter(lambda x: x in [b'.', b',', b'[', b']', b'<', b'>', b'+', b'-'], code))).decode('utf-8')
+	return (b''.join(filter(lambda x: x in \
+			[b'.', b',', b'[', b']', b'<', b'>', b'+', b'-'], 
+			code))).decode('utf-8')
 
 
 def buildbracemap(code):
@@ -69,13 +62,17 @@ def evaluate_brainfuck(code, input_file, timeout = 1):
 			cellptr = 0 if cellptr <= 0 else cellptr - 1
 		try:
 			if command == "+":
-				cells[cellptr] = cells[cellptr] + 1 if cells[cellptr] < 255 else 0
+				cells[cellptr] = cells[cellptr] + 1 \
+				if cells[cellptr] < 255 else 0
 
 			if command == "-":
-				cells[cellptr] = cells[cellptr] - 1 if cells[cellptr] > 0 else 255
+				cells[cellptr] = cells[cellptr] - 1 \
+				if cells[cellptr] > 0 else 255
 
-			if command == "[" and cells[cellptr] == 0: codeptr = bracemap[codeptr]
-			if command == "]" and cells[cellptr] != 0: codeptr = bracemap[codeptr]
+			if command == "[" and cells[cellptr] == 0: 
+				codeptr = bracemap[codeptr]
+			if command == "]" and cells[cellptr] != 0: 
+				codeptr = bracemap[codeptr]
 			
 			if command == ".": output.append(chr(cells[cellptr]))
 
@@ -98,6 +95,13 @@ class Unit(NotEnglishAndPrintableUnit):
 
 	PRIORITY = 60
 
+	ARGUMENTS = [
+		{ 'name' : 'brainfuck_input', 'type' : None, 'default': None, 
+		  'help':  'file to be read as input to brainfuck program'},
+		{ 'name' : 'brainfuck_timeout', 'type' : int, 'default': 1, 
+		  'help':  'timeout in seconds to run brainfuck program'},
+	]
+
 	def __init__(self, katana, parent, target, keywords=[]):
 		super(Unit, self).__init__(katana, parent, target)
 
@@ -114,6 +118,7 @@ class Unit(NotEnglishAndPrintableUnit):
 		except UnicodeDecodeError:
 			raise NotApplicable("unicode error, unlikely brainfuck syntax")
 
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--brainfuck-input',  action='store_true', default=None, help='file to be read as input to brainfuck program')
@@ -122,7 +127,9 @@ class Unit(NotEnglishAndPrintableUnit):
 	def evaluate(self, katana, case):
 
 		try:
-			output = evaluate_brainfuck(self.raw_target, katana.config['brainfuck_input'], katana.config['brainfuck_timeout'])
+			output = evaluate_brainfuck(self.raw_target, 
+										katana.config['brainfuck_input'], 
+										katana.config['brainfuck_timeout'])
 
 			# JOHN: Again, this is from Caleb's old code.
 			# output = evaluate_brainfuck(target, self.config['bf_map'], self.config['bf_input'])

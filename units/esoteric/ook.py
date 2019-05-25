@@ -45,16 +45,24 @@ class Unit(NotEnglishUnit):
 
 	PRIORITY = 60
 
+	ARGUMENTS = [
+		{ 'name' : 'ook_input', 'type' : None, 'default': None, 
+		  'help':  'file to be read as input to ook program'},
+		{ 'name' : 'ook_timeout', 'type' : int, 'default': 1, 
+		  'help':  'timeout in seconds to run ook program'},
+	]
+
 	def __init__(self, katana, parent, target, keywords=[]):
 		super(Unit, self).__init__(katana, parent, target)
 
 		try:
-			self.raw_target = self.target.stream.read().decode('utf-8').lower()
+			self.raw_target=self.target.stream.read().decode('utf-8').lower()
 			if ( self.raw_target.count('ook') < 10 ):
 				raise NotApplicable("less than 10 occurences of 'ook'")
 		except UnicodeDecodeError:
 			raise NotApplicable("unicode error, unlikely ook syntax")
 
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--ook-input',  action='store_true', default=None, help='file to be read as input to ook program')
@@ -63,10 +71,10 @@ class Unit(NotEnglishUnit):
 	def evaluate(self, katana, case):
 
 		try:
-			output = evaluate_ook(self.target.stream.read().decode('utf-8'), katana.config['ook_input'], katana.config['ook_timeout'])
+			output = evaluate_ook(self.target.stream.read().decode('utf-8'), 
+								  katana.config['ook_input'], 
+								  katana.config['ook_timeout'])
 
-			# JOHN: Again, this is from Caleb's old code.
-			# output = evaluate_brainfuck(target, self.config['bf_map'], self.config['bf_input'])
 		except (ValueError, TypeError):
 			traceback.print_exc()
 			return None
