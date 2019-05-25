@@ -39,7 +39,7 @@ class Unit(web.WebUnit):
 			raise units.NotApplicable('no form found')
 
 	def evaluate(self, katana, case):
-		
+
 		if self.action and self.method and self.username and self.password:
 			if self.action: action = self.action[0].decode('utf-8')
 			if self.method: method = self.method[0].decode('utf-8')
@@ -59,11 +59,14 @@ class Unit(web.WebUnit):
 				for admin_cookie in web.potential_cookie_names:
 					if admin_cookie in s.cookies.keys():
 						if s.cookies[admin_cookie] == 'False':
+							s.cookies.update({ admin_cookie : 'True' })
 							new = requests.get(r.url, cookies = { admin_cookie : 'True' })
 							if katana.locate_flags(self, new.text): break
 						else:
+							s.cookies.update({ admin_cookie : '1' })
 							new = requests.get(r.url, cookies = { admin_cookie : '1' })
 							if katana.locate_flags(self, new.text): break
 			else:
+				s.cookies.update({ admin_cookie : '1' })
 				new = s.get(r.url, cookies = { 'admin' : '1' })
 				if katana.locate_flags(self, new.text): return

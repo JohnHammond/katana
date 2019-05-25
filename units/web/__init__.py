@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-05-24 22:45:34
+# @Last Modified time: 2019-05-25 10:54:56
 
 from pwn import *
 from unit import BaseUnit
@@ -27,7 +27,7 @@ potential_file_variables = [
 user_regex = rb'<\s*input.*name\s*=\s*[\'"](%s)[\'"]' % b"|".join(potential_username_variables)
 pass_regex = rb'<\s*input.*name\s*=\s*[\'"](%s)[\'"]' % b"|".join(potential_password_variables)
 
-potential_cookie_names = [ b'admin', b'is_admin', b'isadmin', b'administrator', b'isAdmin' ]
+potential_cookie_names = [ 'admin', 'is_admin', 'isadmin', 'administrator', 'isAdmin' ]
 
 delim = '@@DELIMETER@@'
 special = '@@SPECIAL@@'
