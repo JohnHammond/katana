@@ -544,7 +544,7 @@ class Katana(object):
 				))
 				self.total_work += 1
 	
-	def locate_flags(self, unit, output, stop=True, strict=False):
+	def locate_flags(self, unit, output, stop=True, strict=False, rotate = True):
 		""" Look for flags in the given data/output """
 
 		if isinstance(output, list) or isinstance(output, tuple):
@@ -564,6 +564,11 @@ class Katana(object):
 		no_xml = re.sub(b'<[^<]+>', b'', output)
 		if no_xml != output:
 			self.locate_flags(unit, no_xml, stop=stop)
+
+		# JOHN: Check to see if the flag is found VERTICALLY...
+		if rotate:
+			# Set "rotate" to false so we don't do this forever...
+			self.locate_flags(utilities.rotate_text(unit), rotate = False)
 
 		match = self.flag_pattern.search(output)
 		if match:
