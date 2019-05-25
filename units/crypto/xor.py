@@ -37,7 +37,7 @@ class Unit(units.BaseUnit):
 			help="key to use for XOR operations",
 			default=None)
 
-	def __init__(self, katana, , target):
+	def __init__(self, katana, target):
 		super(Unit, self).__init__(katana, target)
 
 		# JOHN: We actually DON'T want printable characters in this case!

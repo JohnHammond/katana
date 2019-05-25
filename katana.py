@@ -41,7 +41,6 @@ class Katana(object):
 		self.results = {}
 		self.config = {}
 		self.parsers = []
-		self.units = []
 		self.threads = []
 		self.threads_done = []
 		self.completed = False
@@ -434,7 +433,7 @@ class Katana(object):
 			# Notify user of requested units that weren't applicable/found
 			if len(self.config['unit']) > 0:
 				for cls,exc in ignored:
-					log.warning('{0}: not applicable: {1}'.format(cls.name, exc.args))
+					log.warning('{0}: not applicable: {1}'.format(cls.__module__, exc.args))
 			
 			# Did we match any units
 			if len(units) == 0:
@@ -460,7 +459,7 @@ class Katana(object):
 
 			# Add the known units to the work queue
 			try:
-				self.add_to_work(self.units)
+				self.add_to_work(units)
 				self.work.join()
 			except KeyboardInterrupt:
 				self.completed = True

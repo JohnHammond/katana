@@ -38,7 +38,7 @@ class Unit(NotEnglishUnit):
 	ARGUMENTS = [
 		{ 'name': 		'vigenere_key', 
 		  'type': 		str, 
-		  'default': 	None, 
+		  'default': 	'', 
 		  'required': 	False,
 		  'help': 		'a key for vignere cipher'
 		},

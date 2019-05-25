@@ -28,24 +28,23 @@ class BaseUnit(object):
 		return
 
 	# Unit constructor (saves the config)
-	def __init__(self, katana, parent, target):
+	def __init__(self, katana, target):
 
-		if parent is not None and self.PROTECTED_RECURSE and parent.PROTECTED_RECURSE:
+		if target.parent is not None and self.PROTECTED_RECURSE and target.parent.PROTECTED_RECURSE:
 			# Protected recursion means that two protected recurse units
 			# can't follow one another. This protects recurse swapping
 			# in things like crypto modules or strings modules.
 			raise units.NotApplicable('protected recurse violation')
 		elif self.NO_RECURSE:
 			# No recurse means that a unit cannot recurse into itself.
-			unit = parent
+			unit = target.parent
 			while unit is not None:
 				if isinstance(unit, type(self)):
 					raise units.NotApplicable('no recurse')
-				unit = unit.parent
+				unit = unit.target.parent
 
 
 		self._completed = False
-		self.parent = parent
 		self.target = target
 
 	# By default, the only test case is the target itself
@@ -79,11 +78,11 @@ class BaseUnit(object):
 	@property
 	def family_tree(self):
 		parents = []
-		parent = self.parent
+		parent = self.target.parent
 		# Are you my mother
 		while parent is not None:
 			parents.append(parent)
-			parent = parent.parent
+			parent = parent.target.parent
 		return parents[::-1]
 	
 	@property
@@ -94,8 +93,8 @@ class BaseUnit(object):
 	def completed(self, v):
 		if v != True:
 			raise ValueError
-		parent = self.parent
+		parent = self.target.parent
 		while parent is not None:
 			parent._completed = True
-			parent = parent.parent
+			parent = parent.target.parent
 		self._completed = True

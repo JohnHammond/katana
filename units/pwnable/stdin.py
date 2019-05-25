@@ -1,9 +1,9 @@
 from pwn import *
-import units.pwnage
+import units.pwnable
 import subprocess
 
 
-class Unit(units.pwnage.BasicBufferOverflowUnit):
+class Unit(units.pwnable.BasicBufferOverflowUnit):
 
 	# This unit runs code that could be malicious.
 	# Tell Katana not to run it unless the user actually wants to.

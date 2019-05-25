@@ -17,8 +17,6 @@ class ElfUnit(units.FileUnit):
 		except:
 			raise units.NotApplicable("not an elf binary")
 	
-	def p
-	
 	def rop_chain(self, *args):
 		return
 
