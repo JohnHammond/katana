@@ -28,7 +28,8 @@ def build_jumpmap(code):
 			jumpmap[pointer] = pointer2
 			jumpmap[pointer2] = pointer
 		
-		elif code[pointer:pointer+3] == "moo" and jumpmap.get(pointer, -1) == -1:
+		elif code[pointer:pointer+3] == "moo" and \
+			 jumpmap.get(pointer, -1) == -1:
 			raise SyntaxError('Unmatched moo')
 	
 	return jumpmap
@@ -36,7 +37,8 @@ def build_jumpmap(code):
 
 def evaluate_cow(code, input_file, timeout = -1):
 
-	command_list = ['moo', 'mOo', 'moO', 'mOO', 'Moo', 'MOo', 'MoO', 'MOO', 'OOO', 'MMM', 'OOM', 'oom']
+	command_list = ['moo', 'mOo', 'moO', 'mOO', 'Moo', 'MOo', 'MoO', 'MOO', 
+					'OOO', 'MMM', 'OOM', 'oom']
 
 	output = []
 	code = code.strip()
@@ -52,12 +54,14 @@ def evaluate_cow(code, input_file, timeout = -1):
 	start_time = time.time()
 
 	# by default, timeout is -1 and the code runs for as long as possible
-	while codeptr < len(code) and (timeout < 0 or time.time() < (start_time + timeout)):
+	while codeptr < len(code) and (timeout < 0 or \
+		  time.time() < (start_time + timeout)):
 		
 		if codeptr < 0:
 			# weird behavior here
-			# if we encounter a mOO, we make the pointer negative and continue execution
-			# now we know that if the code pointer is negative, mOO was called, so we need to make the command be whatever's pointed at in memory
+			# if we encounter a mOO, we make the pointer negative and continue 
+			# now we know that if the code pointer is negative, mOO was called
+			# so we need to make the command be what is pointed at in memory
 			command = command_list[cells[cellptr]]
 			codeptr = -codeptr 
 		else:
@@ -71,10 +75,12 @@ def evaluate_cow(code, input_file, timeout = -1):
 			cellptr = 0 if cellptr <= 0 else cellptr - 1
 		try:
 			if command == "MoO":
-				cells[cellptr] = cells[cellptr] + 1 if cells[cellptr] < 255 else 0
+				cells[cellptr] = cells[cellptr] + 1 \
+				if cells[cellptr] < 255 else 0
 
 			if command == "MOo":
-				cells[cellptr] = cells[cellptr] - 1 if cells[cellptr] > 0 else 255
+				cells[cellptr] = cells[cellptr] - 1 \
+				if cells[cellptr] > 0 else 255
 
 			if command == "MOO" and cells[cellptr] == 0: 
 				nextptr = jumpmap.get(codeptr, -1)
@@ -134,6 +140,21 @@ def evaluate_cow(code, input_file, timeout = -1):
 class Unit(PrintableDataUnit):
 
 	PRIORITY = 60
+	ARGUMENTS = [
+		{ 'name': 		'cow_input', 
+		  'type': 		str, 
+		  'default': 	None, 
+		  'required': 	False,
+		  'help': 		'file to be read as input to cow program'
+		},
+
+		{ 'name': 		'cow_timeout', 
+		  'type': 		int, 
+		  'default': 	1, 
+		  'required': 	False,
+		  'help': 		'timeout in seconds to run cow program'
+		},
+	]
 
 	def __init__(self, katana, parent, target, keywords=[]):
 		super(Unit, self).__init__(katana, parent, target)
@@ -142,6 +163,7 @@ class Unit(PrintableDataUnit):
 		if ( self.raw_target.count('moo') < 10 ):
 			raise NotApplicable("less than 10 occurences of 'moo'")
 
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--cow-input',  action='store_true', default=None, help='file to be read as input to cow program')
@@ -150,7 +172,9 @@ class Unit(PrintableDataUnit):
 	def evaluate(self, katana, case):
 
 		try:
-			output = evaluate_cow(self.target.stream.read().decode('utf-8'), katana.config['cow_input'], katana.config['cow_timeout'])
+			output = evaluate_cow(self.target.stream.read().decode('utf-8'), 
+								  katana.config['cow_input'],
+								  katana.config['cow_timeout'])
 
 		except (ValueError, TypeError):
 			traceback.print_exc()
