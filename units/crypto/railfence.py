@@ -69,6 +69,9 @@ class Unit(units.NotEnglishUnit):
 
 	def __init__(self, katana, target, keywords=[]):
 		super(Unit, self).__init__(katana, target)
+		
+		if target.is_url:
+			raise NotApplicable('target is a URL')
 
 		try:
 			self.raw_target = self.target.stream.read().decode('utf-8')

@@ -8,12 +8,19 @@ import subprocess
 import units.stego
 import utilities
 from hashlib import md5
+from units import NotApplicable
 
 DEPENDENCIES = [ 'snow' ]
 
 class Unit(units.FileUnit):
 
 	PRIORITY = 30
+
+	def __init__(self, katana, target, keywords=[]):
+		super(Unit, self).__init__(katana, target)
+		
+		if target.is_url:
+			raise NotApplicable('target is a URL')
 
 	def evaluate(self, katana, case):
 

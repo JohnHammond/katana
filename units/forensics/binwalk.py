@@ -10,6 +10,7 @@ import utilities
 import os
 import hashlib
 import shutil
+from units import NotApplicable
 
 DEPENDENCIES = [ 'binwalk' ]
 
@@ -25,6 +26,12 @@ class Unit(units.FileUnit):
 	# JOHN: This MUST be in the class... 
 	PROTECTED_RECURSE = True
 	PRIORITY = 55
+
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target)
+
+		if target.is_url:
+			raise NotApplicable('target is a URL')
 	
 	def evaluate(self, katana, case):
 

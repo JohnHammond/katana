@@ -29,7 +29,8 @@ class BaseUnit(object):
 
 	# Unit constructor (saves the config)
 	def __init__(self, katana, target):
-
+		
+		
 		if target.parent is not None and self.PROTECTED_RECURSE and target.parent.PROTECTED_RECURSE:
 			# Protected recursion means that two protected recurse units
 			# can't follow one another. This protects recurse swapping
@@ -37,13 +38,16 @@ class BaseUnit(object):
 			raise units.NotApplicable('protected recurse violation')
 		elif self.NO_RECURSE:
 			# No recurse means that a unit cannot recurse into itself.
+			
 			unit = target.parent
 			while unit is not None:
 				if isinstance(unit, type(self)):
 					raise units.NotApplicable('no recurse')
 				unit = unit.target.parent
 
-
+		if not self.unit_name.startswith('web.') and target.is_url:
+			raise units.NotApplicable('target is a URL')
+			
 		self._completed = False
 		self.target = target
 

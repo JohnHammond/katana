@@ -9,6 +9,7 @@ import units.forensics
 import os
 import utilities
 import glob
+from units import NotApplicable
 from hashlib import md5
 
 DEPENDENCIES = [ 'foremost' ]
@@ -19,9 +20,11 @@ class Unit(units.FileUnit):
 	PROTECTED_RECURSE = True
 	PRIORITY = 55
 	
-	# We do not need to include the constructor here 
-	# because the ForensicsUnit parent will pull from FileUnit, 
-	# to ensure the target is in fact a file.
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target)
+
+		if target.is_url:
+			raise NotApplicable('target is a URL')
 
 	def evaluate(self, katana, case):
 
