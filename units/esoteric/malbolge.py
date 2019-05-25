@@ -8,7 +8,8 @@ import os
 from pwn import *
 import math
 
-# JOHN: This code is shamelessly stolen from https://github.com/kmyk/malbolge-interpreter
+# JOHN: This code is shamelessly stolen from 
+# https://github.com/kmyk/malbolge-interpreter
 
 def isword(x):
 	return 0 <= x < 3**10
@@ -38,9 +39,13 @@ def crz(xs, ys):
 		[ 2, 2, 1 ] ]
 	return word(map(lambda x, y: table[y][x], unword(xs), unword(ys)))
 
-xlat1 = "+b(29e*j1VMEKLyC})8&m#~W>qxdRp0wkrUo[D7,XTcA\"lI.v%{gJh4G\\-=O@5`_3i<?Z';FNQuY]szf$!BS/|t:Pn6^Ha"
-xlat2 = "5z]&gqtyfr$(we4{WP)H-Zn,[%\\3dL+Q;>U!pJS72FhOA1CB6v^=I_0/8|jsb9m<.TVac`uY*MK'X~xDl}REokN:#?G\"i@"
+xlat1 =  "+b(29e*j1VMEKLyC})8&m#~W>qxdRp0wkrUo[D7,XTcA\"lI.v%{gJh4G\\-=O@5`"
+xlat1 += "_3i<?Z';FNQuY]szf$!BS/|t:Pn6^Ha"
+xlat2 =  "5z]&gqtyfr$(we4{WP)H-Zn,[%\\3dL+Q;>U!pJS72FhOA1CB6v^=I_0/8|jsb9m<.T"
+xlat2 += "Vac`uY*MK'X~xDl}REokN:#?G\"i@"
+
 assert len(xlat1) == len(xlat2) == 94
+
 def crypt1(i, m):
 	assert 32 < ord(m) < 127
 	return xlat1[(ord(m) - 33 + i) % 94]
@@ -58,7 +63,8 @@ def initial_memory(code, allow_not_isprint=False):
 		if chr(c).isspace():
 			continue
 		if 32 < c < 127:
-			assert crypt1(i, chr(c)) in 'ji*p</vo' # 'invalid character in source file'
+			# 'invalid character in source file'
+			assert crypt1(i, chr(c)) in 'ji*p</vo' 
 		else:
 			assert allow_not_isprint
 		assert i <= 3**10
@@ -82,7 +88,7 @@ def execute_step(a, c, d, mem, inf=sys.stdin.buffer, outf=sys.stdout.buffer):
 		# outf.write(bytes([ a % 256 ]))
 		output.append(chr( a % 256 ))
 	elif m == '/':
-		if inf == None:
+		if not inf:
 			x = "\n"
 		else:
 			x = inf.read(1)
@@ -108,9 +114,6 @@ def execute(code, inf=sys.stdin.buffer, allow_not_isprint=False, debug=False):
 		pass
 	a, c, d = 0, 0, 0
 	while True:
-		if debug:
-			# I don't intend to use this but left it in here for preservations sake
-			print('\tA: {} ({}),  C: {},  D: {},  [C]: {} ({}),  [D]: {} ({})'.format(tri(a)[2:], str(a).rjust(5), str(c).rjust(5), str(d).rjust(5), tri(mem[c])[2:], crypt1(c, chr(mem[c])), tri(mem[d])[2:], str(mem[d]).rjust(5)))
 		try:
 			a, c, d, mem, one_output = execute_step(a, c, d, mem, inf=inf)
 			output += one_output
@@ -122,14 +125,25 @@ class Unit(NotEnglishUnit):
 
 	PRIORITY = 65
 
+	ARGUMENTS = [
+		{ 'name': 		'malbolge_input', 
+		  'type': 		str, 
+		  'default': 	None, 
+		  'required': 	False,
+		  'help': 		'file to be read as input to malbolge program'
+		},
+	]
+
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
-		parser.add_argument('--malbolge-input',  action='store_true', default=None, help='file to be read as input to malbolge program')
+		parser.add_argument('--malbolge-input', action='store_true', default=None, help='file to be read as input to malbolge program')
 
 	def evaluate(self, katana, case):
 		
 		try:
-			output = execute(self.target.stream.read().decode('utf-8'), katana.config['malbolge_input'])
+			output = execute(self.target.stream.read().decode('utf-8'), 
+							 katana.config['malbolge_input'])
 
 		except (ValueError, AssertionError):
 			return None

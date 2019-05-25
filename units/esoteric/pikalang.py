@@ -25,7 +25,7 @@ class SyntaxError(Exception):
 	pass
 
 def syntax_error(lineNo):
-	"""Display information about syntax errors in the pikachu program then exit.
+	"""Display information about syntax errors in the pikachu program and exit
 
 	Arguments:
 	lineNo -- the line where the syntax error was found.
@@ -35,7 +35,8 @@ def syntax_error(lineNo):
 	raise SyntaxError # This must not be proper Pikalang for this rendition.
 
 class PikaStack():
-	"""Encapsulate Stack specific data and methods defined in the pikachu langeuage.
+	"""
+	Encapsulate Stack specific data & methods defined in the pikachu language.
 
 	PikaStack()
 	ADD() -> void
@@ -61,8 +62,8 @@ class PikaStack():
 		
 		Error handling:
 		If the stack is empty, nothing happens.
-		If the stack only has a single element, the result pushed to the top of
-		the stack is float("NaN").
+		If the stack only has a single element, the result pushed to the top 
+		of the stack is float("NaN").
 		"""
 		if self.__check_binary_op():
 			a = self.POP()
@@ -77,8 +78,8 @@ class PikaStack():
 
 		Error Handling:
 		If the stack is empty, nothing happens.
-		If the stack only has a single element, the result pushed to the top of
-		the stack is float("NaN")
+		If the stack only has a single element, the result pushed to the top 
+		of the stack is float("NaN")
 		"""
 		if self.__check_binary_op():
 			a = self.POP()
@@ -88,13 +89,13 @@ class PikaStack():
 	def MULT(self):
 		"""Multiplies the top two elements on the stack.
 
-		Multiplies the top two elements on the stack and pushes the result back
-		onto the stack.
+		Multiplies the top two elements on the stack and pushes the result 
+		back onto the stack.
 
 		Error handling:
 		If the stack is empty, nothing happens.
-		If the stack only has a single element, the result pushed to the top of 
-		the stack is float("NaN")
+		If the stack only has a single element, the result pushed to the top 
+		of 	the stack is float("NaN")
 		"""
 		if self.__check_binary_op():
 			a = self.POP()
@@ -104,13 +105,13 @@ class PikaStack():
 	def DIV(self):
 		"""Divides the top two elements on the stack
 
-		Divides the second element on the stack by the first element on the stack,
-		and pushes the result back on top of the stack.
+		Divides the second element on the stack by the first element on the 
+		stack, and pushes the result back on top of the stack.
 		
 		Error Handling:
 		If the stack is empty, nothing happens.
-		If the stack only has a single element, the result pushed to the top of 
-		the stack is float("NaN")
+		If the stack only has a single element, the result pushed to the top 
+		of the stack is float("NaN")
 		If the divisor is '0', the result pushed to the top of the stack is 
 		float("NaN")
 		"""
@@ -162,8 +163,8 @@ class PikaStack():
 		"""Returns True if it is safe to perform a binary op, False otherwise.
 
 		Verifies a binary operation can take place. If the stack is empty, 
-		nothing happens. If the stack has a single element, it is replaced with
-		float("NaN").
+		nothing happens. If the stack has a single element, it is replaced 
+		with float("NaN").
 
 		Returns True if there are at least 2 elements on the stack.
 		Returns False if there is 0 or 1 elements on the stack.
@@ -201,7 +202,7 @@ class PikaReader():
 	def __next__(self):
 		"""Provide support for the next() function.
 
-		next(this) is used to iterate through the pikachu code a line at a time.
+		next(this) is used to loop through the pikachu code a line at a time.
 		
 		Exceptions:
 		StopIteration -- when the end of the file has been reached.
@@ -248,8 +249,8 @@ def run(fileName, args):
 
 	Arguments:
 	fileName -- the name and path of a file containing a pikachu program.
-	args -- the command line arguments specified when the pikachu interpreter was
-	run.
+	args -- the command line arguments specified when the pikachu interpreter
+	was run.
 	"""
 	piStack = PikaStack()
 	pikaStack = PikaStack()
@@ -351,6 +352,14 @@ def run(fileName, args):
 class Unit(PrintableDataUnit):
 
 	PRIORITY = 40
+	ARGUMENTS = [
+		{ 'name': 		'pikalang_args', 
+		  'type': 		list, 
+		  'default': 	[], 
+		  'required': 	False,
+		  'help': 		'arguments to be passed to pikalang program'
+		},
+	]
 
 	def __init__(self, katana, parent, target, keywords=[]):
 		super(Unit, self).__init__(katana, parent, target)
@@ -359,9 +368,11 @@ class Unit(PrintableDataUnit):
 		if ( self.raw_target.count('pi') < 10 ):
 			raise NotApplicable("less than 10 occurences of 'pi'")
 
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
-		parser.add_argument('--pikalang-args',  action='store_true', default=[], help='arguments for pikalang')
+		parser.add_argument('--pikalang-args',  action='store_true', default=[], help='arguments to be passed to pikalang program')
+
 
 	def evaluate(self, katana, case ):
 
@@ -372,11 +383,13 @@ class Unit(PrintableDataUnit):
 
 
 		except SyntaxError:
-			p_mappings = ["pikachu", "pikapi", 'pichu', 'pika', 'pipi', 'chu', 'ka', 'pi']
-			r_mappings = [".",        ",",      '<',     '[',      '>',  ']',  '-',  '+']
+			p_mappings = \
+			["pikachu", "pikapi", 'pichu', 'pika', 'pipi', 'chu', 'ka', 'pi']
+			r_mappings = [".", ",", '<', '[', '>', ']',  '-',  '+']
 
 			for i in range(len(p_mappings)):
-				self.raw_target = self.raw_target.replace(p_mappings[i], r_mappings[i])
+				self.raw_target = self.raw_target.replace(p_mappings[i], 
+														  r_mappings[i])
 			
 			self.raw_target = self.raw_target.replace(' ' ,'')
 			try:

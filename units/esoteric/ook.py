@@ -46,10 +46,19 @@ class Unit(NotEnglishUnit):
 	PRIORITY = 60
 
 	ARGUMENTS = [
-		{ 'name' : 'ook_input', 'type' : None, 'default': None, 
-		  'help':  'file to be read as input to ook program'},
-		{ 'name' : 'ook_timeout', 'type' : int, 'default': 1, 
-		  'help':  'timeout in seconds to run ook program'},
+		{ 'name': 		'ook_input', 
+		  'type': 		str, 
+		  'default': 	None, 
+		  'required': 	False,
+		  'help': 		'file to be read as input to ook program'
+		},
+
+		{ 'name': 		'ook_timeout', 
+		  'type': 		int, 
+		  'default': 	1, 
+		  'required': 	False,
+		  'help': 		'timeout in seconds to run ook program'
+		},
 	]
 
 	def __init__(self, katana, parent, target, keywords=[]):

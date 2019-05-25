@@ -77,7 +77,7 @@ def evaluate_brainfuck(code, input_file, timeout = 1):
 			if command == ".": output.append(chr(cells[cellptr]))
 
 			if command == ",": 
-				if input_file == None:
+				if not input_file:
 					cells[cellptr] = 10
 
 				else:
@@ -96,10 +96,19 @@ class Unit(NotEnglishAndPrintableUnit):
 	PRIORITY = 60
 
 	ARGUMENTS = [
-		{ 'name' : 'brainfuck_input', 'type' : None, 'default': None, 
-		  'help':  'file to be read as input to brainfuck program'},
-		{ 'name' : 'brainfuck_timeout', 'type' : int, 'default': 1, 
-		  'help':  'timeout in seconds to run brainfuck program'},
+		{ 'name': 		'brainfuck_input', 
+		  'type': 		str, 
+		  'default': 	None, 
+		  'required': 	False,
+		  'help': 		'file to be read as input to brainfuck program'
+		},
+
+		{ 'name': 		'brainfuck_timeout', 
+		  'type': 		int, 
+		  'default': 	1, 
+		  'required': 	False,
+		  'help': 		'timeout in seconds to run brainfuck program'
+		},
 	]
 
 	def __init__(self, katana, parent, target, keywords=[]):
