@@ -391,10 +391,10 @@ class LoggingKatanaHook(JinjaKatanaHook):
 		))
 	
 	def failure(self, reason):
-		self.progress.failure(reason)
+		log.failure(reason)
 		# CALEB: I think we should raise a POSIX signal here os it makes it to
 		# the main thread vice raising an exception in the current thread.
 		# I'm unsure at this point, though.
 		# raise RuntimeError('I\'m not sure what to do here')
-		sys.exit(1)
+		#sys.exit(1)
 	
