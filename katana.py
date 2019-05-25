@@ -105,12 +105,14 @@ class Katana(object):
 		# Don't run if the output directory exists
 		if os.path.exists(self.config['outdir']):
 			self.hook.failure('{0}: directory exists'.format(self.config['outdir']))
+			raise RuntimeError('output directory exists')
 		elif not os.path.exists(self.config['outdir']):
 			# Create the directory if needed
 			try:
 				os.mkdir(self.config['outdir'])
 			except:
 				self.hook.failure('{0}: unable to create directory'.format(self.config['outdir']))
+				raise RuntimeError('unable to create output directory')
 
 		self.hook.status('initialization complete')
 
@@ -131,6 +133,7 @@ class Katana(object):
 		# Ensure it is a directory if it already exists
 		if os.path.exists(path) and not os.path.isdir(path):
 			self.failure('{0}: name overlap between unit and result!'.format(path))
+			sys.exit(1)
 
 		# Ensure the entire path chain exists
 		os.makedirs(path, exist_ok=True)
