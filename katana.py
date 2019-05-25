@@ -35,6 +35,7 @@ from collections import deque
 import time
 from imagegui import GUIKatana
 import hook
+import signal
 
 class Katana(object):
 
@@ -56,6 +57,7 @@ class Katana(object):
 		self.config = config
 		self.finder = finder
 		self.hook = hook(self)
+		self._completed = False
 
 		# Notify the user if the requested units are overridden by recursion
 		if self.config['auto'] and len(self.config['unit']) > 0 and not self.config['recurse']:
@@ -115,6 +117,24 @@ class Katana(object):
 				raise RuntimeError('unable to create output directory')
 
 		self.hook.status('initialization complete')
+
+	@property
+	def completed(self):
+		return self._completed
+
+	@completed.setter
+	def completed(self, v):
+		if not v:
+			return
+		self._completed = True
+
+		# CALEB: This a gross __hack__. There's no way to clear the queue in the python standard library
+		with self.work.all_tasks_done:
+			self.work.queue.clear()
+			self.work.unfinished_tasks = 0
+			self.work.all_tasks_done.notify_all()
+		with self.work.not_full:
+			self.work.not_full.notify_all()
 
 	@property
 	def original_target(self):
@@ -249,6 +269,8 @@ class Katana(object):
 			except KeyboardInterrupt:
 				self.completed = True
 				self.hook.failure("aborting early... ({} tasks not yet completed)".format(self.work.qsize()))
+			except utilities.FoundFlag:
+				log.info('wat')
 
 			status_done.set()
 			status_thread.join()
@@ -258,8 +280,17 @@ class Katana(object):
 			# Wait for threads to exit
 			try:
 				# Notify threads of completion (highest priority!)
-				for n in range(self.config['threads']):
-					self.work.put(UnitWorkWrapper(-10000,'done',(None, None)))
+				for n in range(self.config['threads']+1):
+					while True:
+						try:
+							self.work.put_nowait(UnitWorkWrapper(-10000,'done',(None, None)))
+						except queue.Full:
+							try:
+								self.work.get_nowait()
+							except queue.Empty:
+								pass
+						else:
+							break
 
 				# Ask the threads to exit
 				for t in self.threads:
@@ -411,64 +442,84 @@ class Katana(object):
 	def worker(self, thread_number):
 		""" Katana worker thread to process unit execution """
 
+		class WorkDone(Exception):
+			pass
+		class AllDone(Exception):
+			pass
+
 		while True:
-			
-			# Grab the next work item from the queue
-			work = self.work.get()
-
-			# Exit cleanly when the parent asks us to
-			if work.action == 'done':
-				self.work.task_done()
-				break
-
-			# Process the request if we are still running
-			if not self.completed:
-				if work.action == 'unit':
-					self.unit_worker(thread_number, *work.item)
-				else:
-					self.hook.warning('bad work action: {0}'.format(work.action))
-
-			# Try to grab the orphaned unit case combos
-			full = False
 			try:
-				for unit,case in iter(lambda: self.lost_queue.popleft(), None):
-					try:
-						self.work.put(UnitWorkWrapper(
-							unit.PRIORITY, 'unit', (unit, case)
-						), block=False)
-						self.total_work += 1
-					except queue.Full:
-						self.lost_queue.appendleft((unit, case))
-						full = True
-			except IndexError:
-				pass
-			
-			# We won't try if we just saw it as full (could technically be room, but
-			# not worth it IMHO)
-			if not full:
-				# Try to grab the recursed items if there is space available
+				# Grab the next work item from the queue
+				work = self.work.get()
+
+				# Exit cleanly when the parent asks us to
+				if work.action == 'done': 
+					raise AllDone
+
+				# Process the request if we are still running
+				if not self.completed:
+					if work.action == 'unit':
+						self.unit_worker(thread_number, *work.item)
+					else:
+						self.hook.warning('bad work action: {0}'.format(work.action))
+
+				if self.completed:
+					raise WorkDone
+
+				# Try to grab the orphaned unit case combos
+				full = False
 				try:
-					for unit,gen in iter(lambda: self.recurse_queue.popleft(), None):
-						if gen is None:
-							gen = unit.enumerate(self)
-						for case in gen:
-							try:
-								self.work.put(UnitWorkWrapper(
-									unit.PRIORITY, 'unit', (unit, case)
-								), block=False)
-								self.total_work += 1
-							except queue.Full:
-								self.lost_queue.append((unit, case))
-								self.recurse_queue.appendleft((unit, gen))
-								gen = None
-								break
-						if gen is None:
-							break
+					for unit,case in iter(lambda: self.lost_queue.popleft(), None):
+						if self.completed or unit.completed:
+							raise WorkDone
+						try:
+							self.work.put(UnitWorkWrapper(
+								unit.PRIORITY, 'unit', (unit, case)
+							), block=False)
+							self.total_work += 1
+						except queue.Full:
+							self.lost_queue.appendleft((unit, case))
+							full = True
 				except IndexError:
 					pass
-
-			# Notify parent we are done
-			self.work.task_done()
+				
+				# We won't try if we just saw it as full (could technically be room, but
+				# not worth it IMHO)
+				if not full:
+					# Try to grab the recursed items if there is space available
+					try:
+						for unit,gen in iter(lambda: self.recurse_queue.popleft(), None):
+							if self.completed or unit.completed:
+								raise WorkDone
+							if gen is None:
+								gen = unit.enumerate(self)
+							for case in gen:
+								if self.completed or unit.completed:
+									raise WorkDone
+								try:
+									self.work.put(UnitWorkWrapper(
+										unit.PRIORITY, 'unit', (unit, case)
+									), block=False)
+									self.total_work += 1
+								except queue.Full:
+									self.lost_queue.append((unit, case))
+									self.recurse_queue.appendleft((unit, gen))
+									gen = None
+									break
+							if gen is None:
+								break
+					except IndexError:
+						pass
+			except WorkDone:
+				# Notify parent we are done
+				try:
+					self.work.task_done()
+				except ValueError:
+					pass
+			except AllDone:
+				break
+		
+		self.hook.work_status(thread_number, 'exiting')
 
 # Make sure we find the local packages (first current directory)
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
