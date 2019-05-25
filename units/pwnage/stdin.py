@@ -5,6 +5,10 @@ import subprocess
 
 class Unit(units.pwnage.BasicBufferOverflowUnit):
 
+	# This unit runs code that could be malicious.
+	# Tell Katana not to run it unless the user actually wants to.
+	UNSAFE = True
+
 	# read /dev/kmsg to find the address that the given pid segfault'd
 	def get_segfault_address(self, pid):
 		token = '{0}[{1}]: segfault'.format(os.path.basename(self.target.path), pid)
@@ -52,6 +56,15 @@ class Unit(units.pwnage.BasicBufferOverflowUnit):
 
 		raise units.NotApplicable("no buffer overflow found")
 
+	def enumerate(self, katana):
+		for f in katana.config['pwnage_func']:
+			yield f
+
+	@classmethod
+	def add_arguments(cls, parser):
+		parser.add_argument('--pwnage-func', '-pf', action='append', 
+				default=['win', 'flag', 'get_flag', 'print_flag', 'secret']
+		)
 
 	def evaluate(self, katana, function):
 
