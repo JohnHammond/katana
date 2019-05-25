@@ -176,7 +176,7 @@ class Katana(object):
 
 			# We don't add directories to the artifact list by default...
 			# CALEB: But should we? :?
-			self.hook.on_artifact(unit, path, asdir)
+			self.hook.artifact(unit, path, asdir)
 		
 		# Return both the open file handle (if created) and the path
 		return (path, file_handle)
