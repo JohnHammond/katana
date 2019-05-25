@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-05-21 15:37:44
+# @Last Modified time: 2019-05-24 22:42:08
 from unit import BaseUnit
 from pwn import *
 import os
@@ -29,8 +29,8 @@ class DependancyError(Exception):
 
 class FileUnit(BaseUnit):
 
-	def __init__(self, katana, parent, target, keywords=[]):
-		super(FileUnit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target, keywords=[]):
+		super(FileUnit, self).__init__(katana, target)
 		
 		if not self.target.is_file:
 			raise NotApplicable("not a file")
@@ -47,24 +47,24 @@ class FileUnit(BaseUnit):
 
 class PrintableDataUnit(BaseUnit):
 	
-	def __init__(self, katana, parent, target):
-		super(PrintableDataUnit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target):
+		super(PrintableDataUnit, self).__init__(katana, target)
 
 		if not self.target.is_printable:
 			raise NotApplicable("not printable data")
 
 class NotEnglishUnit(BaseUnit):
 	
-	def __init__(self, katana, parent, target):
-		super(NotEnglishUnit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target):
+		super(NotEnglishUnit, self).__init__(katana, target)
 		
 		if self.target.is_english:
 			raise NotApplicable("potential english text")
 
 class NotEnglishAndPrintableUnit(BaseUnit):
 	
-	def __init__(self, katana, parent, target):
-		super(NotEnglishAndPrintableUnit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target):
+		super(NotEnglishAndPrintableUnit, self).__init__(katana, target)
 		
 		if self.target.is_english and not self.target.is_printable:
 			raise NotApplicable("not english and not printable")

@@ -7,9 +7,9 @@ class ElfUnit(units.FileUnit):
 	# the target!!!!
 	EXECUTE_UNSAFE = True
 
-	def __init__(self, katana, parent, target):
+	def __init__(self, katana, target):
 		""" Check that this is a valid ELF binary """
-		super(ElfUnit, self).__init__(katana, parent, target)
+		super(ElfUnit, self).__init__(katana, target)
 		
 		# Load the binary
 		try:
@@ -19,9 +19,9 @@ class ElfUnit(units.FileUnit):
 
 class BasicBufferOverflowUnit(ElfUnit):
 
-	def __init__(self, katana, parent, target):
+	def __init__(self, katana, target):
 		""" Check that at least one of "--functions" exists """
-		super(BasicBufferOverflowUnit, self).__init__(katana, parent, target)
+		super(BasicBufferOverflowUnit, self).__init__(katana, target)
 
 		self.functions = []
 		for func in katana.config['functions'].split(','):

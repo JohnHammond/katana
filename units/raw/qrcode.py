@@ -20,8 +20,8 @@ class Unit(units.FileUnit):
 
 	PRIORITY = 25
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target, keywords = 'image')
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target, keywords = 'image')
 
 		try:
 			self.image = Image.open(self.target.path)

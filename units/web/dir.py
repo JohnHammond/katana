@@ -14,10 +14,18 @@ class Unit(WebUnit):
 	HEADERS = { 'User-Agent': 'Googlebot/2.1' }
 	VALID_CODES = [200,204,301,302,307,403]
 	NO_RECURSE = True
+	ARGUMENTS = [
+		{ 'name': 		'dir_list', 
+		  'type': 		str, 
+		  'default': 	"./tests/directory-list-2.3-medium.txt", 
+		  'required': 	False,
+		  'help': 		'given word list for bruteforcing web locations'
+		},
+	]
 
-	def __init__(self, katana, parent, target):
+	def __init__(self, katana, target):
 		# Run the parent constructor, to ensure this is a valid URL
-		super(Unit, self).__init__(katana, parent, target)
+		super(Unit, self).__init__(katana, target)
 		self.method = requests.head
 
 		try:
@@ -37,7 +45,9 @@ class Unit(WebUnit):
 		# This should have failed
 		if r.status_code < 400 or r.status_code >= 500:
 			raise NotApplicable('did not respond negatively to non-existent file')
-	
+
+
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--dir-list', type=str, default='./tests/directory-list-2.3-medium.txt')

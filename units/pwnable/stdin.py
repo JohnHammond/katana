@@ -15,8 +15,8 @@ class Unit(units.pwnage.BasicBufferOverflowUnit):
 					return int(line.split(' ')[5], 16)
 		return None
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target)
 		""" Ensure this binary is exploitable with a direct buffer overflow in STDIN """
 
 		for size in range(16,2048,32):

@@ -20,8 +20,8 @@ class Unit(BaseUnit):
 
 	PRIORITY = 25
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target)
 
 		# We don't need to operate on files
 		if not self.target.is_printable or self.target.is_file or self.target.is_english:

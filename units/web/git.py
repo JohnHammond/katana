@@ -499,7 +499,37 @@ def fetch_git( unit, url, directory, jobs, retry, timeout, katana):
 class Unit(WebUnit):
 
 	PRIORITY = 40
+	ARGUMENTS = [
+		{ 'name': 		'git_proxy', 
+		  'type': 		str, 
+		  'default': 	"", 
+		  'required': 	False,
+		  'help': 		'use the specified proxy for git downloading'
+		},
 
+		{ 'name': 		'git_jobs', 
+		  'type': 		int, 
+		  'default': 	10, 
+		  'required': 	False,
+		  'help': 		'number of simultaneous requests for git downloading'
+		},
+
+		{ 'name': 		'git_retry', 
+		  'type': 		int, 
+		  'default': 	3, 
+		  'required': 	False,
+		  'help': 		'max number of request attempts for git downloading'
+		},
+
+		{ 'name': 		'git_timeout', 
+		  'type': 		int, 
+		  'default': 	3, 
+		  'required': 	False,
+		  'help': 		'max download time in seconds for git downloading'
+		},
+	]
+
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
 
@@ -517,10 +547,10 @@ class Unit(WebUnit):
 								help='maximum time in seconds before giving up')
 
 
-	def __init__(self, katana, parent, target):
+	def __init__(self, katana, target):
 
 		# Run the parent constructor, to ensure this is a valid URL
-		super(Unit, self).__init__(katana, parent, target)
+		super(Unit, self).__init__(katana, target)
 
 		# jobs
 		if katana.config['git_jobs'] < 1:
@@ -636,4 +666,7 @@ class Unit(WebUnit):
 				
 				line_number += 1
 
-			commit_data = subprocess.run(f"git checkout {first_commit}".split(), cwd = git_directory, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+			commit_data = subprocess.run(f"git checkout {first_commit}".split(), 
+										 cwd = git_directory, 
+										 stdout = subprocess.PIPE, 
+										 stderr = subprocess.PIPE)

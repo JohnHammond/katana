@@ -21,15 +21,24 @@ PROTECTED_RECURSE = True
 class Unit(units.BaseUnit):
 
 	PRIORITY = 70
+	ARGUMENTS = [
+		{ 'name': 		'xor_key', 
+		  'type': 		str,
+		  'default': 	None, 
+		  'required': 	False,
+		  'help': 		'key to use for XOR operations'
+		},
+	]
 
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--xor-key', type=str,
 			help="key to use for XOR operations",
 			default=None)
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, , target):
+		super(Unit, self).__init__(katana, target)
 
 		# JOHN: We actually DON'T want printable characters in this case!
 		try:

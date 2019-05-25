@@ -42,8 +42,8 @@ class Unit(units.FileUnit):
 	PROTECTED_RECURSE = True
 	PRIORITY = 25
 	
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target)
 
 		if not 'image' in self.target.magic:
 			raise NotApplicable("not an image")

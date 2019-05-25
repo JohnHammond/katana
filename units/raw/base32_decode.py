@@ -23,8 +23,8 @@ class Unit(BaseUnit):
 
 	PRIORITY = 60
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target)
 
 		if not self.target.is_printable:
 			raise NotApplicable("not printable data")

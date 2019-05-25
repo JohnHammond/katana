@@ -14,13 +14,22 @@ class Unit(units.NotEnglishUnit):
 
 	PROTECTED_RECURSE = True
 	PRIORITY = 60
+	ARGUMENTS = [
+		{ 'name': 		'caesar_shift', 
+		  'type': 		int, 
+		  'default': 	-1, 
+		  'required': 	False,
+		  'help': 		'number to shift by for caesar cipher'
+		},
+	]
 
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--caesar-shift', default=-1, type=int, help='number to shift by for caesar cipher')
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target)
 
 		if target.is_url:
 			raise NotApplicable('target is a URL')

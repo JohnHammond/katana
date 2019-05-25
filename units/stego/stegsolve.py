@@ -45,7 +45,30 @@ def get_plane(img, data, channel, index = 0):
 class Unit(units.FileUnit):
 
 	PRIORITY = 70
+	ARGUMENTS = [
+		{ 'name': 		'stegsolve_channel', 
+		  'type': 		str, 
+		  'default': 	"", 
+		  'required': 	False,
+		  'help': 		'a channel to scrape out in stegsolve, R, G, B, or A'
+		},
 
+		{ 'name': 		'stegsolve_max', 
+		  'type': 		int, 
+		  'default': 	8, 
+		  'required': 	False,
+		  'help': 		'maximum number of bits to bruteforce (without specifying --stegsolve-plane), default 1'
+		},
+
+		{ 'name': 		'stegsolve_plane', 
+		  'type': 		int, 
+		  'default': 	None, 
+		  'required': 	False,
+		  'help': 		'a bit number to scrape out in stegsolve, in range 0 to 7'
+		},
+	]
+
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
 
@@ -56,12 +79,12 @@ class Unit(units.FileUnit):
 			help="maximum number of bits to bruteforce (without specifying --stegsolve-plane), default 1", action="append",
 			default=8)
 		parser.add_argument('--stegsolve-plane', type=int,
-			help="a bit number to scrape out in stegsolve, in range 0 to 7.", action="append",
+			help="a bit number to scrape out in stegsolve, in range 0 to 7", action="append",
 			default=None)
 
-	def __init__(self, katana, parent, target):
+	def __init__(self, katana, target):
 		# Call the parent constructor to ensure that this an image file!
-		super(Unit, self).__init__(katana, parent, target, keywords=[' image '])
+		super(Unit, self).__init__(katana, target, keywords=[' image '])
 
 		try:
 			self.img = Image.open(self.target.path)

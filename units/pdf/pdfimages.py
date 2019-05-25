@@ -20,9 +20,9 @@ class Unit(units.FileUnit):
 	# JOHN: This MUST be in the class... 
 	PROTECTED_RECURSE = True
 
-	def __init__(self, katana, parent, target):
+	def __init__(self, katana, target):
 		# This ensures it is a PDF
-		super(Unit, self).__init__(katana, parent, target, keywords=['pdf document'])
+		super(Unit, self).__init__(katana, target, keywords=['pdf document'])
 
 	def evaluate(self, katana, case):
 

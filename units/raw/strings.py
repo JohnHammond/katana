@@ -22,8 +22,8 @@ class Unit(BaseUnit):
 		parser.add_argument('--strings-length', '-sl', type=int,
 				help="minimum length of strings to return", default=4)
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target)
 
 		if not self.target.is_file:
 			raise NotApplicable("not a file")

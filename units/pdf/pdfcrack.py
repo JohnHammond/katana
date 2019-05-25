@@ -18,9 +18,9 @@ class Unit(units.FileUnit):
 
 	PRIORITY = 70
 
-	def __init__(self, katana, parent, target):
+	def __init__(self, katana, target):
 		# This ensures it is a PDF
-		super(Unit, self).__init__(katana, parent, target, keywords=['pdf document'])
+		super(Unit, self).__init__(katana, target, keywords=['pdf document'])
 
 		try:
 			with open(self.target.path, 'rb') as f:

@@ -36,6 +36,44 @@ class Unit(units.NotEnglishUnit):
 	PROTECTED_RECURSE = True
 	PRIORITY = 60
 
+	ARGUMENTS = [
+		{ 'name': 		'rsa_e', 
+		  'type': 		str, 
+		  'default': 	"", 
+		  'required': 	False,
+		  'help': 		'exponent value for RSA cryptography'
+		},
+
+		{ 'name': 		'rsa_n', 
+		  'type': 		str, 
+		  'default': 	"", 
+		  'required': 	False,
+		  'help': 		'modulus value for RSA cryptography'
+		},
+
+		{ 'name': 		'rsa_q', 
+		  'type': 		str, 
+		  'default': 	"", 
+		  'required': 	False,
+		  'help': 		'q factor for RSA cryptography'
+		},
+
+		{ 'name': 		'rsa_p', 
+		  'type': 		str, 
+		  'default': 	"", 
+		  'required': 	False,
+		  'help': 		'p factor for RSA cryptography'
+		},
+
+		{ 'name': 		'rsa_d', 
+		  'type': 		str, 
+		  'default': 	"", 
+		  'required': 	False,
+		  'help': 		'd value for RSA cryptography'
+		},
+	]
+
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--rsa-e', default="", type=str, help='exponent value for RSA cryptography')
@@ -44,8 +82,8 @@ class Unit(units.NotEnglishUnit):
 		parser.add_argument('--rsa-p', default="", type=str, help='p factor for RSA cryptography')
 		parser.add_argument('--rsa-d', default="", type=str, help='d value for RSA cryptography')
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target)
 
 		if target.is_url:
 			raise NotApplicable('target is a URL')

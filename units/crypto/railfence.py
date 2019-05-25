@@ -51,16 +51,31 @@ class Unit(units.NotEnglishUnit):
 
 	PROTECTED_RECURSE = True
 	PRIORITY = 70
+	ARGUMENTS = [
+		{ 'name': 		'railfence_rails', 
+		  'type': 		int, 
+		  'default': 	0, 
+		  'required': 	False,
+		  'help': 		'number of rails to use for railfence cipher'
+		},
 
-	def __init__(self, katana, parent, target, keywords=[]):
-		super(Unit, self).__init__(katana, parent, target)
+		{ 'name': 		'railfence_offset', 
+		  'type': 		int, 
+		  'default': 	0, 
+		  'required': 	False,
+		  'help': 		'initial offset for railfence cipher'
+		},
+	]
+
+	def __init__(self, katana, target, keywords=[]):
+		super(Unit, self).__init__(katana, target)
 
 		try:
 			self.raw_target = self.target.stream.read().decode('utf-8')
 		except UnicodeDecodeError:
 			raise NotApplicable("unicode error, unlikely usable cryptogram")
 
-
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--railfence-rails', type=int,

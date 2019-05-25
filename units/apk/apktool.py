@@ -26,9 +26,9 @@ class Unit(units.FileUnit):
 
 	def evaluate(self, katana, case):
 
-		def __init__(self, katana, parent, target):
+		def __init__(self, katana, target):
 			# This ensures it is a PDF
-			super(Unit, self).__init__(katana, parent, target, keywords=['zip archive', 'java archive'])
+			super(Unit, self).__init__(katana, target, keywords=['zip archive', 'java archive'])
 
 		# Find/create the output artifact directory
 		apktool_directory = katana.get_artifact_path(self)

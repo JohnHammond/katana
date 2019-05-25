@@ -17,8 +17,8 @@ class Unit(web.WebUnit):
 
 	PRIORITY = 60
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target)
 
 		# Check if there is even file upload functionality present
 		# self.raw_content = self.target.content.decode('utf-8')

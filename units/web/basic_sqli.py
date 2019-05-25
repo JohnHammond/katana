@@ -17,10 +17,10 @@ class Unit(web.WebUnit):
 
 	PRIORITY = 25
 
-	def __init__(self, katana, parent, target):
+	def __init__(self, katana, target):
 
 		# Run the parent constructor, to ensure this is a valid URL
-		super(Unit, self).__init__(katana, parent, target)
+		super(Unit, self).__init__(katana, target)
 		if not katana.config['flag_format']:
 			raise units.NotApplicable('no flag format supplied')
 

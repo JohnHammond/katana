@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-04-23 20:23:40
+# @Last Modified time: 2019-05-24 22:43:31
 
 from pwn import *
 from unit import BaseUnit
@@ -11,6 +11,6 @@ import os
 
 class PcapUnit(units.FileUnit):
 	
-	def __init__(self, katana, parent, target):
+	def __init__(self, katana, target):
 		# This ensures that it is a file
-		super(PcapUnit, self).__init__(katana, parent, target, keywords = 'pcap')
+		super(PcapUnit, self).__init__(katana, target, keywords = 'pcap')

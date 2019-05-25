@@ -38,13 +38,23 @@ class Unit(units.PrintableDataUnit):
 	PROTECTED_RECURSE = True
 	PRIORITY = 40
 
-	def __init__( self, katana, parent, target ):
-		super(Unit, self).__init__(katana, parent, target)
+	ARGUMENTS = [
+		{ 'name': 		'polybius_alphabet', 
+		  'type': 		str, 
+		  'default': 	"ABCDEFGHIKLMNOPQRSTUVWXYZ", 
+		  'required': 	False,
+		  'help': 		'key to use for the polybius square cipher'
+		},
+	]
+
+	def __init__( self, katana, target ):
+		super(Unit, self).__init__(katana, target)
 
 		no_spaces = target.stream.read().decode('utf-8').replace(' ','')
 		if not no_spaces.isdecimal():
 			raise NotApplicable("not just decimal numbers")
 
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--polybius-alphabet', type=str,

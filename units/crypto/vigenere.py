@@ -35,7 +35,16 @@ class Unit(NotEnglishUnit):
 
 	PROTECTED_RECURSE = True
 	PRIORITY = 65
+	ARGUMENTS = [
+		{ 'name': 		'vigenere_key', 
+		  'type': 		str, 
+		  'default': 	None, 
+		  'required': 	False,
+		  'help': 		'a key for vignere cipher'
+		},
+	]
 
+	# JOHN: This SHOULD be removed following the unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--vigenere-key', type=str,
@@ -44,8 +53,8 @@ class Unit(NotEnglishUnit):
 		)
 		return	
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target)
 		if katana.config['vigenere_key'] == [""]:
 			raise NotApplicable("empty vignere key passed")
 

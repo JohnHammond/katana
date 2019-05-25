@@ -21,8 +21,8 @@ class Unit(BaseUnit):
 
 	PRIORITY = 25
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target)
 
 		self.matches = BINARY_REGEX.findall(self.target.raw)
 

@@ -38,16 +38,41 @@ def decrypt( ciphertext, a = 1, b = 1, alphabet = alphabet):
 class Unit(units.NotEnglishUnit):
 
 	PRIORITY = 65
+	PROTECTED_RECURSE = True
+	
+	ARGUMENTS = [
+		{ 'name': 		'affine_a', 
+		  'type': 		int, 
+		  'default': 	-1, 
+		  'required': 	False,
+		  'help': 		'coefficient a for affine cipher'
+		},
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target)
+		{ 'name': 		'affine_b', 
+		  'type': 		int, 
+		  'default': 	-1, 
+		  'required': 	False,
+		  'help': 		'coefficient b for affine cipher'
+		},
+
+		{ 'name': 		'affine_alphabet', 
+		  'type': 		int, 
+		  'default': 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ", 
+		  'required': 	False,
+		  'help': 		'alphabet for affine cipher'
+		},
+	]
+
+
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target)
 
 		# We won't have non-printable characters in an affine cipher...
 		if not self.target.is_printable:
 			raise NotApplicable("not printable characters")
 	
-	PROTECTED_RECURSE = True
 
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--affine-a', default=-1, type=int, help='coefficient a for affine cipher')

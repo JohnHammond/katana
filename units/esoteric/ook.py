@@ -61,8 +61,8 @@ class Unit(NotEnglishUnit):
 		},
 	]
 
-	def __init__(self, katana, parent, target, keywords=[]):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target, keywords=[]):
+		super(Unit, self).__init__(katana, target)
 
 		try:
 			self.raw_target=self.target.stream.read().decode('utf-8').lower()

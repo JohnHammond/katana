@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-05-08 23:39:40
+# @Last Modified time: 2019-05-24 22:45:34
 
 from pwn import *
 from unit import BaseUnit
@@ -37,9 +37,9 @@ potential_flag_names = [b'flag', b'flag.txt']
 
 class WebUnit(BaseUnit):
 	
-	def __init__(self, katana, parent, target):
+	def __init__(self, katana, target):
 
-		super(WebUnit, self).__init__(katana, parent, target)
+		super(WebUnit, self).__init__(katana, target)
 		
 		if not self.target.is_url:
 			raise NotApplicable("not a web url")

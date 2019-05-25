@@ -361,8 +361,8 @@ class Unit(PrintableDataUnit):
 		},
 	]
 
-	def __init__(self, katana, parent, target, keywords=[]):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target, keywords=[]):
+		super(Unit, self).__init__(katana, target)
 
 		self.raw_target = self.target.stream.read().decode('utf-8')
 		if ( self.raw_target.count('pi') < 10 ):

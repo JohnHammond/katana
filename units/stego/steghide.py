@@ -19,8 +19,8 @@ class Unit(units.FileUnit):
 
 	PRIORITY = 20
 
-	def __init__(self, katana, parent, target):
-		super(Unit, self).__init__(katana, parent, target, keywords=['jpg ', 'jpeg '])
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target, keywords=['jpg ', 'jpeg '])
 
 	def enumerate(self, katana):
 		# The default is to check an empty password

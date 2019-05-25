@@ -12,10 +12,10 @@ class Unit(WebUnit):
 
 	PRIORITY = 30
 
-	def __init__(self, katana, parent, target):
+	def __init__(self, katana, target):
 
 		# Run the parent constructor, to ensure this is a valid URL
-		super(Unit, self).__init__(katana, parent, target)
+		super(Unit, self).__init__(katana, target)
 
 		# Try to get the robots.txt file
 		try:

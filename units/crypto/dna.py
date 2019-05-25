@@ -16,8 +16,8 @@ class Unit(units.PrintableDataUnit):
 
 	PRIORITY = 50
 
-	def __init__(self, katana, parent, target, keywords=[]):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__(self, katana, target, keywords=[]):
+		super(Unit, self).__init__(katana, target)
 
 		self.raw_target = self.target.stream.read().decode('utf-8').upper()
 		if not all(c in "ACGTU" for c in self.raw_target) or \

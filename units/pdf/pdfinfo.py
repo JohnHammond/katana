@@ -13,18 +13,34 @@ DEPENDENCIES = [ 'pdfinfo' ]
 class Unit(units.FileUnit):
 
 	PRIORITY = 60
+	ARGUMENTS = [
+		{ 'name': 		'pdf_user_password', 
+		  'type': 		str, 
+		  'default': 	"", 
+		  'required': 	False,
+		  'help': 		'user password for the given PDF'
+		},
 
-	def __init__(self, katana, parent, target):
+		{ 'name': 		'pdf_owner_password', 
+		  'type': 		str, 
+		  'default': 	"", 
+		  'required': 	False,
+		  'help': 		'owner password for the given PDF'
+		},
+	]
+
+	def __init__(self, katana, target):
 		# This ensures it is a PDF
-		super(Unit, self).__init__(katana, parent, target, keywords=['pdf document'])
+		super(Unit, self).__init__(katana, target, keywords=['pdf document'])
 
+	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod
 	def add_arguments(cls, katana, parser):
 		parser.add_argument('--pdf-user-password', '-up', default="", type=str, help='user password for the given PDF')
-		parser.add_argument('--pdf-owner-password', '-op', default="", type=str, help='owner password for the given PDF')	
+		parser.add_argument('--pdf-owner-password', '-op', default="", type=str, help='owner password for the given PDF')
 
-	def __init__( self, katana, parent, target ):
-		super(Unit, self).__init__(katana, parent, target)
+	def __init__( self, katana, target ):
+		super(Unit, self).__init__(katana, target)
 
 	def evaluate(self, katana, case):
 

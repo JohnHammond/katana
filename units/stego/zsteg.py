@@ -18,9 +18,9 @@ class Unit(units.FileUnit):
 
 	PRIORITY = 40
 
-	def __init__(self, katana, parent, target):
+	def __init__(self, katana, target):
 		# This ensures it is a PNG
-		super(Unit, self).__init__(katana, parent, target, keywords=['png image'])
+		super(Unit, self).__init__(katana, target, keywords=['png image'])
 
 	def evaluate(self, katana, case):
 		for args in permutations:
