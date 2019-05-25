@@ -191,6 +191,12 @@ __Malbolge__
 rm -r results/ ; ./katana.py --unit esoteric ./tests/malbolge.txt -ff "Hello World"
 ```
 
+__DNA__
+
+```
+rm -r results/ ; ./katana.py -a "gtcactagacagttgagacagttgaaattgcatacacagcat" -ff 'This is a test'
+```
+
 PicoCTF Cookbook
 ================
 
@@ -243,6 +249,9 @@ rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/1a6db33
 ```
 
 __caesar cipher 1__
+
+This does not solve as it should, because the file in fact already
+has the picoCTF{} flag format inside. We cannot avoid this.
 
 ```
 rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/9c305b1460312c3bcfc6dd5741990c26/ciphertext" -ff 'picoCTF{.*?}'

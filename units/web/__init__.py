@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-05-25 10:54:56
+# @Last Modified time: 2019-05-25 11:05:24
 
 from pwn import *
 from unit import BaseUnit
@@ -13,7 +13,7 @@ from units import NotApplicable
 # JOHN: This may be used across mutliple units, so I place them here
 #       to prevent duplicate code
 potential_username_variables = [
-			b'username', b'user', b'uname', b'un', b'name', b'user1', b'input1', b'uw1', b'username1', b'uname1', b'tbUsername', b'usern', b'id'
+	b'username', b'user', b'uname', b'un', b'name', b'user1', b'input1', b'uw1', b'username1', b'uname1', b'tbUsername', b'usern', b'id'
 ]
 potential_password_variables = [
 	b'password', b'pass', b'pword', b'pw', b'pass1', b'input2', b'password1', b'pw1', b'pword1', b'tbPassword'

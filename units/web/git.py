@@ -307,7 +307,6 @@ def fetch_git( unit, url, directory, jobs, retry, timeout, katana):
 	assert jobs >= 1, 'invalid number of jobs'
 	assert retry >= 1, 'invalid number of retries'
 	assert timeout >= 1, 'invalid timeout'
-
 	# find base url
 	url = url.rstrip('/')
 	if url.endswith('HEAD'):
@@ -653,7 +652,7 @@ class Unit(WebUnit):
 
 					for filename in files:
 						file_path = os.path.join(directory, filename)
-
+						# print(file_path)
 
 						# Hash the file to make sure if we have not seen it before
 						path_hash = md5(open(file_path, 'rb').read()).hexdigest()
