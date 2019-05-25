@@ -37,7 +37,7 @@ from imagegui import GUIKatana
 
 class Katana(object):
 
-	def __init__(self):
+	def __init__(self, config, finder):
 		self.results = {}
 		self.config = {}
 		self.parsers = []
@@ -60,158 +60,15 @@ class Katana(object):
 		self.image_queue = deque()
 		self.flag_queue = deque()
 		self.gui = None
-
-		# Initial parser is for unit directory. We need to process this argument first,
-		# so that the specified unit may be loaded
-		parser = ArgumentParserWithHelp(
-			description='Low-hanging fruit checker for CTF problems',
-			add_help=True,
-			allow_abbrev=True)
-		parser.add_argument('--unitdir', type=utilities.DirectoryArgument,
-			default='./units', help='the directory where available units are stored')
-		parser.add_argument('--unit', action='append',
-			required=False, default = [], help='the units to run on the targets')
-		parser.add_argument('--unit-help', action='store_true',
-			default=False, help='display help on unit selection')
-		# The number of threads to use
-		parser.add_argument('--threads', '-t', type=int, default=len(os.sched_getaffinity(0)),
-			help='number of threads to use')
-		# The list of targets to scan
-		parser.add_argument('target', type=str,
-			help='the target file/url/IP/etc') 
-		# The output directory for this scan
-		parser.add_argument('--outdir', '-o', default='./results',
-			help='directory to house results')
-		# A Regular Expression patter for units to match
-		parser.add_argument('--flag-format', '-ff', default=None,
-			help='regex pattern for output (e.g. "FLAG{.*}")')
-		parser.add_argument('--auto', '-a', default=False,
-			action='store_true', help='automatically search for matching units in unitdir')
-		parser.add_argument('--recurse', '-r', type=int, default=5,
-				help='the maximum depth which the units may recurse')
-		parser.add_argument('--exclude', action='append',
-			required=False, default = [], help='units to exclude in a recursive case')
-		parser.add_argument('--verbose', '-v', action='store_true',
-			default=False, help='show the running threads')
-		parser.add_argument('--dict', type=argparse.FileType('rb'),
-				required=False, default=None, help='dictionary for brute forcing tasks')
-		parser.add_argument('--data-length', '-l', default=10, type=int,
-			help="minimum number of characters for units results to be displayed")
-		parser.add_argument('--show', '-s', default=False, action="store_true",
-			help="print the results on stdout as well as save to file")
-		parser.add_argument('--download', '-d', action="store_true", default=False,
-				help='consider the argument to be a download link and pull it down')
-		parser.add_argument('--no-download', '-nd', action="store_true", default=False,
-				help='do not download URLs, just treat them as locations')
-		parser.add_argument('--template', default='default',
-				help='Jinja2 template for html results output')
-		parser.add_argument('--functions', default='win,get_flag,print_flag,show_flag,flag',
-				help='comma separated list of function name that may print a flag')
-		parser.add_argument('--timeout', default=0.1, type=float, 
-				help='suggested timeout for long running unit tests')
-		parser.add_argument('--exec', '-e', default=False,
-				action='store_true', help='run units which may execute arbitrary code')
-		parser.add_argument('--input', default='%s',
-				help='a format string used to create payloads for pwn challenges')
-		parser.add_argument('--display-images', '-i', action="store_true", default=False,
-				help='display images as katana finds them')
-		parser.add_argument('--continue', '-c', action="store_true", default=False,
-				help='continue after finding a flag')
-		parser.add_argument('--password', '-p', action='append', default=[],
-				help='specify a possible password for units that may need it')
-		parser.add_argument('--no-priority', '-np', action="store_true", default=False,
-				help='do not use the priority queue')
-		args, remaining = parser.parse_known_args()
-
-		if args.verbose:
-			context.log_level = logging.DEBUG
-
-		# Add current arguments to the config
-		self.config.update(vars(args))
+		self.config = config
+		self.finder = finder
 
 		# Create the progress line for katana
 		self.progress = log.progress('katana')
 
-		# Add the units directory the system path
-		sys.path.insert(0, self.config['unitdir'])
-
-		# CALEB: This is a hacky way to keep track of unit findings...
-		units_found = [False]*len(self.config['unit'])
-
-		# Load all units under the unit directory
-		for importer, name, ispkg in pkgutil.walk_packages([self.config['unitdir']], ''):
-
-			# Exclude packages/units that were excluded from loading
-			try:
-				for exclude in self.config['exclude']:
-					if name == exclude or name.startswith(exclude.rstrip('.') + '.'):
-						raise Exception
-			except:
-				continue
-
-			self.progress.status('loading unit {0}'.format(name))
-		
-			# Attempt to load the module
-			try:
-				module = importlib.import_module(name)
-			except:
-				self.progress.failure('{0}: failed to load module'.format(name))
-				traceback.print_exc()
-				exit()
-
-			# Check if this module requires dependencies
-			try:
-				dependencies = module.DEPENDENCIES
-				assert isinstance(dependencies, list), "Dependencies must be given as a list!" 
-			except AttributeError:
-				dependencies = []
-
-			# Ensure the dependencies exist
-			try:
-				for dependency in dependencies:
-					subprocess.check_output(['which',dependency])
-			except (FileNotFoundError, subprocess.CalledProcessError):
-				log.failure('{0}: dependancy not satisfied: {1}'.format(
-					name, dependency
-				))
-				continue
-			else:
-				# Dependencies are good, ensure the unit class exists
-				try:
-					unit_class = module.Unit
-				except AttributeError:
-					continue
-
-			# Add any arguments we need
-			unit_class.add_arguments(self, parser)
-
-			# Check if this was a requested unit
-			for i in range(len(self.config['unit'])):
-				if isinstance(self.config['unit'][i],str) and \
-					( name == self.config['unit'][i] or  name.startswith(self.config['unit'][i].rstrip('.') + '.') ):
-					units_found[i] = True
-					self.requested_units.append(unit_class)
-	
-			# Keep total list for blind recursion
-			self.all_units.append(unit_class)
-
-		# Notify user of failed unit loads
-		for i in range(len(self.config['unit'])):
-			if not units_found[i]:
-				log.failure('{0}: unit not found'.format(self.config['unit'][i]))
-
-		# Ensure we have something to do
-		if len(self.config['unit']) != sum(units_found) and not self.config['auto']:
-			self.progress.failure('no units loaded. aborting.')
-			exit()
-
 		# Notify the user if the requested units are overridden by recursion
-		if self.config['auto'] and len(self.requested_units) > 0 and not self.config['recurse']:
+		if self.config['auto'] and len(self.config['unit']) > 0 and not self.config['recurse']:
 			log.warning('ignoring --unit options in favor of --auto')
-
-		# Final argument parsing. This includes all unit arguments
-		args = parser.parse_args()
-		self.config.update(vars(args))
 
 		# Download the target, if that is specified
 		if self.config['download']:
@@ -572,12 +429,17 @@ class Katana(object):
 		else:
 
 			# Find units which match this target
-			self.units = self.locate_units(self.config['target'])
+			units, ignored = self.finder.find(self, self.config['target'], requested=self.config['unit'])
 
-			def show_status(signal_number, frame):
-				log.info("working \u001b[33;01m{0}\u001b[0m->\u001b[34;01m{1}\u001b[0m".format(*self.threads[0].getName().split('->')))
-
-			# signal.signal(signal.SIGTSTP, show_status)
+			# Notify user of requested units that weren't applicable/found
+			if len(self.config['unit']) > 0:
+				for cls,exc in ignored:
+					log.warning('{0}: not applicable: {1}'.format(cls.name, exc.args))
+			
+			# Did we match any units
+			if len(units) == 0:
+				self.progress.failure('no applicable units found')
+				return
 
 			if not self.config['flag_format']:
 				log.warn("no flag format was specified, advise looking at saved results")
@@ -761,55 +623,11 @@ class Katana(object):
 			target = Target(self, data, parent=parent)
 
 			# Locate matching units
-			units = self.locate_units(target, parent=parent, recurse=True)
+			units, _ = self.finder.find(self, target)
 
 			# Add them to the recurse queue
 			for u in units:
-				self.recurse_queue.append((u, None))
-	
-	def locate_units(self, target, parent=None, recurse=False):
-
-		# We are building a list of units for this target
-		units_so_far = []
-		
-		if target.hash.hexdigest() in self.target_hashes:
-			return units_so_far
-		else:
-			self.target_hashes.append(target.hash.hexdigest())
-
-		if not self.config['auto'] and not recurse:
-			just_added = False
-			for unit_class in self.requested_units:
-				try:
-					# Run this if we HAVE NOT seen it before...
-					unit = unit_class(self, parent, target)
-					units_so_far.append(unit)
-				except units.NotApplicable as error:
-					log.failure('{0}: target not applicable {1}'.format(
-						unit_class.__module__,
-						'({0})'.format(error.args[0]) if error.args else ''
-					))
-		else:
-			for unit_class in self.all_units:
-				try:
-					# Climb the family tree to see if THE MOST RECENT ancester 
-					# is not allowed to recurse.. don't bother with this unit
-					if unit_class.PROTECTED_RECURSE and parent is not None:
-						if parent.PROTECTED_RECURSE:
-							raise units.NotApplicable()
-
-					# Run this if we HAVE NOT seen it before...
-					unit = unit_class(self, parent, target)
-					units_so_far.append(unit)
-				except units.NotApplicable:
-					pass
-
-		# Prioritize resultant units, if requested
-		if self.config['no_priority']:
-			return units_so_far
-		else:
-			# Internal Unit comparisons account for prioritization
-			return sorted(units_so_far)
+				self.recurse_queue.append((u, None))	
 
 	def progress_worker(self, done_event):
 		""" This is the thread that monitors status, and prints a nice message """
@@ -911,8 +729,84 @@ sys.path.insert(0, os.getcwd())
 
 if __name__ == '__main__':
 
+	# Initial parser is for unit directory. We need to process this argument first,
+	# so that the specified unit may be loaded
+	parser = ArgumentParserWithHelp(
+		description='Low-hanging fruit checker for CTF problems',
+		add_help=True,
+		allow_abbrev=True)
+	parser.add_argument('--unitdir', type=utilities.DirectoryArgument,
+		default='./units', help='the directory where available units are stored')
+	parser.add_argument('--unit', action='append',
+		required=False, default = [], help='the units to run on the targets')
+	parser.add_argument('--unit-help', action='store_true',
+		default=False, help='display help on unit selection')
+	# The number of threads to use
+	parser.add_argument('--threads', '-t', type=int, default=len(os.sched_getaffinity(0)),
+		help='number of threads to use')
+	# The list of targets to scan
+	parser.add_argument('target', type=str,
+		help='the target file/url/IP/etc') 
+	# The output directory for this scan
+	parser.add_argument('--outdir', '-o', default='./results',
+		help='directory to house results')
+	# A Regular Expression patter for units to match
+	parser.add_argument('--flag-format', '-ff', default=None,
+		help='regex pattern for output (e.g. "FLAG{.*}")')
+	parser.add_argument('--auto', '-a', default=False,
+		action='store_true', help='automatically search for matching units in unitdir')
+	parser.add_argument('--recurse', '-r', type=int, default=5,
+			help='the maximum depth which the units may recurse')
+	parser.add_argument('--exclude', action='append',
+		required=False, default = [], help='units to exclude in a recursive case')
+	parser.add_argument('--verbose', '-v', action='store_true',
+		default=False, help='show the running threads')
+	parser.add_argument('--dict', type=argparse.FileType('rb'),
+			required=False, default=None, help='dictionary for brute forcing tasks')
+	parser.add_argument('--data-length', '-l', default=10, type=int,
+		help="minimum number of characters for units results to be displayed")
+	parser.add_argument('--show', '-s', default=False, action="store_true",
+		help="print the results on stdout as well as save to file")
+	parser.add_argument('--download', '-d', action="store_true", default=False,
+			help='consider the argument to be a download link and pull it down')
+	parser.add_argument('--no-download', '-nd', action="store_true", default=False,
+			help='do not download URLs, just treat them as locations')
+	parser.add_argument('--template', default='default',
+			help='Jinja2 template for html results output')
+	parser.add_argument('--functions', default='win,get_flag,print_flag,show_flag,flag',
+			help='comma separated list of function name that may print a flag')
+	parser.add_argument('--timeout', default=0.1, type=float, 
+			help='suggested timeout for long running unit tests')
+	parser.add_argument('--exec', '-e', default=False,
+			action='store_true', help='run units which may execute arbitrary code')
+	parser.add_argument('--input', default='%s',
+			help='a format string used to create payloads for pwn challenges')
+	parser.add_argument('--display-images', '-i', action="store_true", default=False,
+			help='display images as katana finds them')
+	parser.add_argument('--continue', '-c', action="store_true", default=False,
+			help='continue after finding a flag')
+	parser.add_argument('--password', '-p', action='append', default=[],
+			help='specify a possible password for units that may need it')
+	parser.add_argument('--no-priority', '-np', action="store_true", default=False,
+			help='do not use the priority queue')
+
+	# Parse the above arguments
+	args, remaining = parser.parse_known_args()
+
+	# Initialize our unit finder
+	finder = units.UnitFinder(args.unitdir, args.exclude)
+
+	# Add all unit arguments to our parser
+	finder.construct_parser(parser)
+
+	# Parse remaining arguments
+	args = parser.parse_args()
+
+	# Convert args namespace to a dictionary
+	config = vars(args)
+
 	# Create the Katana
-	katana = Katana()
+	katana = Katana(config, finder)
 
 	if katana.config['display_images']:
 		# Create a Tkinter window to show images

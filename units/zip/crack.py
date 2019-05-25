@@ -8,16 +8,17 @@ DEPENDENCIES = [ 'unzip' ]
 class Unit(units.FileUnit):
 
 	PRIORITY = 40
+	ARGUMENTS = [
+		{ 'name': 'zip_password',
+		  'type': list,
+		  'help': 'A password to try on the file', 
+		  'default': []
+		}
+	]
 
-	@classmethod
-	def add_arguments(cls, katana, parser):
-		parser.add_argument('--zip-password', type=str,
-					help='A password to try on the file', action='append',
-					default=[])
-
-	def __init__(self, katana, parent, target):
+	def __init__(self, katana target):
 		# This ensures it is a ZIP
-		super(Unit, self).__init__(katana, parent, target, keywords=['zip archive'])
+		super(Unit, self).__init__(katana, target, keywords=['zip archive'])
 
 	def enumerate(self, katana):
 		yield ''

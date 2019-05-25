@@ -13,9 +13,14 @@ class ElfUnit(units.FileUnit):
 		
 		# Load the binary
 		try:
-			self.elf = ELF(self.target.path)
+			self.elf = ELF(self.target.path, checksec=False)
 		except:
 			raise units.NotApplicable("not an elf binary")
+	
+	def p
+	
+	def rop_chain(self, *args):
+		return
 
 class BasicBufferOverflowUnit(ElfUnit):
 
