@@ -181,6 +181,9 @@ class Katana(object):
 		# Return both the open file handle (if created) and the path
 		return (path, file_handle)
 
+	def add_artifact(self, unit, path):
+		self.hook.artifact(unit, path, False)
+
 	# Add some results to the result object
 	def add_results(self, unit, d):
 		self.hook.result(unit, d)
