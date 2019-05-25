@@ -197,6 +197,12 @@ __DNA__
 rm -r results/ ; ./katana.py -a "gtcactagacagttgagacagttgaaattgcatacacagcat" -ff 'This is a test'
 ```
 
+__T9 Cipher__
+
+```
+rm -r results/ ; ./katana.py -a "8 44 444 7777 0 444 7777 0 2 0 8 33 7777 8 0 333 555 2 4 0" -ff 'this is a test flag'
+```
+
 PicoCTF Cookbook
 ================
 
