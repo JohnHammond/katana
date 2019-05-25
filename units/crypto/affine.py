@@ -56,7 +56,7 @@ class Unit(units.NotEnglishUnit):
 		},
 
 		{ 'name': 		'affine_alphabet', 
-		  'type': 		int, 
+		  'type': 		str, 
 		  'default': 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ", 
 		  'required': 	False,
 		  'help': 		'alphabet for affine cipher'

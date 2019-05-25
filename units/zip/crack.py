@@ -16,7 +16,7 @@ class Unit(units.FileUnit):
 		}
 	]
 
-	def __init__(self, katana target):
+	def __init__(self, katana, target):
 		# This ensures it is a ZIP
 		super(Unit, self).__init__(katana, target, keywords=['zip archive'])
 

@@ -13,6 +13,8 @@ import re
 import utilities
 from dataclasses import dataclass, field
 from typing import Any
+import pkgutil
+import importlib
 
 @dataclass(order=True)
 class UnitWorkWrapper(object):
@@ -86,7 +88,7 @@ class UnitFinder(object):
 		""" Load all units in the unit path, and ensure they are valid """
 
 		# Add the units directory the system path
-		sys.path.insert(0, self.config['unitdir'])
+		sys.path.insert(0, unit_path)
 
 		for importer, name, ispkg in pkgutil.walk_packages([unit_path], ''):
 			
@@ -182,7 +184,7 @@ class UnitFinder(object):
 			pass
 
 		# These are synonymous 
-		if requested = []:
+		if requested == []:
 			requested = None
 
 		# Iterate through known units to find ones we are interested in
@@ -192,7 +194,7 @@ class UnitFinder(object):
 				if requested is not None:
 					try:
 						for name in requested:
-							if name == unit_class.name or name.startswith(unit_class.name.rstrip('.')+'.'):
+							if name == unit_class.__module__ or unit_class.__module__.startswith(name.rstrip('.')+'.'):
 								# It matched one of the requested
 								raise StopIteration
 					except StopIteration:
@@ -208,7 +210,7 @@ class UnitFinder(object):
 						raise NotApplicable
 
 				unit = unit_class(katana, target)
-				valid_units.append(units)
+				valid_units.append(unit)
 			except NotApplicable as e:
 				# Return the not applicable exception so
 				ignored_units.append((unit_class, e))

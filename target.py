@@ -39,6 +39,7 @@ class Target(object):
 
 		# Initialize internal properties
 		self.katana = katana
+		self.parent = parent
 		self.upstream = upstream
 		self.is_printable = True
 		self.is_english = True

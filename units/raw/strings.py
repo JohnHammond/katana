@@ -16,6 +16,14 @@ DEPENDENCIES = [ 'strings' ]
 class Unit(BaseUnit):
 
 	PRIORITY = 25
+	ARGUMENTS = [
+		{ 'name': 'strings_length',
+		  'type': int,
+		  'default': 4,
+		  'required': False,
+		  'help': "minimum length of strings to return" 
+		}
+	]
 
 	@classmethod
 	def add_arguments(cls, katana, parser):
