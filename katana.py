@@ -535,7 +535,13 @@ if __name__ == '__main__':
 	args, remaining = parser.parse_known_args()
 
 	# Initialize our unit finder
-	finder = units.UnitFinder(args.unitdir, args.exclude)
+	finder = units.UnitFinder(args.exclude)
+
+	# Let the user know what we're doing (this takes a couple seconds)
+	with log.progress('loading units') as p:
+		for unit in finder.load_units(args.unitdir):
+			p.status('loaded {0}'.format(unit.__module__))
+		p.success('complete')
 
 	# Add all unit arguments to our parser
 	finder.construct_parser(parser)

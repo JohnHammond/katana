@@ -79,12 +79,13 @@ class UnitFinder(object):
 		given a list of units.
 	"""
 
-	def __init__(self, unit_path, exclusions):
+	def __init__(self, exclusions):
 		self.units = []
+		self.exclusions = exclusions
 	
-		self.load_units(unit_path, exclusions)
+		#self.load_units(unit_path, exclusions)
 	
-	def load_units(self, unit_path, exclusions):
+	def load_units(self, unit_path):
 		""" Load all units in the unit path, and ensure they are valid """
 
 		# Add the units directory the system path
@@ -94,7 +95,7 @@ class UnitFinder(object):
 			
 			# Check the exclusion list to see if this unit matches
 			try:
-				for exclude in exclusions:
+				for exclude in self.exclusions:
 					if name == exclude or name.startswith(exclude.rstrip('.')+'.'):
 						raise NotApplicable
 			except NotApplicable:
@@ -131,6 +132,9 @@ class UnitFinder(object):
 		
 			# Track the module list
 			self.units.append(unit_class)
+
+			# This allows the caller to track progress. This can take a while.
+			yield unit_class
 	
 	def construct_parser(self, parser):
 		""" Build a argparse parser based on loaded unit config requirements
