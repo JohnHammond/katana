@@ -23,19 +23,6 @@ good_magic_strings = [
 dictionary = enchant.Dict()
 english_words_threshold = 1
 
-
-def rotate_text(text):
-	for line in text:
-		length = len(line)
-		for i in range(len(line)):
-			if i+1 <= len(rotated):
-				rotated[i] += line[i]
-			else:
-				rotated.append(line[i])
-	rotated = '\n'.join(rotated)
-	
-	return rotated
-
 class FoundFlag(Exception):
 	pass
 
