@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-05-26 01:03:04
+# @Last Modified time: 2019-05-26 11:31:36
 
 from pwn import *
 from unit import BaseUnit
@@ -44,8 +44,3 @@ class WebUnit(BaseUnit):
 		
 		if not self.target.is_url:
 			raise NotApplicable("not a web url")
-
-# class WebSite(target.Target):
-
-# 	def __init__(self, katana, upstream, parent=None):
-# 		super(Unit, self).__init__(katana, target)

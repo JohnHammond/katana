@@ -2,13 +2,15 @@
 # @Author: John Hammond
 # @Date:   2019-05-07 17:57:40
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-05-07 20:23:33
+# @Last Modified time: 2019-05-26 16:28:26
 
 import time
 import tkinter
 from PIL import ImageTk, Image
 import threading
 import os
+
+
 
 
 class GUIThread(threading.Thread):
@@ -64,14 +66,18 @@ class GUIKatana(tkinter.Tk):
 		self.right_frame.pack(side = tkinter.TOP, expand=True, \
 							  fill = tkinter.BOTH)
 
+
+		self.copy_of_image = None
 		self.image_label = tkinter.Label(self.right_frame, \
 										 text = "No Images Found Yet")
+		self.image_label.bind('<Configure>', self.resize_image)
 		self.image_label.pack(expand = True, fill = tkinter.BOTH )
 
 		# This is the function bound for when a list item is selected;
 		# it updates the image if it is an accessible file.
 		def list_select(event):
 			listbox = event.widget
+
 			try:
 				index = int(listbox.curselection()[0])
 			except IndexError:
@@ -80,7 +86,9 @@ class GUIKatana(tkinter.Tk):
 
 			if os.path.exists( value ):
 				try:
-					image = ImageTk.PhotoImage(Image.open(value))
+					raw_image = Image.open(value)
+					image = ImageTk.PhotoImage(raw_image)
+					self.copy_of_image = raw_image.copy()
 					self.image_label.configure(image = image, text = '')
 					self.image_label.image = image
 				except OSError as e:
@@ -90,6 +98,15 @@ class GUIKatana(tkinter.Tk):
 		self.listbox.bind('<<ListboxSelect>>', list_select)
 		self.thread.start()
 
+
+	def resize_image(self, event):
+		new_width = event.width
+		new_height = event.height
+		if self.copy_of_image is not None:
+			image = self.copy_of_image.resize((new_width, new_height))
+			photo = ImageTk.PhotoImage(image)
+			self.image_label.config(image = photo)
+			self.image_label.image = photo #avoid garbage collection
 
 	def insert(self, filename):
 		'''
@@ -106,7 +123,10 @@ class GUIKatana(tkinter.Tk):
 			value = self.listbox.get(index)
 
 			if os.path.exists( value ):
-				image = ImageTk.PhotoImage(Image.open(value))
+				raw_image = Image.open(value)
+				self.copy_of_image = raw_image.copy()
+				
+				image = ImageTk.PhotoImage(raw_image)
 				self.image_label.configure(image = image)
 				self.image_label.image = image
 

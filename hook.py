@@ -389,6 +389,16 @@ class LoggingKatanaHook(JinjaKatanaHook):
 			finish-self.katana.start,
 			self.katana.config['outdir']
 		))
+
+	def image(self, image_path):
+		super(LoggingKatanaHook, self).image(image_path)
+
+		if ( self.katana.config['display_images'] ) and self.katana.gui is not None:
+			try:
+				self.katana.gui.insert(image_path)
+			except RuntimeError:
+				# The user must have closed the window.. that's fine!
+				pass
 	
 	def failure(self, reason):
 		log.failure(reason)

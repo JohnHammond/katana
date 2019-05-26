@@ -511,6 +511,7 @@ class Katana(object):
 					except IndexError:
 						pass
 			except WorkDone:
+				print("lol we out here")
 				# Notify parent we are done
 				try:
 					self.work.task_done()

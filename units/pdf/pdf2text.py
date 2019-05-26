@@ -12,6 +12,7 @@ import glob
 import pdftotext
 from units import NotApplicable
 
+
 class Unit(units.FileUnit):
 
 	PRIORITY = 50
