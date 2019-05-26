@@ -37,7 +37,7 @@ class Unit(BaseUnit):
 			raise NotApplicable("not a file")
 
 	def evaluate(self, katana, case):
-
+		
 		# Run the process.
 		p = subprocess.Popen(['strings', self.target.path, '-n', str(katana.config['strings_length'])], 
 			stdout = subprocess.PIPE, stderr=subprocess.PIPE )

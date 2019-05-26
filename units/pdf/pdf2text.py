@@ -9,9 +9,8 @@ import units.forensics
 import os
 import utilities
 import glob
-
-DEPENDENCIES = [ 'pdftotext' ]
-
+import pdftotext
+from units import NotApplicable
 
 class Unit(units.FileUnit):
 
@@ -26,19 +25,16 @@ class Unit(units.FileUnit):
 
 	def __init__(self, katana, target):
 		# This ensures it is a PDF
-		super(Unit, self).__init__(katana, target, keywords=['pdf document'])
+		super(Unit, self).__init__(katana, target, keywords=['pdf document', 'data'])
+		
+		try:
+			self.pdf = pdftotext.PDF(self.target.stream)
+		except (AttributeError,pdftotext.Error):
+			raise NotApplicable("cannot read pdf file")
 
 	def evaluate(self, katana, case):
 
-		# Find/create the output artifact directory
-		filename = [ str(p) for p in os.path.splitext(self.target.path) ]
-		if filename:
-			filename = filename[0].split('/')[-1]
-
-		artifact_path, _ = katana.create_artifact(self, f'{filename}.txt', create=False)
-		
-		p = subprocess.Popen(['pdftotext', self.target.path, artifact_path ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-		p.wait()
-		
-		if os.path.exists(artifact_path):
-			katana.recurse(self, artifact_path)
+		for page in self.pdf:
+			lines = page.split('\n')
+			for line in lines:
+				katana.recurse(self, line)

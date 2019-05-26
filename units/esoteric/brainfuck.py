@@ -115,17 +115,12 @@ class Unit(NotEnglishAndPrintableUnit):
 		super(Unit, self).__init__(katana, target)
 
 		try:
-			self.raw_target = self.target.stream.read().decode('utf-8')
-		except UnicodeDecodeError:
-			raise NotApplicable("unicode error, unlikely usable cryptogram")
-
-	def __init__(self, katana, target, keywords=[]):
-		super(Unit, self).__init__(katana, target)
-
-		try:
 			self.raw_target = self.target.stream.read().decode('utf-8').lower()
 		except UnicodeDecodeError:
 			raise NotApplicable("unicode error, unlikely brainfuck syntax")
+
+		if self.raw_target.count('+') < 5:
+			raise NotApplicable("less than five + signs, unlikely brainfuck")
 
 	# JOHN: This SHOULD be removed following the new unit argument restructure
 	@classmethod

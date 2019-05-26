@@ -19,3 +19,4 @@ pypdf2
 scipy
 matplotlib
 pylab
+pdftotext

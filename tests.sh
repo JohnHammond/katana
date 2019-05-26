@@ -54,9 +54,8 @@ rm -r results/; ./katana.py -ff "USCGA{.*?}" -a ./tests/pierre.png
 BLUE "robots.txt"
 rm -r results/; ./katana.py -ff "FLAG{.*?}" -a 'https://johnhammond.org'  
 
-
 BLUE "basic SQL injection"
-rm -r results/ ; ./katana.py -a "http://2018shell.picoctf.com:53261/" -nd -ff 'picoCTF{.*?}'
+rm -r results/ ; ./katana.py -a "http://2018shell.picoctf.com:53261/" -ff 'picoCTF{.*?}'
 
 
 BLUE "ROT47"
@@ -68,4 +67,4 @@ rm -r results/; ./katana.py -ff "USCGA{.*?}" -a './tests/brainfuck.txt'
 
 
 BLUE "pdftotext"
-rm -r results/; ./katana.py -ff "actf{.*?}" -a './tests/blank_paper.pdf'  
+rm -r results/; ./katana.py -ff "actf{.*?}" -a './tests/blank_paper.pdf' 
