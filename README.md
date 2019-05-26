@@ -306,3 +306,8 @@ __What's my Name?__
 rm -r results/ ; ./katana.py -a "https://2018shell.picoctf.com/static/6ae91abb9e70e527e32729413103af90/myname.pcap" -d -ff 'picoCTF{.*?}'
 ```
 
+__caesar cipher 2__
+
+```
+rm -r results/ ; ./katana.py -a "https://2018shell.picoctf.com/static/bed1fba9caa8aeda29580c36bf0d0276/ciphertext" -d -ff 'picoCTF{.*?}' -v
+```

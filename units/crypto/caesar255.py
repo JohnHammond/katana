@@ -15,7 +15,7 @@ import magic
 class Unit(units.NotEnglishUnit):
 
 	PROTECTED_RECURSE = True
-	PRIORITY = 70
+	PRIORITY = 60
 
 	def evaluate(self, katana, case):
 
