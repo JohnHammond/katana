@@ -77,6 +77,7 @@ Whenever Katana runs, it creates a `results` directory where it stores its findi
 
 If you are running Katana multiple times and just want to see the output, you may want to prepend a `rm -r results;` before your Katana command. **ENSURE THAT THE SEMI-COLON IS IN PLACE SO YOU DO NOT REMOVE KATANA AND YOUR FILES.**
 
+
 Contributions and Credits
 -------------------------
 
@@ -84,8 +85,10 @@ As we got further along in development, we asked members of my Discord server if
 
 ```
 crypto.dna - voidUpdate, Zwedgy
+crypto.t9 - Zwedgy, r4j
 esoteric.ook - Liikt
 esoteric.cow - Drnkn
+stego.audio_spectrogram - Zwedgy
 ```
 
 Cookbooks

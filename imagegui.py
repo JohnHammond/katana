@@ -2,15 +2,13 @@
 # @Author: John Hammond
 # @Date:   2019-05-07 17:57:40
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-05-26 16:48:36
+# @Last Modified time: 2019-05-26 16:55:02
 
 import time
 import tkinter
 from PIL import ImageTk, Image
 import threading
 import os
-
-
 
 
 class GUIThread(threading.Thread):
@@ -36,6 +34,7 @@ class GUIThread(threading.Thread):
 				time.sleep(1)
 		except KeyboardInterrupt:
 			return
+
 
 class GUIKatana(tkinter.Tk):
 	'''
@@ -65,7 +64,6 @@ class GUIKatana(tkinter.Tk):
 		self.right_frame = tkinter.Frame(self)
 		self.right_frame.pack(side = tkinter.TOP, expand=True, \
 							  fill = tkinter.BOTH)
-
 
 		self.copy_of_image = None
 		self.image_label = tkinter.Label(self.right_frame, \
@@ -118,6 +116,7 @@ class GUIKatana(tkinter.Tk):
 			photo = ImageTk.PhotoImage(image)
 			self.image_label.config(image = photo)
 			self.image_label.image = photo #avoid garbage collection
+
 
 	def insert(self, filename):
 		'''
