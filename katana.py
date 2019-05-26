@@ -514,18 +514,13 @@ class Katana(object):
 					except IndexError:
 						pass
 			except WorkDone:
-				# Notify parent we are done
-				try:
-					self.work.task_done()
-				except ValueError:
-					pass
+				pass	
 			except AllDone:
 				break
-			else:
-				try:
-					self.work.task_done()
-				except ValueError:
-					pass
+			try:
+				self.work.task_done()
+			except ValueError:
+				pass
 		
 		self.hook.work_status(thread_number, 'exiting')
 
