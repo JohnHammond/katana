@@ -63,14 +63,9 @@ class Unit(units.FileUnit):
 		pylab.specgram( x=sound_info, Fs=2, NFFT=1024,mode='magnitude', scale='dB', sides='onesided' )
 		pylab.savefig(dB_path,  pad_inches=0, bbox_inches="tight", bbox_extra_artists=[] )
 
-		katana.add_image(linear_path)
 		katana.add_image(dB_path)
+		katana.add_image(linear_path)
 
-		ocr_text = attempt_ocr(os.path.abspath(linear_path))
-		if ocr_text:
-			if katana.locate_flags(self, ocr_text.replace('\n', '')):
-			# If we do find a flag, stop this unit!!
-				self.completed = True
 
 		ocr_text = attempt_ocr(os.path.abspath(dB_path))
 		if ocr_text:
@@ -78,4 +73,8 @@ class Unit(units.FileUnit):
 			# If we do find a flag, stop this unit!!
 				self.completed = True
 
-		# katana.add_results(self, response)
+		ocr_text = attempt_ocr(os.path.abspath(linear_path))
+		if ocr_text:
+			if katana.locate_flags(self, ocr_text.replace('\n', '')):
+			# If we do find a flag, stop this unit!!
+				self.completed = True

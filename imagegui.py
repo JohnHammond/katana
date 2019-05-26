@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-05-07 17:57:40
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-05-26 16:28:26
+# @Last Modified time: 2019-05-26 16:48:36
 
 import time
 import tkinter
@@ -89,8 +89,19 @@ class GUIKatana(tkinter.Tk):
 					raw_image = Image.open(value)
 					image = ImageTk.PhotoImage(raw_image)
 					self.copy_of_image = raw_image.copy()
+					raw_image_w, raw_image_h = raw_image.size
+
 					self.image_label.configure(image = image, text = '')
 					self.image_label.image = image
+
+					window_w = self.thread.root.winfo_width()
+					window_h = self.thread.root.winfo_height()
+					if window_w < raw_image_w or window_h < raw_image_h:
+						
+						image = self.copy_of_image.resize((window_w, window_h-150))
+						photo = ImageTk.PhotoImage(image)
+						self.image_label.config(image = photo)
+						self.image_label.image = photo #avoid garbage collection
 				except OSError as e:
 					self.image_label.configure(text = e.args, image = '')
 
@@ -124,11 +135,19 @@ class GUIKatana(tkinter.Tk):
 
 			if os.path.exists( value ):
 				raw_image = Image.open(value)
+				raw_image_w, raw_image_h = raw_image.size
 				self.copy_of_image = raw_image.copy()
-				
 				image = ImageTk.PhotoImage(raw_image)
 				self.image_label.configure(image = image)
 				self.image_label.image = image
+				window_w = self.thread.root.winfo_width()
+				window_h = self.thread.root.winfo_height()
+				if window_w < raw_image_w or window_h < raw_image_h:
+					
+					image = self.copy_of_image.resize((window_w, window_h-150))
+					photo = ImageTk.PhotoImage(image)
+					self.image_label.config(image = photo)
+					self.image_label.image = photo #avoid garbage collection
 
 
 	def evaluate(self):

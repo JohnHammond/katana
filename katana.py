@@ -36,6 +36,8 @@ import time
 from imagegui import GUIKatana
 import hook
 import signal
+import warnings
+warnings.simplefilter("ignore")
 
 class Katana(object):
 
