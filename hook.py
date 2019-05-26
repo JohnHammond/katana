@@ -12,9 +12,10 @@ import sys
 
 class KatanaHook(object):
 
-	def __init__(self, katana):
-		self.katana = katana
-	
+	def __init__(self):
+		self.katana = None
+		pass
+
 	def flag(self, flag):
 		""" Notified when a unit locates a flag """
 		pass

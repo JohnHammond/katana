@@ -56,8 +56,11 @@ class Katana(object):
 		self.gui = None
 		self.config = config
 		self.finder = finder
-		self.hook = hook(self)
+		self.hook = hook
 		self._completed = False
+
+		# Set the katana reference in our hook object
+		self.hook.katana = self
 
 		# Notify the user if the requested units are overridden by recursion
 		if self.config['auto'] and len(self.config['unit']) > 0 and not self.config['recurse']:
@@ -511,14 +514,13 @@ class Katana(object):
 					except IndexError:
 						pass
 			except WorkDone:
-				print("lol we out here")
-				# Notify parent we are done
-				try:
-					self.work.task_done()
-				except ValueError:
-					pass
+				pass	
 			except AllDone:
 				break
+			try:
+				self.work.task_done()
+			except ValueError:
+				pass
 		
 		self.hook.work_status(thread_number, 'exiting')
 
@@ -611,7 +613,7 @@ if __name__ == '__main__':
 	config = vars(args)
 
 	# Create the Katana
-	katana = Katana(config, finder, hook.LoggingKatanaHook)
+	katana = Katana(config, finder, hook.LoggingKatanaHook())
 
 	if katana.config['display_images']:
 		# Create a Tkinter window to show images
