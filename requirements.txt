@@ -18,5 +18,4 @@ git+https://github.com/elliptic-shiho/primefac-fork
 pypdf2
 scipy
 matplotlib
-pylab
 pdftotext
