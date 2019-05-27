@@ -206,6 +206,18 @@ __T9 Cipher__
 rm -r results/ ; ./katana.py -a "8 44 444 7777 0 444 7777 0 2 0 8 33 7777 8 0 333 555 2 4 0" -ff 'this is a test flag'
 ```
 
+__Whitespace Stego__
+
+```
+rm -r results/ ; ./katana.py --unit stego.whitespace "tests/whitespace.txt" -ff 'FLAG{.*?}'
+```
+
+__Piet__
+
+```
+rm -r results/ ; ./katana.py --unit esoteric.piet "tests/piet_hello_world.png" -ff 'Hello, World!'
+```
+
 PicoCTF Cookbook
 ================
 

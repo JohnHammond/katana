@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-05-24 23:28:20
+# @Last Modified time: 2019-05-27 00:18:23
 from unit import BaseUnit
 from pwn import *
 import os
@@ -120,7 +120,11 @@ class UnitFinder(object):
 				for dep in deps:
 					subprocess.check_output(['which', dep])
 			except (FileNotFoundError, subprocess.CalledProcessError):
-				raise DependencyError(name, dep)
+				log.failure('{0}: dependancy not satisfied: {1}'.format(
+					name, dep
+				))
+				continue
+				# raise DependancyError(name, dep) # JOHN: This is now longer caught, so...
 			
 			# Grab the unit class
 			try:

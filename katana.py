@@ -601,8 +601,10 @@ if __name__ == '__main__':
 
 	# Let the user know what we're doing (this takes a couple seconds)
 	with log.progress('loading units') as p:
+		
 		for unit in finder.load_units(args.unitdir):
 			p.status('loaded {0}'.format(unit.__module__))
+	
 		p.success('complete')
 
 	# Add all unit arguments to our parser
