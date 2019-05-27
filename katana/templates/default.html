@@ -1,0 +1,329 @@
+{%- macro random_int(len) -%}
+  {%- for n in range(len) -%}
+    {{ [0,1,2,3,4,5,6,7,8,9]|random }}
+  {%- endfor -%}
+{%- endmacro -%}
+
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+		<title>Katana Results - {{target}}</title>
+
+		<!-- Bootstrap CSS CDN -->
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+		<!-- Our Custom CSS -->
+		<link rel="stylesheet" href="default.css">
+		<!-- Scrollbar Custom CSS -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.min.css"
+
+		<!-- Font Awesome JS -->
+		<script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js" integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ" crossorigin="anonymous"></script>
+		<script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js" integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY" crossorigin="anonymous"></script>
+
+		<style>
+			.wrapper {
+				display: flex;
+				width: 100%;
+			}
+
+			#sidebar {
+				width: 250px;
+				position: fixed;
+				top: 0;
+				left: 0;
+				height: 100vh;
+				z-index: 999;
+				background: #7386D5;
+				color: #fff;
+				transition: all 0.3s;
+			}
+
+			#sidebar.active {
+				margin-left: -250px;
+			}
+
+			#sidebar {
+				min-width: 250px;
+				max-width: 250px;
+				min-height: 100vh;
+			}
+
+			a[data-toggle="collapse"] {
+				position: relative;
+			}
+
+			.dropdown-toggle::after {
+				display: block;
+				position: absolute;
+				top: 50%;
+				right: 20px;
+				transform: translateY(-50%);
+			}
+
+			@media (max-width: 768px) {
+				#sidebar {
+					margin-left: -250px;
+				}
+				#sidebar.active {
+					margin-left: 0;
+				}
+			}
+
+			/*
+				ADDITIONAL DEMO STYLE, NOT IMPORTANT TO MAKE THINGS WORK BUT TO MAKE IT A BIT NICER :)
+			*/
+			@import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
+
+
+			body {
+				font-family: 'Poppins', sans-serif;
+				background: #fafafa;
+			}
+
+			p {
+				font-family: 'Poppins', sans-serif;
+				font-size: 1.1em;
+				font-weight: 300;
+				line-height: 1.7em;
+				color: #999;
+			}
+
+			a, a:hover, a:focus {
+				color: inherit;
+				text-decoration: none;
+				transition: all 0.3s;
+			}
+
+			#sidebar {
+				/* don't forget to add all the previously mentioned styles here too */
+				background: #7386D5;
+				color: #fff;
+				transition: all 0.3s;
+			}
+
+			#sidebar .sidebar-header {
+				padding: 20px;
+				background: #6d7fcc;
+			}
+
+			#sidebar ul.components {
+				padding: 20px 0;
+				border-bottom: 1px solid #47748b;
+			}
+
+			#sidebar ul p {
+				color: #fff;
+				padding: 10px;
+			}
+
+			#sidebar ul li a {
+				padding: 10px;
+				font-size: 1.1em;
+				display: block;
+			}
+			#sidebar ul li a:hover {
+				color: #7386D5;
+				background: #fff;
+			}
+
+			#sidebar ul li.active > a, a[aria-expanded="true"] {
+				color: #fff;
+				background: #6d7fcc;
+			}
+			ul ul a {
+				font-size: 0.9em !important;
+				padding-left: 30px !important;
+				background: #6d7fcc;
+			}
+
+			#content {
+				width: calc(100% - 250px);
+				padding: 40px;
+				min-height: 100vh;
+				transition: all 0.3s;
+				position: absolute;
+				top: 0;
+				right: 0;
+			}
+
+			#content.active {
+				width: 100%;
+			}
+
+			.accordion-body {
+				margin: 2em;
+			}
+
+			.accordion-link {
+
+			}
+		</style>
+	</head>
+
+	<body>
+
+		<div class="wrapper">
+
+			<nav id="sidebar">
+				<div class="sidebar-header">
+					<h1>Katana</h1>
+				</div>
+
+				<ul class="list-unstyled components" id="menu">
+					<p>Contents</p>
+					<li><a href="#card-flags">Potential Flags</a></li>
+					<li><a href="#card-images">Found Images</a></li>
+					{% if 'children' in results %}
+						{% for name,value in results['children'].items() if name is not in ["flags","children"] recursive %}
+							<li>
+								{% if value['children'] | length > 0 %}
+									{% set uniq_id = random_int(10) %}
+									<a href="#menu-{{value['uuid']}}" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">{{name}}</a>
+									<ul id="menu-{{value['uuid']}}" class="collapse list-unstyled">
+										{{ loop(value['children'].items()) }}
+									</ul>
+								{% else %}
+								<a class="accordion-link" href="#{{value['uuid']}}" data-target="{{value['uuid']}}">{{name}}</a>
+								{% endif %}
+							</li>
+						{% endfor %}
+					{% endif %}
+				</ul>
+			</div>
+
+			<div id="content">
+				<h1>Results For Target "{{ target }}"</h1>
+				<hr>
+				<div class="accordion" id="content-accordion">
+					<div class="card">
+						<div class="card-header" id="card-flags">
+							<h2 class="mb-0">
+								<button class="btn btn-lnk" type="button" data-toggle="collapse" data-target="#collapse-flags" aria-expanded="true" aria-controls="collapse-flags">
+									Potential Flags
+								</button>
+							</h2>
+						</div>
+
+						<div id="collapse-flags" class="collapse show" aria-labelledby="card-flags" data-parent="content-accordion">
+							<div class="accordion-body">
+								<ul class="list-group">
+									{% for flag in results['flags'] %}
+										<li class="list-group-item">{{flag}}</li>
+									{% endfor %}
+								</ul>
+							</div>
+						</div>
+					</div>
+
+					<div class="card">
+						<div class="card-header" id="card-images">
+							<h2 class="mb-0">
+								<button class="btn btn-lnk" type="button" data-toggle="collapse" data-target="#collapse-images" aria-expanded="true" aria-controls="collapse-images">
+									Images
+								</button>
+							</h2>
+						</div>
+
+						<div id="collapse-images" class="collapse show" aria-labelledby="card-images" data-parent="content-accordion">
+							<div class="accordion-body">
+								{% if 'images' in results %}
+									{% for image in results['images'] %}
+										<figure class="figure">
+											<img src="{{image}}" class="figure-img img-fluid"/>
+											<figcaption class="figure-caption">{{image}}</figcaption>
+										</figure>
+									{% endfor %}
+								{% endif %}
+							</div>
+						</div>
+					</div>
+
+					{% if 'children' in results %}
+						{% for name, value in results['children'].items() if name not in ["flags", "children"] recursive %}
+							{% if value['results'] | length > 0 or value['images'] | length > 0 or value['artifacts'] | length > 0 %}
+							<div class="card" id="{{value['uuid']}}">
+									<div class="card-header" id="header-{{value['uuid']}}">
+										<h2 class="mb-0">
+											<button class="btn btn-lnk" type="button" data-toggle="collapse" data-target="#collapse-{{value['uuid']}}" aria-expanded="true" aria-controls="collapse-flags">
+												{{ name }}
+											</button>
+										</h2>
+									</div>
+
+									<div id="collapse-{{value['uuid']}}" class="collapse show" aria-labelledby="header-{{value['uuid']}}">
+										<div class="accordion-body">
+											{% if value['results'] | length > 0 %}
+												<h3>Results</h3><hr>
+												<pre class="pre-scrollable"><code>{{ value['results'] | pretty_json }}</code></pre>
+											{% endif %}
+											{% if value['images'] | length > 0 %}
+												<h3>Images</h3><hr>
+												{% for image in value['images'] %}
+													<figure class="figure">
+														<img src="{{image}}" class="figure-img img-fluid"/>
+														<figcaption class="figure-caption">{{image}}</figcaption>
+													</figure>
+												{% endfor %}
+											{% endif %}
+											{% if value['artifacts'] | length > 0 %}
+												<h3>Artifacts</h3><hr>
+												<ul>
+													{% for artifact in value['artifacts'] %}
+														<li>{{artifact}}</li>
+													{% endfor %}
+												</ul>
+											{% endif %}
+										</div>
+									</div>
+								</div>
+							{% endif %}
+							{% if value['children'] | length > 0 %}
+								{{ loop( value['children'].items() ) }}
+							{% endif %}
+						{% endfor %}
+					{% endif %}
+
+				</div>
+			</div>
+
+		</div>
+
+
+    <!-- jQuery CDN - Slim version (=without AJAX) -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <!-- Popper.JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+    <!-- jQuery Custom Scroller CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.concat.min.js"></script>
+	<script>
+		$(document).ready(function () {
+
+			$("#sidebar").mCustomScrollbar({
+				 theme: "minimal"
+			});
+
+			$('#sidebarCollapse').on('click', function () {
+				$('#sidebar').toggleClass('active');
+			});
+
+			$('.accordion-link').on('click', function () {
+				//$([document.documentElement, document.body]).animate({
+				//	scrollTop: $("#"+$(this).data('target')).offset().top
+				//}, 2000);
+
+				$("#collapse-"+$(this).data('target')).collapse('show');
+			});
+
+		});
+	</script>
+
+	</body>
+
+</html>

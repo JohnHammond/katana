@@ -7,3 +7,6 @@ env/
 *.pyc
 test-results
 savedstate.sav
+build/
+dist/
+katana.egg-info
