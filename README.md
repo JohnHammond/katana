@@ -90,6 +90,7 @@ crypto.t9 - Zwedgy, r4j
 esoteric.ook - Liikt
 esoteric.cow - Drnkn
 stego.audio_spectrogram - Zwedgy
+stego.whitespace - l14ck3r0x01
 ```
 
 Cookbooks
@@ -217,6 +218,12 @@ __Piet__
 
 ```
 rm -r results/ ; ./katana.py --unit esoteric.piet "tests/piet_hello_world.png" -ff 'Hello, World!'
+```
+
+__quipqiup__
+
+```
+rm -r results/ ; ./katana.py -a "tests/subtest.txt"
 ```
 
 PicoCTF Cookbook
