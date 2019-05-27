@@ -3,7 +3,6 @@
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
 # @Last Modified time: 2019-05-27 00:18:23
-from pwn import *
 import os
 import magic
 import traceback
@@ -13,6 +12,7 @@ from dataclasses import dataclass, field
 from typing import Any
 import pkgutil
 import importlib
+import subprocess
 
 from katana import utilities
 from katana.unit import BaseUnit
@@ -89,6 +89,9 @@ class UnitFinder(object):
 	
 	def load_units(self):
 		""" Load all units in the unit path, and ensure they are valid """
+		# This is bad, but I need to not import it at the global level here :(
+		import pwnlib.log
+		log = pwnlib.log.getLogger(__name__)
 
 		for importer, name, ispkg in pkgutil.walk_packages(katana.units.__path__, 'katana.units.'):	
 

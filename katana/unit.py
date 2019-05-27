@@ -1,4 +1,3 @@
-from pwn import *
 import hashlib
 import re
 import base64
@@ -77,7 +76,7 @@ class BaseUnit(object):
 		return self.__class__.__module__
 
 	def evaluate(self, case):
-		log.error('{0}: no evaluate implemented: bad unit'.format(self.unit_name))
+		raise RuntimeError('{0}: no evaluate implemented: bad unit'.format(self.unit_name))
 	
 	@property
 	def family_tree(self):

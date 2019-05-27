@@ -37,7 +37,7 @@ from katana.target import Target
 from katana.imagegui import GUIKatana
 from katana import hook
 from katana import utilities
-from katana.utilities import ArgumentParserWithHelp, find_modules_recursively
+from katana.utilities import ArgumentParserWithHelp
 from katana.unit import BaseUnit
 
 class Katana(object):
