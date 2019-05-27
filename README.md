@@ -90,6 +90,7 @@ crypto.t9 - Zwedgy, r4j
 esoteric.ook - Liikt
 esoteric.cow - Drnkn
 stego.audio_spectrogram - Zwedgy
+stego.dtmf_decoder - Zwedgy
 stego.whitespace - l14ck3r0x01
 ```
 
