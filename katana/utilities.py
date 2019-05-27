@@ -3,7 +3,6 @@ import importlib
 import argparse
 import pkgutil
 import sys
-from pwn import *
 import magic
 import json
 import re
@@ -68,16 +67,6 @@ def DirectoryArgument(name):
 		raise argparse.ArgumentTypeError('{0} is not a directory'.format(name))
 	return fullpath
 
-# argparse type to automatically verify module existence and load it
-def PythonModule(name):
-	try:
-		log.info('loading unit: {0}'.format(name))
-		module = importlib.import_module(name)
-	except Exception as e:
-		print(e)
-		raise argparse.ArgumentTypeError('{0} is not a valid module name'.format(name))
-	return module
-
 # This is dumb, but it makes the code more expressive...
 def GetUnitName(unit):
 	return unit.__module__
@@ -89,20 +78,6 @@ def GetFullyQualifiedClassName(o):
 		return o.__class__.__name__  # Avoid reporting __builtin__
 	else:
 		return module + '.' + o.__class__.__name__
-
-def find_modules_recursively(path, prefix):
-	""" Locate all modules under a path """
-	log.warning('calling pkgutil.iter_modules({0},\'{1}\')'.format([path], prefix))
-	for importer, name, ispkg in pkgutil.iter_modules([path], prefix):
-		log.failure('looking at {0}'.format(name))
-		module_path = os.path.join(path, name.replace('.','/'))
-		if ispkg:
-			
-			for s in find_modules_recursively(module_path, name + '.'):
-				yield s
-		else:
-			
-			yield name
 
 def is_english(string):
 	# Filter out words that are only two letters long...
