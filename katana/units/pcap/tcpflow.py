@@ -14,7 +14,7 @@ from katana import units
 
 DEPENDENCIES = [ 'tcpflow' ]
 
-class Unit(units.pcap.PcapUnit):
+class Unit(units.FileUnit):
 
 	PRIORITY = 25
 
@@ -24,6 +24,10 @@ class Unit(units.pcap.PcapUnit):
 	# We do not need to include the constructor here 
 	# because the ForensicsUnit parent will pull from FileUnit, 
 	# to ensure the target is in fact a file.
+
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target, keywords=['capture file', 'pcap'])	
+
 
 	def evaluate(self, katana, case):
 

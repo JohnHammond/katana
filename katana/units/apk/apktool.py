@@ -25,6 +25,9 @@ class Unit(units.FileUnit):
 	# because the ForensicsUnit parent will pull from FileUnit, 
 	# to ensure the target is in fact a file.
 
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target, keywords=['archive'])	
+
 	def evaluate(self, katana, case):
 
 		def __init__(self, katana, target):

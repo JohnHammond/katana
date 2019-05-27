@@ -24,9 +24,6 @@ class Unit(units.NotEnglishAndPrintableUnit):
 		except UnicodeDecodeError:
 			raise units.NotApplicable("unicode error, unlikely usable cryptogram")
 
-	def __init__(self, *args, **kwargs):
-		super(Unit, self).__init__(*args, **kwargs)	
-
 	def evaluate(self, katana, case):
 		new_string = []
 		reverse_upper = string.ascii_uppercase[::-1]
@@ -48,5 +45,4 @@ class Unit(units.NotEnglishAndPrintableUnit):
 		result = ''.join(new_string)
 
 		katana.recurse(self, result)
-		katana.locate_flags(self, result)
 		katana.add_results(self, result)
