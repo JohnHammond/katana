@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-from pwn import *
+# from pwn import *
+import pwnlib.log
 import argparse
 import json
 import sys
@@ -39,6 +40,8 @@ from katana import hook
 from katana import utilities
 from katana.utilities import ArgumentParserWithHelp
 from katana.unit import BaseUnit
+
+log = pwnlib.log.getLogger(__name__)
 
 class Katana(object):
 
@@ -118,7 +121,8 @@ class Katana(object):
 		elif not os.path.exists(self.config['outdir']):
 			# Create the directory if needed
 			try:
-				os.mkdir(self.config['outdir'])
+				# Make parent directories if they do not exist.
+				os.makedirs(self.config['outdir'], exist_ok=True)
 			except:
 				self.hook.failure('{0}: unable to create directory'.format(self.config['outdir']))
 				raise RuntimeError('unable to create output directory')
