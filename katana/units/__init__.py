@@ -172,10 +172,15 @@ class UnitFinder(object):
 			for arg in args:
 				# Ensure it exists
 				if arg['name'] not in config:
-					raise RuntimeError('{0}: missing argument'.format(arg['name']))
+					if 'default' in arg:
+						config[arg['name']] = arg['default']
+					else:
+						raise RuntimeError('{0}: missing argument'.format(arg['name']))
 				# Ensure it's the right type
-				if not isinstance(config[arg['name']], arg['type']):
-					raise RuntimeError('{0}: invalid type'.format(arg['name']))
+				#elif not isinstance(config[arg['name']], arg['type']):
+				#	raise RuntimeError('{0}: invalid type'.format(arg['name']))
+		
+		return config
 
 	def find(self, katana, target, requested = None):
 		""" Use the specified katana object to locate units applicable to the

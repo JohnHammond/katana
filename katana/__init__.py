@@ -611,6 +611,9 @@ def main():
 	# Convert args namespace to a dictionary
 	config = vars(args)
 
+	# Validate config
+	config = finder.validate_config(config)
+
 	# Create the Katana
 	katana = Katana(config, finder, hook.LoggingKatanaHook())
 
