@@ -39,20 +39,21 @@ Katana works with a "boss -> worker" topology. One thread (the boss) spins off o
 To add functionality to Katana, you simply need to create units. The boss will then handle them appropriately. Currently, the units we have defined are:
 
 ```
-crypto/affine.py       pdf/pdfinfo.py        stego/steghide.py
-crypto/atbash.py       pdf/pdftotext.py      stego/stegsolve.py
-crypto/caesar.py       pwnage/stdin.py       stego/zsteg.py
-crypto/polybius.py     raw/base64_decode.py  web/basic_img_shell.py
-crypto/railfence.py    raw/exiftool.py       web/basic_nosqli.py
-crypto/reverse.py      raw/file.py           web/basic_sqli.py
-crypto/rot47.py        raw/morsecode.py      web/cookies.py
-crypto/vigenere.py     raw/qrcode.py         web/git.py
-crypto/xor.py          raw/strings.py        web/logon_cookies.py
-esoteric/brainfuck.py  raw/unbinary.py       web/request.py
-esoteric/malbolge.py   raw/undecimal.py      web/robots.py
-esoteric/pikalang.py   raw/unhexlify.py      zip/crack.py
-forensics/binwalk.py   stego/jsteg.py
-forensics/foremost.py  stego/snow.py
+pdf/pdf2text.py		crypto/polybius.py		raw/base64_decode.py		stego/snow.py
+pdf/pdfimages.py	crypto/railfence.py		raw/exiftool.py				stego/stegsolve.py
+pdf/pdfinfo.py		crypto/dna.py			raw/qrcode.py				stego/zsteg.py
+pdf/pdfcrack.py		zip/crack.py			raw/undecimal.py			stego/jsteg.py
+pcap/tcpflow.py		pwnable/stdin.py		raw/unhexlify.py			ocr/tesseract.py
+crypto/caesar.py	forensics/foremost.py	raw/ascii85_decode.py		web/dir.py
+crypto/caesar255.py	forensics/binwalk.py	raw/base32_decode.py		web/cookies.py
+crypto/atbash.py	esoteric/brainfuck.py	raw/urldecode.py			web/spider.py
+crypto/vigenere.py	esoteric/cow.py			raw/base58_decode.py		web/git.py
+crypto/rsa.py		esoteric/malbolge.py	raw/unbinary.py				web/basic_sqli.py
+crypto/t9.py		esoteric/ook.py			raw/strings.py				web/logon_cookies.py
+crypto/reverse.py	esoteric/piet.py		apk/apktool.py				web/basic_img_shell.py
+crypto/xor.py		esoteric/pikalang.py	stego/audio_spectrogram.py	web/robots.py
+crypto/rot47.py		raw/morsecode.py		stego/steghide.py			web/basic_nosqli.py
+crypto/affine.py	raw/base85_decode.py	stego/whitespace.py			web/form_submit.py
 ```
 
 -------
