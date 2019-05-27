@@ -45,7 +45,7 @@ class BaseUnit(object):
 					raise units.NotApplicable('no recurse')
 				unit = unit.target.parent
 
-		if not self.unit_name.startswith('web.') and target.is_url:
+		if not self.unit_name.startswith('katana.units.web.') and target.is_url:
 			raise units.NotApplicable('target is a URL')
 			
 		self._completed = False

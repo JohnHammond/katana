@@ -39,20 +39,21 @@ Katana works with a "boss -> worker" topology. One thread (the boss) spins off o
 To add functionality to Katana, you simply need to create units. The boss will then handle them appropriately. Currently, the units we have defined are:
 
 ```
-crypto/affine.py       pdf/pdfinfo.py        stego/steghide.py
-crypto/atbash.py       pdf/pdftotext.py      stego/stegsolve.py
-crypto/caesar.py       pwnage/stdin.py       stego/zsteg.py
-crypto/polybius.py     raw/base64_decode.py  web/basic_img_shell.py
-crypto/railfence.py    raw/exiftool.py       web/basic_nosqli.py
-crypto/reverse.py      raw/file.py           web/basic_sqli.py
-crypto/rot47.py        raw/morsecode.py      web/cookies.py
-crypto/vigenere.py     raw/qrcode.py         web/git.py
-crypto/xor.py          raw/strings.py        web/logon_cookies.py
-esoteric/brainfuck.py  raw/unbinary.py       web/request.py
-esoteric/malbolge.py   raw/undecimal.py      web/robots.py
-esoteric/pikalang.py   raw/unhexlify.py      zip/crack.py
-forensics/binwalk.py   stego/jsteg.py
-forensics/foremost.py  stego/snow.py
+apk/apktool.py			esoteric/cow.py			raw/base85_decode.py		stego/snow.py
+crypto/caesar.py		esoteric/malbolge.py		raw/base64_decode.py		stego/stegsolve.py
+crypto/caesar255.py		esoteric/ook.py			raw/exiftool.py			stego/zsteg.py
+crypto/atbash.py		esoteric/piet.py		raw/qrcode.py			stego/jsteg.py
+crypto/vigenere.py		esoteric/pikalang.py		raw/undecimal.py		web/dir.py
+crypto/rsa.py			forensics/foremost.py		raw/unhexlify.py		web/cookies.py
+crypto/t9.py			forensics/binwalk.py		raw/ascii85_decode.py		web/spider.py
+crypto/reverse.py		ocr/tesseract.py		raw/base32_decode.py		web/git.py
+crypto/xor.py			pcap/tcpflow.py			raw/urldecode.py		web/basic_sqli.py
+crypto/rot47.py			pdf/pdf2text.py			raw/base58_decode.py		web/logon_cookies.py
+crypto/affine.py		pdf/pdfimages.py		raw/unbinary.py			web/basic_img_shell.py
+crypto/polybius.py		pdf/pdfinfo.py			raw/strings.py			web/robots.py
+crypto/railfence.py		pdf/pdfcrack.py			stego/audio_spectrogram.py	web/basic_nosqli.py
+crypto/dna.py			pwnable/stdin.py		stego/steghide.py		web/form_submit.py
+esoteric/brainfuck.py		raw/morsecode.py		stego/whitespace.py		zip/crack.py
 ```
 
 -------
@@ -204,6 +205,18 @@ __T9 Cipher__
 
 ```
 rm -r results/ ; ./katana.py -a "8 44 444 7777 0 444 7777 0 2 0 8 33 7777 8 0 333 555 2 4 0" -ff 'this is a test flag'
+```
+
+__Whitespace Stego__
+
+```
+rm -r results/ ; ./katana.py --unit stego.whitespace "tests/whitespace.txt" -ff 'FLAG{.*?}'
+```
+
+__Piet__
+
+```
+rm -r results/ ; ./katana.py --unit esoteric.piet "tests/piet_hello_world.png" -ff 'Hello, World!'
 ```
 
 PicoCTF Cookbook

@@ -14,6 +14,7 @@ import pytesseract
 from PIL import Image
 import traceback
 from katana import units
+from katana.units import NotApplicable
 
 DEPENDENCIES = [ 'tesseract' ]
 

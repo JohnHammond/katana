@@ -2,7 +2,7 @@
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
-# @Last Modified time: 2019-05-24 23:28:20
+# @Last Modified time: 2019-05-27 00:18:23
 from pwn import *
 import os
 import magic
@@ -16,6 +16,7 @@ import importlib
 
 from katana import utilities
 from katana.unit import BaseUnit
+import katana.units
 
 @dataclass(order=True)
 class UnitWorkWrapper(object):
@@ -82,18 +83,15 @@ class UnitFinder(object):
 
 	def __init__(self, exclusions):
 		self.units = []
-		self.exclusions = exclusions
+		self.exclusions = ['katana.units.'+e for e in exclusions]
 	
 		#self.load_units(unit_path, exclusions)
 	
-	def load_units(self, unit_path):
+	def load_units(self):
 		""" Load all units in the unit path, and ensure they are valid """
 
-		# Add the units directory the system path
-		sys.path.insert(0, unit_path)
+		for importer, name, ispkg in pkgutil.walk_packages(katana.units.__path__, 'katana.units.'):	
 
-		for importer, name, ispkg in pkgutil.walk_packages([unit_path], ''):
-			
 			# Check the exclusion list to see if this unit matches
 			try:
 				for exclude in self.exclusions:
@@ -121,7 +119,11 @@ class UnitFinder(object):
 				for dep in deps:
 					subprocess.check_output(['which', dep])
 			except (FileNotFoundError, subprocess.CalledProcessError):
-				raise DependencyError(name, dep)
+				log.failure('{0}: dependancy not satisfied: {1}'.format(
+					name, dep
+				))
+				continue
+				# raise DependancyError(name, dep) # JOHN: This is now longer caught, so...
 			
 			# Grab the unit class
 			try:
@@ -191,6 +193,9 @@ class UnitFinder(object):
 		# These are synonymous 
 		if requested == []:
 			requested = None
+
+		if requested is not None:
+			requested = ['katana.units.'+r for r in requested]
 
 		# Iterate through known units to find ones we are interested in
 		for unit_class in self.units:

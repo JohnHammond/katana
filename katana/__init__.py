@@ -98,10 +98,11 @@ class Katana(object):
 
 		# Compile the flag format if given
 		if self.config['flag_format']:
-			self.flag_pattern = re.compile(bytes('({0})'.format(self.config['flag_format']), 'utf-8'),
-					flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
+			self.flag_pattern = re.compile(bytes('({0}|flag ?is:?.*|flag:)'.format(self.config['flag_format']), 'utf-8'),
+				flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
 		else:
-			self.flag_pattern = None
+			self.flag_pattern = re.compile(bytes('(flag ?is:?.*|flag:)', 'utf-8'),
+				flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
 
 		# Setup the work queue
 		if self.config['no_priority']:
@@ -534,8 +535,8 @@ def main():
 		description='Low-hanging fruit checker for CTF problems',
 		add_help=True,
 		allow_abbrev=True)
-	parser.add_argument('--unitdir', type=utilities.DirectoryArgument,
-		default='./units', help='the directory where available units are stored')
+#	parser.add_argument('--unitdir', type=utilities.DirectoryArgument,
+#		default='./units', help='the directory where available units are stored')
 	parser.add_argument('--unit', action='append',
 		required=False, default = [], help='the units to run on the targets')
 	parser.add_argument('--unit-help', action='store_true',
@@ -597,7 +598,7 @@ def main():
 
 	# Let the user know what we're doing (this takes a couple seconds)
 	with log.progress('loading units') as p:
-		for unit in finder.load_units(args.unitdir):
+		for unit in finder.load_units():
 			p.status('loaded {0}'.format(unit.__module__))
 		p.success('complete')
 
