@@ -39,21 +39,21 @@ Katana works with a "boss -> worker" topology. One thread (the boss) spins off o
 To add functionality to Katana, you simply need to create units. The boss will then handle them appropriately. Currently, the units we have defined are:
 
 ```
-pdf/pdf2text.py		crypto/polybius.py		raw/base64_decode.py		stego/snow.py
-pdf/pdfimages.py		crypto/railfence.py		raw/exiftool.py		stego/stegsolve.py
-pdf/pdfinfo.py		crypto/dna.py			raw/qrcode.py			stego/zsteg.py
-pdf/pdfcrack.py		zip/crack.py			raw/undecimal.py		stego/jsteg.py
-pcap/tcpflow.py		pwnable/stdin.py		raw/unhexlify.py		ocr/tesseract.py
-crypto/caesar.py		forensics/foremost.py		raw/ascii85_decode.py		web/dir.py
-crypto/caesar255.py		forensics/binwalk.py		raw/base32_decode.py		web/cookies.py
-crypto/atbash.py		esoteric/brainfuck.py		raw/urldecode.py		web/spider.py
-crypto/vigenere.py		esoteric/cow.py		raw/base58_decode.py		web/git.py
-crypto/rsa.py			esoteric/malbolge.py		raw/unbinary.py		web/basic_sqli.py
-crypto/t9.py			esoteric/ook.py		raw/strings.py		web/logon_cookies.py
-crypto/reverse.py		esoteric/piet.py		apk/apktool.py		web/basic_img_shell.py
-crypto/xor.py			esoteric/pikalang.py		stego/audio_spectrogram.py	web/robots.py
-crypto/rot47.py		raw/morsecode.py		stego/steghide.py		web/basic_nosqli.py
-crypto/affine.py		raw/base85_decode.py		stego/whitespace.py		web/form_submit.py
+apk/apktool.py			esoteric/cow.py			raw/base85_decode.py		stego/snow.py
+crypto/caesar.py		esoteric/malbolge.py		raw/base64_decode.py		stego/stegsolve.py
+crypto/caesar255.py		esoteric/ook.py			raw/exiftool.py			stego/zsteg.py
+crypto/atbash.py		esoteric/piet.py		raw/qrcode.py			stego/jsteg.py
+crypto/vigenere.py		esoteric/pikalang.py		raw/undecimal.py		web/dir.py
+crypto/rsa.py			forensics/foremost.py		raw/unhexlify.py		web/cookies.py
+crypto/t9.py			forensics/binwalk.py		raw/ascii85_decode.py		web/spider.py
+crypto/reverse.py		ocr/tesseract.py		raw/base32_decode.py		web/git.py
+crypto/xor.py			pcap/tcpflow.py			raw/urldecode.py		web/basic_sqli.py
+crypto/rot47.py			pdf/pdf2text.py			raw/base58_decode.py		web/logon_cookies.py
+crypto/affine.py		pdf/pdfimages.py		raw/unbinary.py			web/basic_img_shell.py
+crypto/polybius.py		pdf/pdfinfo.py			raw/strings.py			web/robots.py
+crypto/railfence.py		pdf/pdfcrack.py			stego/audio_spectrogram.py	web/basic_nosqli.py
+crypto/dna.py			pwnable/stdin.py		stego/steghide.py		web/form_submit.py
+esoteric/brainfuck.py		raw/morsecode.py		stego/whitespace.py		zip/crack.py
 ```
 
 -------
