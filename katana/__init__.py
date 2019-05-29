@@ -569,8 +569,6 @@ def main():
 			required=False, default=None, help='dictionary for brute forcing tasks')
 	parser.add_argument('--data-length', '-l', default=10, type=int,
 		help="minimum number of characters for units results to be displayed")
-	parser.add_argument('--show', '-s', default=False, action="store_true",
-		help="print the results on stdout as well as save to file")
 	parser.add_argument('--download', '-d', action="store_true", default=False,
 			help='consider the argument to be a download link and pull it down')
 	parser.add_argument('--no-download', '-nd', action="store_true", default=False,

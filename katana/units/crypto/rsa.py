@@ -16,6 +16,36 @@ import binascii
 from katana import utilities
 from katana import units
 
+def find_variables( text ):
+
+	matches = [
+		'N',
+		'exponent',
+		'ciphertext',
+		'message',
+		'd',
+		'p',
+		'phi',
+		'q',
+		'totient',
+	]
+	for m in matches:
+		match = re.search(r'({0})({1})?\s*[=:]\s*(.*)'.format(m[0], m[1:]), text, re.IGNORECASE)
+
+		if match:
+			letter = match.groups()[0].lower()
+			middle = match.groups()[1]
+			value = match.groups()[-1]
+			
+			if middle:
+				middle = middle.lower()
+				if letter.startswith('m') and middle.startswith('odulus'):
+					letter = 'n'
+				if letter.startswith('p') and middle.startswith('hi'):
+					letter = 'phi'
+
+			yield letter, value
+
 def parse_int(given):
 	found = -1
 	if not utilities.isprintable(given):
@@ -72,16 +102,14 @@ class Unit(units.NotEnglishUnit):
 		  'required': 	False,
 		  'help': 		'd value for RSA cryptography'
 		},
-	]
 
-	# JOHN: This SHOULD be removed following the new unit argument restructure
-	@classmethod
-	def add_arguments(cls, katana, parser):
-		parser.add_argument('--rsa-e', default="", type=str, help='exponent value for RSA cryptography')
-		parser.add_argument('--rsa-n', default="", type=str, help='modulus value for RSA cryptography')
-		parser.add_argument('--rsa-q', default="", type=str, help='q factor for RSA cryptography')
-		parser.add_argument('--rsa-p', default="", type=str, help='p factor for RSA cryptography')
-		parser.add_argument('--rsa-d', default="", type=str, help='d value for RSA cryptography')
+		{ 'name': 		'rsa_c', 
+		  'type': 		str, 
+		  'default': 	"", 
+		  'required': 	False,
+		  'help': 		'c value for RSA cryptography'
+		},
+	]
 
 	def __init__(self, katana, target):
 		super(Unit, self).__init__(katana, target)
@@ -89,58 +117,78 @@ class Unit(units.NotEnglishUnit):
 		if target.is_url:
 			raise NotApplicable('target is a URL')
 
-		self.c = parse_int(self.target.raw)
-		if self.c == -1:
-			raise NotApplicable('could not determine ciphertext')
-
-		if not katana.config['rsa_n'] or ( not katana.config['rsa_p'] and not katana.config['rsa_q'] ):
-			raise NotApplicable('no means to determine modulus (no n, or no p and q)')
 		
-	# def enumerate(self, katana):
-	# 	if katana.config['caesar_shift'] == -1:
-	# 		for shift in range(1, len(string.ascii_lowercase)):
-	# 			yield shift
-	# 	else:
-	# 		yield katana.config['caesar_shift']
+
+		# Extract all the variables out from the arguments, if they are supplied.
+		# Since we need a ciphertext and that will be tested later, leave that empty.
+		self.c = -1
+		self.e = parse_int(katana.config['rsa_e'])
+		self.n = parse_int(katana.config['rsa_n'])
+		self.q = parse_int(katana.config['rsa_q'])
+		self.p = parse_int(katana.config['rsa_p'])
+		self.d = parse_int(katana.config['rsa_d'])
+
+		if katana.config['rsa_c']:
+			try:
+				handle = open(katana.config['rsa_c'], 'rb')
+				is_file = True
+			except OSError:
+				is_file = False
+
+			if is_file:
+				ciphertext_data = handle.read()
+				self.c = parse_int(ciphertext_data)
+				if self.c == -1:
+					raise NotApplicable('could not determine ciphertext from file')
+			else:
+				self.c = parse_int(katana.config['rsa_c'])
+
+		if self.target.is_file:
+			try:
+				self.raw_target = self.target.stream.read().decode('utf-8')
+			except UnicodeDecodeError:
+				raise NotApplicable('unicode error, must not be potential ciphertext')
+				
+			for finding in find_variables(self.raw_target):
+				if finding:
+					vars(self)[finding[0]] = parse_int(finding[1])
+
+		if self.c == -1:
+			raise NotApplicable("no ciphertext determined")
 
 	def evaluate(self, katana, case):
 
-		c = self.c
-		e = parse_int(katana.config['rsa_e'])
-		n = parse_int(katana.config['rsa_n'])
-		q = parse_int(katana.config['rsa_q'])
-		p = parse_int(katana.config['rsa_p'])
-		d = parse_int(katana.config['rsa_d'])
+
 
 		# If e is not given, assume it is the standard 65537
-		if e == -1:
-			e = 0x10001
+		if self.e == -1:
+			self.e = 0x10001
 
 
 		# if n is given but p and q are not, try TO factor n.
-		if p == -1 and q == -1 and n != -1:
-			factors = list([ int(x) for x in primefac.factorint(n)])
+		if self.p == -1 and self.q == -1 and self.n != -1:
+			factors = list([ int(x) for x in primefac.factorint(self.n)])
 			if len(factors) == 2:
-				p, q = factors
+				self.p, self.q = factors
 			else:
 				raise NotImplemented("We need support for multifactor RSA!")
 			pass
 
 		# if n is NOT given but p and q are, multiply them to get n
-		if n == -1 and p != -1 and q != -1:
-			n = p * q
+		if self.n == -1 and self.p != -1 and self.q != -1:
+			self.n = self.p * self.q
 		
-		phi = ( p - 1 )* ( q - 1 )
+		self.phi = ( self.p - 1 )* ( self.q - 1 )
 
 		# If d is not supplied (which is normal) calculate it
-		if d == -1:
-			d = inverse(e,phi)
+		if self.d == -1:
+			self.d = inverse(self.e,self.phi)
 		
-		m = pow( c, d, n )
+		self.m = pow( self.c, self.d,self.n )
 		try:
-			result = binascii.unhexlify(hex(m)[2:].rstrip('L'))
+			result = binascii.unhexlify(hex(self.m)[2:].rstrip('L'))
 		except binascii.Error:
-			result = binascii.unhexlify(str('0'+hex(m)[2:].rstrip('L')))
+			result = binascii.unhexlify(str('0'+hex(self.m)[2:].rstrip('L')))
 		
 		katana.add_results(self, result)
 		katana.recurse(self, result)
