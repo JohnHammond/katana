@@ -239,6 +239,8 @@ class Katana(object):
 			pass
 		else:
 
+			self.hook.begin()
+
 			# Find units which match this target
 			units, ignored = self.finder.find(self, self.config['target'], requested=self.config['unit'])
 
