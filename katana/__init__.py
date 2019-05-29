@@ -127,6 +127,15 @@ class Katana(object):
 				self.hook.failure('{0}: unable to create directory'.format(self.config['outdir']))
 				raise RuntimeError('unable to create output directory')
 
+		if self.config['dict'] is not None and isinstance(self.config['dict'], str):
+			try:
+				self.config['dict'] = open(self.config['dict'], 'rb')
+			except OSError:
+				self.hook.failure('{0}: dictionary does not exist'.format(
+					self.config['dict']
+				))
+				raise RuntimeError('dictionary does not exist')
+
 		self.hook.status('initialization complete')
 
 	@property
