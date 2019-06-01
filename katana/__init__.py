@@ -101,10 +101,10 @@ class Katana(object):
 
 		# Compile the flag format if given
 		if self.config['flag_format']:
-			self.flag_pattern = re.compile(bytes('({0}|flag ?is:?.*|flag:)'.format(self.config['flag_format']), 'utf-8'),
+			self.flag_pattern = re.compile(bytes('({0}|flag ?is:?.*|flag:?.*)'.format(self.config['flag_format']), 'utf-8'),
 				flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
 		else:
-			self.flag_pattern = re.compile(bytes('(flag ?is:?.*|flag:)', 'utf-8'),
+			self.flag_pattern = re.compile(bytes('(flag ?is:?.*|flag:?.*)', 'utf-8'),
 				flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
 
 		# Setup the work queue

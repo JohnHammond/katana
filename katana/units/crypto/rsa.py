@@ -15,9 +15,84 @@ import traceback
 import binascii
 from katana import utilities
 from katana import units
+from OpenSSL import crypto
+
+## JOHN: These are functions for Weiner's Little D attack.
+# -------------------------------------------
+def rational_to_contfrac(x,y):
+	# Converts a rational x/y fraction into a list of partial quotients [a0, ..., an]
+	a = x // y
+	pquotients = [a]
+	while a * y != x:
+		x, y = y, x - a * y
+		a = x // y
+		pquotients.append(a)
+	return pquotients
+
+def convergents_from_contfrac(frac):
+	# computes the list of convergents using the list of partial quotients
+	convs = [];
+	for i in range(len(frac)): convs.append(contfrac_to_rational(frac[0 : i]))
+	return convs
+
+def contfrac_to_rational (frac):
+	# Converts a finite continued fraction [a0, ..., an] to an x/y rational.
+	if len(frac) == 0: return (0,1)
+	num = frac[-1]
+	denom = 1
+	for _ in range(-2, -len(frac) - 1, -1): num, denom = frac[_] * num + denom, num
+	return (num, denom)
+def egcd(a, b):
+	if a == 0: return (b, 0, 1)
+	g, x, y = egcd(b % a, a)
+	return (g, y - (b // a) * x, x)
+
+def mod_inv(a, m):
+	g, x, _ = egcd(a, m)
+	return (x + m) % m
+
+def isqrt(n):
+	x = n
+	y = (x + 1) // 2
+	while y < x:
+		x = y
+		y = (x + n // x) // 2
+	return x
+  
+def weiners_little_d(e, n):
+	frac = rational_to_contfrac(e, n)
+	convergents = convergents_from_contfrac(frac)
+	
+	for (k, d) in convergents:
+		if k != 0 and (e * d - 1) % k == 0:
+			phi = (e * d - 1) // k
+			s = n - phi + 1
+			# check if x*x - s*x + n = 0 has integer roots
+			D = s * s - 4 * n
+			if D >= 0:
+				sq = isqrt(D)
+				if sq * sq == D and (s + sq) % 2 == 0: return d
+# ---------------------------------------
+
+
+# JOHN: This is used to detect variables in a given file, or handle a given pubkey.
 
 def find_variables( text ):
+	
+	# First, check if this is a public key file.
+	beginning_pubkey = re.search('^-----BEGIN.*?-----\s', text, re.MULTILINE | re.DOTALL)
+	ending_pubkey = re.search('-----END.*?-----\s*$', text, re.MULTILINE | re.DOTALL)
 
+	if beginning_pubkey and ending_pubkey:
+		pubkey = text[beginning_pubkey.start():ending_pubkey.end()]
+
+		pubkey = crypto.load_publickey(crypto.FILETYPE_PEM, pubkey)
+		rsakey = pubkey.to_cryptography_key().public_numbers()
+		values = ( ['n', rsakey.n], ['e', rsakey.e] )
+		for letter, value in values:
+			yield letter, value
+
+		return # We can assume we won't find any other variables....
 	matches = [
 		'N',
 		'exponent',
@@ -46,8 +121,13 @@ def find_variables( text ):
 
 			yield letter, value
 
+
 def parse_int(given):
+	
+	if isinstance(given, int):
+		return given
 	found = -1
+	
 	if not utilities.isprintable(given):
 		given = binascii.hexlify(given)
 	if given == '':
@@ -117,8 +197,6 @@ class Unit(units.NotEnglishUnit):
 		if target.is_url:
 			raise NotApplicable('target is a URL')
 
-		
-
 		# Extract all the variables out from the arguments, if they are supplied.
 		# Since we need a ciphertext and that will be tested later, leave that empty.
 		self.c = -1
@@ -147,8 +225,9 @@ class Unit(units.NotEnglishUnit):
 			try:
 				self.raw_target = self.target.stream.read().decode('utf-8')
 			except UnicodeDecodeError:
+				print("we dead")
 				raise NotApplicable('unicode error, must not be potential ciphertext')
-				
+
 			for finding in find_variables(self.raw_target):
 				if finding:
 					vars(self)[finding[0]] = parse_int(finding[1])
@@ -156,14 +235,30 @@ class Unit(units.NotEnglishUnit):
 		if self.c == -1:
 			raise NotApplicable("no ciphertext determined")
 
-	def evaluate(self, katana, case):
 
+
+
+	def evaluate(self, katana, case):
 
 
 		# If e is not given, assume it is the standard 65537
 		if self.e == -1:
 			self.e = 0x10001
 
+		# If e is large, we might have a Weiner's Little D attack!
+		if self.e > 0x10001 and self.n != -1:
+			self.d = weiners_little_d(self.e, self.n)
+
+			# Attempt to decrypt!!!
+			self.m = pow( self.c, self.d,self.n )
+			try:
+				result = binascii.unhexlify(hex(self.m)[2:].rstrip('L'))
+			except binascii.Error:
+				result = binascii.unhexlify(str('0'+hex(self.m)[2:].rstrip('L')))
+
+			katana.add_results(self, result)
+			katana.recurse(self, result)
+			return 
 
 		# if n is given but p and q are not, try TO factor n.
 		if self.p == -1 and self.q == -1 and self.n != -1:
@@ -193,3 +288,8 @@ class Unit(units.NotEnglishUnit):
 		katana.add_results(self, result)
 		katana.recurse(self, result)
 	
+# 
+'''
+
+crypto.load_publickey(crypto.FILETYPE_PEM, h)
+'''

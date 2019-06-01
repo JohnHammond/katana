@@ -24,6 +24,7 @@ dependencies = [
 	'matplotlib',
 	'pdftotext',
 	'PyPDF2',
+	'pyopenssl',
 	'pwntools @ https://github.com/arthaud/python3-pwntools',
 	'primefac @ https://github.com/elliptic-shiho/primefac-fork' 
 ]

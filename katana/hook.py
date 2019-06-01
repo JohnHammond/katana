@@ -381,7 +381,7 @@ class LoggingKatanaHook(JinjaKatanaHook):
 
 	def begin(self):
 		super(LoggingKatanaHook, self).begin()
-		self.progress('beginning unit processing')
+		self.progress.status('beginning unit processing')
 	
 	def complete(self):
 		super(LoggingKatanaHook, self).complete()

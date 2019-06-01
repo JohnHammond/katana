@@ -10,3 +10,4 @@ savedstate.sav
 build/
 dist/
 katana.egg-info
+.requirements.txt.swp
