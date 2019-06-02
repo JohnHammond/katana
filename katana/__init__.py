@@ -101,6 +101,10 @@ class Katana(object):
 
 		# Compile the flag format if given
 		if self.config['flag_format']:
+			# If they don't make the last character optional, do it for them...
+			if self.config['flag_format'].endswith('}'):
+				self.config['flag_format'] += '?'
+				
 			self.flag_pattern = re.compile(bytes('({0}|flag ?is:?.*|flag:?.*)'.format(self.config['flag_format']), 'utf-8'),
 				flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
 		else:
@@ -375,7 +379,7 @@ class Katana(object):
 			found = match.group().decode('utf-8')
 			# if found.isprintable():
 			if utilities.isprintable(found):
-				
+
 				# JOHN:
 				if strict:
 					if len(found) == len(output):

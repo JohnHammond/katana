@@ -16,6 +16,8 @@ import binascii
 from katana import utilities
 from katana import units
 from OpenSSL import crypto
+import decimal
+
 
 ## JOHN: These are functions for Weiner's Little D attack.
 # -------------------------------------------
@@ -105,7 +107,7 @@ def find_variables( text ):
 		'totient',
 	]
 	for m in matches:
-		match = re.search(r'({0})({1})?\s*[=:]\s*(.*)'.format(m[0], m[1:]), text, re.IGNORECASE)
+		match = re.search(r'({0})({1})?\)?\s*[=:]\s*(.*)'.format(m[0], m[1:]), text, re.IGNORECASE)
 
 		if match:
 			letter = match.groups()[0].lower()
@@ -257,6 +259,33 @@ class Unit(units.NotEnglishUnit):
 			katana.recurse(self, result)
 			return 
 
+		# if n is NOT given but p and q are, multiply them to get n
+		if self.n == -1 and self.p != -1 and self.q != -1:
+			self.n = self.p * self.q
+
+		# If e is only 3, we might have a cubed root attack!
+		if ( self.e == 3 and self.n != -1 ):
+			# Set laaaarrge precision
+			decimal.getcontext().prec = 3000
+
+			# The ciphertext must be in this new object form
+			c_decimal = decimal.Decimal(str(self.c))
+
+			# Take the cubed root of c to find the plaintext message
+			self.m = c_decimal ** (decimal.Decimal('1') / 3)
+
+			# This needs to be rounded... a fine cheap hack is just round up
+			self.m = int(self.m) + 1
+
+			try:
+				result = binascii.unhexlify(hex(self.m)[2:].rstrip('L'))
+			except binascii.Error:
+				result = binascii.unhexlify(str('0'+hex(self.m)[2:].rstrip('L')))
+			
+			katana.add_results(self, result)
+			katana.recurse(self, result)
+			return
+
 		# if n is given but p and q are not, try TO factor n.
 		if self.p == -1 and self.q == -1 and self.n != -1:
 			factors = list([ int(x) for x in primefac.factorint(self.n)])
@@ -266,10 +295,7 @@ class Unit(units.NotEnglishUnit):
 				raise NotImplemented("We need support for multifactor RSA!")
 			pass
 
-		# if n is NOT given but p and q are, multiply them to get n
-		if self.n == -1 and self.p != -1 and self.q != -1:
-			self.n = self.p * self.q
-		
+		# Now that all the given values are found, try to calcuate phi
 		self.phi = ( self.p - 1 )* ( self.q - 1 )
 
 		# If d is not supplied (which is normal) calculate it
