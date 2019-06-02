@@ -225,7 +225,6 @@ class Unit(units.NotEnglishUnit):
 			try:
 				self.raw_target = self.target.stream.read().decode('utf-8')
 			except UnicodeDecodeError:
-				print("we dead")
 				raise NotApplicable('unicode error, must not be potential ciphertext')
 
 			for finding in find_variables(self.raw_target):
