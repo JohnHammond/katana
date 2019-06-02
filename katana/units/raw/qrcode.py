@@ -33,7 +33,6 @@ class Unit(units.FileUnit):
 	def evaluate(self, katana, case):
 
 		decoded = pyzbar.decode(self.image)
-
 		for each_decoded_item in decoded:
 			
 			decoded_data = each_decoded_item.data.decode('latin-1')

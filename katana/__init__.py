@@ -373,8 +373,9 @@ class Katana(object):
 			# JOHN: This test is here because we had an issue with esoteric languages.
 			#       We MORE THAN LIKELY will not have a flag without printable chars...
 			found = match.group().decode('utf-8')
-			if found.isprintable():
-
+			# if found.isprintable():
+			if utilities.isprintable(found):
+				
 				# JOHN:
 				if strict:
 					if len(found) == len(output):
