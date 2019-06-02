@@ -235,8 +235,6 @@ class Unit(units.NotEnglishUnit):
 			raise NotApplicable("no ciphertext determined")
 
 
-
-
 	def evaluate(self, katana, case):
 
 

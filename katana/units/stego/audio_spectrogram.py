@@ -20,7 +20,7 @@ from katana import units
 def get_info(wav_file):
 
 	if(wav_file.split(b".")[-1] == b"mp3"):
-		sound = AudioSegment.from_mp3(wav_file)
+		sound = AudioSegment.from_mp3(wav_file.decode('utf-8'))
 		frames = sound._data
 		frame_rate = sound.frame_rate
 

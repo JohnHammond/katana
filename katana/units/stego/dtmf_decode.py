@@ -222,6 +222,8 @@ class Unit(units.FileUnit):
 		try:
 			# pass
 			self.detector.check(self.target.path.decode('utf-8'))
+		except wave.Error:
+			raise NotApplicable("no RIFF id... not a .wav? mp3 not yet supported..")
 		except:
 			traceback.print_exc()
 			raise NotApplicable("failure reading dtmf tones")
