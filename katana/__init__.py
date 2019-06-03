@@ -101,12 +101,12 @@ class Katana(object):
 
 		# Compile the flag format if given
 		if self.config['flag_format']:
-				
-			self.flag_pattern = re.compile(bytes('({0}|flag ?is:?.*|flag:\s?.*)'.format(self.config['flag_format']), 'utf-8'),
+			self.flag_pattern = re.compile(bytes('({0})'.format(self.config['flag_format']), 'utf-8'),
 				flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
-		else:
-			self.flag_pattern = re.compile(bytes('(flag ?is:?.*|flag:?.*)', 'utf-8'),
-				flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
+		
+		# Whether or not a flag was supplied, look for this pattern regardless
+		self.hotfix_flag = re.compile(bytes('(flag ?is:?.*|flag:\s?.*)'.format(self.config['flag_format']), 'utf-8'),
+				flags=re.DOTALL | re.IGNORECASE)
 
 		# Setup the work queue
 		if self.config['no_priority']:
@@ -357,8 +357,8 @@ class Katana(object):
 			return count > 0
 
 		# If the user didn't supply a pattern, there's nothing to do.
-		if self.flag_pattern == None:
-			return False
+		# if self.flag_pattern == None:
+		# 	return False
 
 		if isinstance(output, str):
 			output = output.encode('utf-8')
@@ -368,33 +368,39 @@ class Katana(object):
 		if no_xml != output:
 			self.locate_flags(unit, no_xml, stop=stop)
 
-		match = self.flag_pattern.search(output)
-		if match:
+		def handle_flag_finding(flag_regex_object, output):
+			match = flag_regex_object.search(output)
+			if match:
 
-			# JOHN: This test is here because we had an issue with esoteric languages.
-			#       We MORE THAN LIKELY will not have a flag without printable chars...
-			found = match.group().decode('utf-8')
-			# if found.isprintable():
-			if utilities.isprintable(found):
+				# JOHN: This test is here because we had an issue with esoteric languages.
+				#       We MORE THAN LIKELY will not have a flag without printable chars...
+				found = match.group().decode('utf-8')
+				# if found.isprintable():
+				if utilities.isprintable(found):
 
-				# JOHN:
-				if strict:
-					if len(found) == len(output):
+					# JOHN:
+					if strict:
+						if len(found) == len(output):
+							self.add_flag(found)
+					else:
 						self.add_flag(found)
-				else:
-					self.add_flag(found)
-			
-			# Stop the unit if they asked
-			if stop and unit is not None:
-				unit.completed = True
+				
+				# Stop the unit if they asked
+				if stop and unit is not None:
+					unit.completed = True
 
-			# Stop everything if we have requested that
-			if not self.config['continue']:
-				self.completed = True
+				# Stop everything if we have requested that
+				if not self.config['continue']:
+					self.completed = True
 
-			raise utilities.FoundFlag
+				raise utilities.FoundFlag
 
-			return True
+				return True
+		
+		# First, look for the actual flag format
+		handle_flag_finding(self.flag_pattern, output)
+		# If that fails, try generic flag finding.
+		handle_flag_finding(self.hotfix_flag, output)
 
 		return False
 
