@@ -78,7 +78,6 @@ def weiners_little_d(e, n):
 
 
 # JOHN: This is used to detect variables in a given file, or handle a given pubkey.
-
 def find_variables( text ):
 	
 	# First, check if this is a public key file.
@@ -238,7 +237,6 @@ class Unit(units.NotEnglishUnit):
 
 
 	def evaluate(self, katana, case):
-
 
 		# If e is not given, assume it is the standard 65537
 		if self.e == -1:
