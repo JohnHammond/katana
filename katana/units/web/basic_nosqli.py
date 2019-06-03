@@ -30,9 +30,13 @@ class Unit(web.WebUnit):
 		self.action = re.findall(rb'<\s*form.*action\s*=\s*[\'"](.+?)[\'"]', self.target.content, flags=re.IGNORECASE)
 		self.method = re.findall(rb'<\s*form.*method\s*=\s*[\'"](.+?)[\'"]', self.target.content, flags=re.IGNORECASE)
 
+		# Sometimes, a form might not have an explicit location. Assume the current page!
+		if ( self.action == [] ):
+			self.action = [ b"#" ]
+
 		self.username = re.findall(web.user_regex, self.target.content, flags=re.IGNORECASE)
 		self.password = re.findall(web.pass_regex, self.target.content, flags=re.IGNORECASE)
-		
+
 		# Only run this if we have potential information...
 		if not (self.action and self.method and self.username and self.password):
 			raise units.NotApplicable("no appropriate form fields detected")

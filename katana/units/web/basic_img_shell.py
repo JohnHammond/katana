@@ -38,6 +38,10 @@ class Unit(web.WebUnit):
 		method = re.findall(rb'<\s*form.*method\s*=\s*[\'"](.+?)[\'"]', self.target.content, flags=re.IGNORECASE)
 		upload = self.upload
 
+		# Sometimes, a form might not have an explicit location. Assume the current page!
+		if ( self.action == [] ):
+			self.action = [ b"#" ]
+
 		file_regex = rb'<\s*input.*name\s*=\s*[\'"](%s)[\'"]' % b"|".join(web.potential_file_variables)
 		file = re.findall(file_regex, self.target.content, flags=re.IGNORECASE)
 

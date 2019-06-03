@@ -32,6 +32,10 @@ class Unit(web.WebUnit):
 		self.username = re.findall(web.user_regex, self.target.content, flags=re.IGNORECASE)
 		self.password = re.findall(web.pass_regex, self.target.content, flags=re.IGNORECASE)
 		
+		# Sometimes, a form might not have an explicit location. Assume the current page!
+		if ( self.action == [] ):
+			self.action = [ b"#" ]
+
 		# Only run this if we have potential information...
 		if not (self.action and self.method and self.username and self.password):
 			raise units.NotApplicable('no form found')
