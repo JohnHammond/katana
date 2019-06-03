@@ -113,6 +113,9 @@ class Target(object):
 			self.path = None
 			self.content = upstream
 
+		if isinstance(self.path, bytes):
+			self.path = self.path.decode('utf-8')
+
 		# Grab the file type from libmagic (both for files and raw buffers)
 		if self.is_file:
 			self.magic = magic.from_file(self.path)
