@@ -92,6 +92,7 @@ esoteric.cow - Drnkn
 stego.audio_spectrogram - Zwedgy
 stego.dtmf_decoder - Zwedgy
 stego.whitespace - l14ck3r0x01
+hash.md5 - John Kazantzis
 ```
 
 Cookbooks
