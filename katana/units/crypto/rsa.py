@@ -290,7 +290,11 @@ class Unit(units.NotEnglishUnit):
 			if len(factors) == 2:
 				self.p, self.q = factors
 			else:
-				raise NotImplemented("We need support for multifactor RSA!")
+				if len(factors) == 1:
+					raise NotImplemented("factordb could not factor this!")
+				else:
+					raise NotImplemented("We need support for multifactor RSA!")
+					
 			pass
 
 		# Now that all the given values are found, try to calcuate phi

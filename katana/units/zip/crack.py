@@ -38,7 +38,11 @@ class Unit(units.FileUnit):
 			'namelist': []
 		}
 
-		directory_path, _ = katana.create_artifact(self, os.path.basename(self.target.path.decode('utf-8')), create=True, asdir=True)
+		if isinstance(self.target.path, str):
+			path = self.target.path
+		else:
+			path = self.target.path.decode('utf-8')
+		directory_path, _ = katana.create_artifact(self, os.path.basename(path), create=True, asdir=True)
 
 		p = subprocess.Popen(['unzip', '-P', password, self.target.path], cwd=directory_path, 
 				stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)

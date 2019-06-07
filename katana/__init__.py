@@ -99,14 +99,16 @@ class Katana(object):
 		if self.config['target'] == '-':
 			self.config['target'] = sys.stdin.read()
 
+		# Whether or not a flag was supplied, look for this pattern regardless
+		self.hotfix_flag = re.compile(bytes('(flag ?is:?.*|flag:\s?.*)'.format(self.config['flag_format']), 'utf-8'),
+				flags=re.DOTALL | re.IGNORECASE)
+
 		# Compile the flag format if given
 		if self.config['flag_format']:
 			self.flag_pattern = re.compile(bytes('({0})'.format(self.config['flag_format']), 'utf-8'),
 				flags=re.MULTILINE | re.DOTALL | re.IGNORECASE)
-		
-		# Whether or not a flag was supplied, look for this pattern regardless
-		self.hotfix_flag = re.compile(bytes('(flag ?is:?.*|flag:\s?.*)'.format(self.config['flag_format']), 'utf-8'),
-				flags=re.DOTALL | re.IGNORECASE)
+		else:
+			self.flag_pattern = None
 
 		# Setup the work queue
 		if self.config['no_priority']:
@@ -397,8 +399,10 @@ class Katana(object):
 
 				return True
 		
-		# First, look for the actual flag format
-		handle_flag_finding(self.flag_pattern, output)
+		# First, look for the actual flag format, if one was supplied.
+		if self.flag_pattern:
+			handle_flag_finding(self.flag_pattern, output)
+
 		# If that fails, try generic flag finding.
 		handle_flag_finding(self.hotfix_flag, output)
 
