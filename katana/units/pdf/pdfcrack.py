@@ -30,7 +30,7 @@ class Unit(units.FileUnit):
 		except units.NotApplicable as e:
 			raise e
 		except:
-			raise NotApplicable('failed to open/read file')
+			raise units.NotApplicable('failed to open/read file')
 
 	def enumerate(self, katana):
 		

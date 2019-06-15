@@ -95,6 +95,7 @@ stego.whitespace - l14ck3r0x01
 hash.md5 - John Kazantzis
 esoteric.jsfuck - Zwedgy
 crypto.playfair - voidUpdate
+crypto.nato_phonetic - voidUpdate
 ```
 
 Cookbooks
