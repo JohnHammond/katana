@@ -28,9 +28,11 @@ class Unit(BaseUnit):
 		if not self.target.is_printable or self.target.is_file or self.target.is_english:
 			raise NotApplicable("is a file")
 
-		# Check if there is hex in it
-		self.matches = HEX_REGEX.findall(self.target.raw)
-		if self.matches is None:
+		# Check if there is hex in it, remove spaces and commas
+		self.raw_target = self.target.raw.replace(b' ',b'').replace(b',',b'')
+		self.matches = HEX_REGEX.findall(self.raw_target)
+
+		if self.matches is None or self.matches == []:
 			raise NotApplicable("no hex found")
 
 	def evaluate(self, katana, case):
@@ -41,6 +43,7 @@ class Unit(BaseUnit):
 			if len(match) < 4:
 				continue
 			try:
+				result = binascii.unhexlify(match)
 				results.append(binascii.unhexlify(match))
 			except binascii.Error as e:
 				# We may have an "odd-length string" in the way...

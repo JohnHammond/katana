@@ -44,6 +44,10 @@ class Unit(units.NotEnglishAndPrintableUnit):
 			self.raw_target = self.target.stream.read().decode('utf-8')
 		except UnicodeDecodeError:
 			raise units.NotApplicable("unicode error, unlikely usable cryptogram")
+		try:
+			requests.get('https://6n9n93nlr5.execute-api.us-east-1.amazonaws.com/prod/solve')
+		except requests.exceptions.ConnectionError:
+			raise units.NotApplicable("cannot reach quipqiup solver")
 
 	def evaluate(self, katana, case):
 		

@@ -8,7 +8,7 @@ import string
 import enchant
 import mmap
 
-ADDRESS_PATTERN = rb'^((http|https):\/\/)(?P<host>[a-zA-Z0-9][a-zA-Z0-9\-_.]*)(:(?P<port>[0-9]{1,5}))?(\/(?P<uri>[^?]*))?(\?(?P<query>.*))?$'
+ADDRESS_PATTERN = rb'^((?P<protocol>http|https):\/\/)(?P<host>[a-zA-Z0-9][a-zA-Z0-9\-_.]*)(:(?P<port>[0-9]{1,5}))?(\/(?P<uri>[^?]*))?(\?(?P<query>.*))?$'
 BASE64_PATTERN = rb'^[a-zA-Z0-9+/]+={0,2}$'
 LETTER_PATTERN = rb'[A-Za-z]+'
 LETTER_REGEX = re.compile(LETTER_PATTERN, re.DOTALL | re.MULTILINE)
@@ -45,7 +45,10 @@ class Target(object):
 		self.is_english = True
 		self.is_image = False
 		self.is_base64 = False
-		self.is_url = ADDRESS_REGEX.match(self.upstream) is not None
+		self.path = False
+
+		self.url_pieces = ADDRESS_REGEX.match(self.upstream)
+		self.is_url = self.url_pieces is not None
 		# This zero test is here because os.path.isfile chokes on a null-byte
 		self.is_file = 0 not in self.upstream and os.path.isfile(self.upstream)
 		
@@ -78,8 +81,6 @@ class Target(object):
 				except requests.exceptions.ConnectionError:
 					url_accessible = False
 					self.is_url = False
-				
-				self.url_root = '/'.join(upstream.decode('utf-8').split('/')[:3]) + '/'
 				
 				if url_accessible:
 					self.content = self.request.content
@@ -174,6 +175,11 @@ class Target(object):
 		# If we haven't already decided, check if we think this is english
 		if self.is_english:
 			self.is_english = english_words >= (all_words - DICTIONARY_THRESHOLD) and english_words != 0
+
+
+		if self.is_url:
+			print("we are the thing")
+			print(self.web_protocol, self.web_host, self.web_port, self.web_uri, self.web_query, self.is_website_root, self.website_root, self.is_webpage)
 	
 	def __repr__(self):
 		try:
@@ -216,3 +222,66 @@ class Target(object):
 			return open(self.path, 'rb')
 		else:
 			return BytesIO(self.upstream)
+
+
+# ------------------------------------------------------------
+# JOHN: Below is information to handle web things.
+
+	@property
+	def web_protocol(self):
+		if self.is_url:
+			val = self.url_pieces.groupdict()['protocol']
+			return val.decode() if isinstance(val, bytes) else val
+		else:
+			return None
+
+	@property
+	def web_host(self):
+		if self.is_url:
+			val = self.url_pieces.groupdict()['host']
+			return val.decode('utf-8') if isinstance(val, bytes) else val
+		else:
+			return None
+
+	@property
+	def web_port(self):
+		if self.is_url:
+			val = self.url_pieces.groupdict()['port']
+			return val.decode('utf-8') if isinstance(val, bytes) else val
+		else:
+			return None
+
+	@property
+	def web_uri(self):
+		if self.is_url:
+			val = self.url_pieces.groupdict()['uri']
+			return val.decode('utf-8') if isinstance(val, bytes) else val
+		else:
+			return None
+
+	@property
+	def web_query(self):
+		if self.is_url:
+			val = self.url_pieces.groupdict()['query']
+			return val.decode('utf-8') if isinstance(val, bytes) else val
+		else:
+			return None
+
+	@property
+	def website_root(self):
+		if self.is_url:
+			if self.web_port:
+				return f"{self.web_protocol}://{self.web_host}:{self.web_port}/"
+			else:
+				return f"{self.web_protocol}://{self.web_host}/"
+
+	@property
+	def is_website_root(self):
+		return self.upstream.decode('utf-8') == self.website_root \
+			and not self.web_uri and not self.web_query
+
+
+	@property
+	def is_webpage(self):
+		return bool(self.upstream.decode('utf-8') != self.website_root \
+			and self.web_uri)
