@@ -48,11 +48,12 @@ xlat2 += "Vac`uY*MK'X~xDl}REokN:#?G\"i@"
 assert len(xlat1) == len(xlat2) == 94
 
 def crypt1(i, m):
-	assert 32 < ord(m) < 127
+	# assert 32 < ord(m) < 127
 	return xlat1[(ord(m) - 33 + i) % 94]
 def crypt2(m):
-	assert 32 < ord(m) < 127
-	return xlat2[ord(m) - 33]
+
+	# assert 32 < ord(m) < 127
+	return xlat2[(ord(m) - 33) % len(xlat2)]
 def decrypt1(i, c):
 	return chr((xlat1.index(c) - i) % 94 + 33)
 
@@ -101,6 +102,7 @@ def execute_step(a, c, d, mem, inf=sys.stdin.buffer, outf=sys.stdout.buffer):
 	elif m == 'v':
 		raise StopIteration
 	mem[c] = ord(crypt2(chr(mem[c])))
+	
 	c = (c + 1) % (3**10)
 	d = (d + 1) % (3**10)
 
@@ -109,6 +111,7 @@ def execute(code, inf=sys.stdin.buffer, allow_not_isprint=False, debug=False):
 	output = []
 	try:
 		mem = initial_memory(code, allow_not_isprint=allow_not_isprint)
+
 	except:
 		# If this fails, it is probably not Malbolge. Stop trying.
 		return None
@@ -143,7 +146,8 @@ class Unit(NotEnglishUnit):
 	def evaluate(self, katana, case):
 		
 		try:
-			output = execute(self.target.stream.read().decode('utf-8'), 
+			targ = self.target.stream.read().decode('utf-8')
+			output = execute(targ, 
 							 katana.config['malbolge_input'])
 
 		except (ValueError, AssertionError):

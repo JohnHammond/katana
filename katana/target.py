@@ -178,8 +178,9 @@ class Target(object):
 
 
 		if self.is_url:
-			print("we are the thing")
-			print(self.web_protocol, self.web_host, self.web_port, self.web_uri, self.web_query, self.is_website_root, self.website_root, self.is_webpage)
+			pass
+			# print"(we are the thing")
+			# print(self.web_protocol, self.web_host, self.web_port, self.web_uri, self.web_query, self.is_website_root, self.website_root, self.is_webpage)
 	
 	def __repr__(self):
 		try:
