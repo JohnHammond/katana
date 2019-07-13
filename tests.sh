@@ -68,3 +68,6 @@ rm -r results/; ./katana.py -ff "USCGA{.*?}" -a './tests/brainfuck.txt'
 
 BLUE "pdftotext"
 rm -r results/; ./katana.py -ff "actf{.*?}" -a './tests/blank_paper.pdf' 
+
+BLUE "Malbolge"
+rm -r results; ./katana.py -a -ff "InnoCTF{.*?}" tests/inno.txt

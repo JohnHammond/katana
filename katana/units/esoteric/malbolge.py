@@ -127,7 +127,7 @@ def execute(code, inf=sys.stdin.buffer, allow_not_isprint=False, debug=False):
 	
 class Unit(NotEnglishUnit):
 
-	PRIORITY = 65
+	PRIORITY = 10
 
 	ARGUMENTS = [
 		{ 'name': 		'malbolge_input', 
@@ -146,7 +146,7 @@ class Unit(NotEnglishUnit):
 	def evaluate(self, katana, case):
 		
 		try:
-			targ = self.target.stream.read().decode('utf-8')
+			targ = self.target.stream.read().decode('utf-8').replace('\n','')
 			output = execute(targ, 
 							 katana.config['malbolge_input'])
 
