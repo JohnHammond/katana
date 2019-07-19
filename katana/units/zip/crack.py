@@ -11,7 +11,7 @@ class Unit(units.FileUnit):
 	ARGUMENTS = [
 		{ 'name': 'zip_password',
 		  'type': list,
-		  'help': 'A password to try on the file', 
+		  'help': 'A password to try on a ZIP archive', 
 		  'default': []
 		}
 	]

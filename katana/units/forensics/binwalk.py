@@ -56,6 +56,7 @@ class Unit(units.FileUnit):
 		for root, dirs, files in os.walk(binwalk_directory):
 			for name in files:
 				path = os.path.join(root, name)
+				path = os.path.abspath(path)
 				md5 = md5sum(path)
 				if md5.hexdigest() == target_sum.hexdigest():
 					os.remove(os.path.join(root, name))
@@ -64,3 +65,5 @@ class Unit(units.FileUnit):
 					katana.recurse(self, path)
 
 		katana.add_results(self, results)
+		self.completed = True
+		return

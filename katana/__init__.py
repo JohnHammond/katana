@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 # from pwn import *
 import pwnlib.log
 import argparse
@@ -461,7 +462,7 @@ class Katana(object):
 		
 		# Show progress if debug
 		self.hook.work_status(ident, '{0} -> {1}... ({2})'.format(
-			'\u001b[33;1m' + unit.unit_name + '\u001b[0m',
+			'\u001b[33;1m' + unit.unit_name.replace('katana.units.','') + '\u001b[0m',
 			'\u001b[34;1m' + unit.target[:60].replace('\n','') + '\u001b[0m',
 			unit.PRIORITY))
 		

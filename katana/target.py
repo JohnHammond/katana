@@ -176,6 +176,10 @@ class Target(object):
 		if self.is_english:
 			self.is_english = english_words >= (all_words - DICTIONARY_THRESHOLD) and english_words != 0
 
+		# JOHN: This is a patch to handle relative file paths, because apparently
+		#       we didn't....
+		if self.path and self.path.startswith('./'):
+			self.path = os.path.abspath(self.path)
 
 		if self.is_url:
 			pass

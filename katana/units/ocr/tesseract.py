@@ -58,3 +58,6 @@ class Unit(units.FileUnit):
 			# We don't locate flags any more because recurse does this for us.
 			katana.recurse(self, ocr_data)
 			katana.add_results(self, ocr_data)
+			
+		self.completed = True
+		return

@@ -50,6 +50,7 @@ class Unit(units.FileUnit):
 
 				# Don't recurse on the same file, or the foremost report
 				if filename != 'audit.txt' and target_hash != path_hash:
+					file_path = os.path.abspath(file_path)
 					katana.recurse(self, file_path)
 					results["extracted_files"].append(filename)
 
@@ -57,3 +58,6 @@ class Unit(units.FileUnit):
 		if results['extracted_files']:
 			results['artifact_directory'] = foremost_directory
 			katana.add_results(self, results)
+
+		self.completed = True
+		return
