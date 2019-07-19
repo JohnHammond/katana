@@ -19,7 +19,9 @@ from katana import units
 
 def get_info(wav_file):
 
-	if(wav_file.split(b".")[-1] == b"mp3"):
+	if not isinstance(wav_file, bytes):
+		wav_file = wav_file.encode('utf-8')
+	if ( wav_file.split(b".")[-1] == b"mp3" ):
 		sound = AudioSegment.from_mp3(wav_file.decode('utf-8'))
 		frames = sound._data
 		frame_rate = sound.frame_rate
@@ -41,6 +43,7 @@ class Unit(units.FileUnit):
 	def __init__(self, katana, target, keywords=[]):
 		super(Unit, self).__init__(katana, target, keywords=["audio"])
 		
+		print("did we get here?")
 		if target.is_url:
 			raise NotApplicable('target is a URL')
 

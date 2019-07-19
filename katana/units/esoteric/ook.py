@@ -14,15 +14,28 @@ import time
 import traceback
 import sys
 
+OOK_PATTERN = rb'((Ook)?(\.|!|\?))'
+OOK_REGEX = re.compile(OOK_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
+
+# translate_table = {
+# 	"Ook. Ook?": ">",
+# 	"Ook? Ook.": "<",
+# 	"Ook. Ook.": "+",
+# 	"Ook! Ook!": "-",
+# 	"Ook! Ook.": ".",
+# 	"Ook. Ook!": ",",
+# 	"Ook! Ook?": "[",
+# 	"Ook? Ook!": "]",
+# }
 translate_table = {
-	"Ook. Ook?": ">",
-	"Ook? Ook.": "<",
-	"Ook. Ook.": "+",
-	"Ook! Ook!": "-",
-	"Ook! Ook.": ".",
-	"Ook. Ook!": ",",
-	"Ook! Ook?": "[",
-	"Ook? Ook!": "]",
+	".?": ">",
+	"?.": "<",
+	"..": "+",
+	"!!": "-",
+	"!.": ".",
+	".!": ",",
+	"!?": "[",
+	"?!": "]",
 }
 
 def evaluate_ook(code, input_file, timeout = 1):
@@ -34,17 +47,22 @@ def evaluate_ook(code, input_file, timeout = 1):
 	if len(code) % 4 != 0 and len(code) % 2 != 0:
 		return None
 
-	bf_code = ""
+	bf_code = []
 
-	for idx in range(0, len(code), 8):
-		bf_code += translate_table[f"{code[idx:idx+4]} {code[idx+4:idx+8]}"]
+	for idx in range(0, len(code), 2):
+		try:
+			bf_code.append(translate_table[f"{code[idx:idx+2]}"])
+		except KeyError:
+			return
+
+	bf_code = ''.join(bf_code)
 
 	return evaluate_brainfuck(bf_code, input_file, timeout)
 
 
 class Unit(NotEnglishUnit):
 
-	PRIORITY = 60
+	PRIORITY = 20
 
 	ARGUMENTS = [
 		{ 'name': 		'ook_input', 
@@ -66,22 +84,22 @@ class Unit(NotEnglishUnit):
 		super(Unit, self).__init__(katana, target)
 
 		try:
-			self.raw_target=self.target.stream.read().decode('utf-8').lower()
-			if ( self.raw_target.count('ook') < 10 ):
-				raise NotApplicable("less than 10 occurences of 'ook'")
+			self.raw_target=self.target.stream.read()
 		except UnicodeDecodeError:
 			raise NotApplicable("unicode error, unlikely ook syntax")
+		
+		self.matches = OOK_REGEX.findall(self.raw_target)
+		
+		if self.matches is None or self.matches == []:
+			raise NotApplicable("no ook potential found")
 
-	# JOHN: This SHOULD be removed following the new unit argument restructure
-	@classmethod
-	def add_arguments(cls, katana, parser):
-		parser.add_argument('--ook-input',  action='store_true', default=None, help='file to be read as input to ook program')
-		parser.add_argument('--ook-timeout',  action='store_true', default=1, help='timeout in seconds to run ook program')
 
 	def evaluate(self, katana, case):
 
+		value = ''.join( [ x[-1].decode('utf-8') for x in self.matches ] )
+
 		try:
-			output = evaluate_ook(self.target.stream.read().decode('utf-8'), 
+			output = evaluate_ook(value, 
 								  katana.config['ook_input'], 
 								  katana.config['ook_timeout'])
 

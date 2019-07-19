@@ -19,12 +19,13 @@ class Unit(units.PrintableDataUnit):
 
 	def __init__(self, katana, target, keywords=[]):
 		super(Unit, self).__init__(katana, target)
-
 		self.raw_target = self.target.stream.read().decode('utf-8').upper()
-		self.raw_target = self.raw_target.replace(" ", "").replace("U", "T")
-		if not all(c in "ACGTU" for c in self.raw_target) or \
+		self.raw_target = self.raw_target.replace(" ", "").replace("U", "T").strip()
+		
+		if not all(c in "ACGT" for c in self.raw_target) or \
 			len(self.raw_target) % 3 != 0:
 
+			
 			raise NotApplicable("more than DNA letters (A, T, C, G) found")
 
 	def evaluate(self, katana, case):

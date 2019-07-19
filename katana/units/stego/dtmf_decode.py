@@ -215,13 +215,17 @@ class Unit(units.FileUnit):
 	def __init__(self, katana, target, keywords=[]):
 		super(Unit, self).__init__(katana, target, keywords=["audio"])
 		
+
+
 		if target.is_url:
 			raise NotApplicable('target is a URL')
 
 		self.detector = DTMFdetector()
 		try:
-			# pass
-			self.detector.check(self.target.path.decode('utf-8'))
+			if isinstance(self.target.path, bytes):
+				self.detector.check(self.target.path.decode('utf-8'))
+			else:
+				self.detector.check(self.target.path)
 		except wave.Error:
 			raise NotApplicable("no RIFF id... not a .wav? mp3 not yet supported..")
 		except:
