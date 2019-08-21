@@ -4,3 +4,4 @@
 .. automodule:: katana.imagegui
    :members:
    :undoc-members:
+   :noindex:

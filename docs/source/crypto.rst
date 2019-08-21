@@ -18,6 +18,7 @@ These units handle procedures that are often necessary for challenges in the Cry
 	crypto/polybius
 	crypto/quipqiup
 	crypto/railfence
+	crypto/reverse
 	crypto/rot47
 	crypto/rsa
 	crypto/t9

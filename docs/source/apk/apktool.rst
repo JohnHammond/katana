@@ -4,4 +4,5 @@
 .. automodule:: katana.units.apk.apktool
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

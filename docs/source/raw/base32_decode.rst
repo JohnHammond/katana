@@ -4,4 +4,5 @@
 .. automodule:: katana.units.raw.base32_decode
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

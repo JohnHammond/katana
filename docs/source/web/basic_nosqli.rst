@@ -4,4 +4,5 @@
 .. automodule:: katana.units.web.basic_nosqli
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

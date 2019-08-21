@@ -4,4 +4,5 @@
 .. automodule:: katana.units.esoteric.brainfuck
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

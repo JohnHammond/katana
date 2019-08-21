@@ -6,9 +6,3 @@ These units attempt to crack hashes, if they are ever found or determined in Kat
 .. toctree::
 	crack/md5
 	
-
-	
-.. .. automodule:: katana.units.crypto.rsa
-..    :members:
-..    :undoc-members:
-..    :show-inheritance:

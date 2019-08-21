@@ -4,4 +4,5 @@
 .. automodule:: katana.units.raw.base85_decode
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

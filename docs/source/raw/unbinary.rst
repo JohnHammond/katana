@@ -4,4 +4,5 @@
 .. automodule:: katana.units.raw.unbinary
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

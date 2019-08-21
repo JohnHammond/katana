@@ -4,4 +4,5 @@
 .. automodule:: katana.units.raw.undecimal
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

@@ -4,4 +4,5 @@
 .. automodule:: katana.units.raw.exiftool
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

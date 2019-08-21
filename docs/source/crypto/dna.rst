@@ -4,4 +4,5 @@
 .. automodule:: katana.units.crypto.dna
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

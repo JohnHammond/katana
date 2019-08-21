@@ -4,4 +4,5 @@
 .. automodule:: katana.units.esoteric.ook
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

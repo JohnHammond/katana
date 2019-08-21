@@ -4,4 +4,5 @@
 .. automodule:: katana.units.forensics.foremost
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

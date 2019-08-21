@@ -4,4 +4,5 @@
 .. automodule:: katana.units.stego.steghide
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

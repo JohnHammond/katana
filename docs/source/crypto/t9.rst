@@ -4,4 +4,5 @@
 .. automodule:: katana.units.crypto.t9
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

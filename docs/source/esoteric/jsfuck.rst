@@ -4,4 +4,5 @@
 .. automodule:: katana.units.esoteric.jsfuck
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

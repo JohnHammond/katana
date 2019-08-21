@@ -4,4 +4,5 @@
 .. automodule:: katana.units.stego.dtmf_decode
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

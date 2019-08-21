@@ -4,4 +4,5 @@
 .. automodule:: katana.units.stego.zsteg
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

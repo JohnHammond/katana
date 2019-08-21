@@ -4,4 +4,5 @@
 .. automodule:: katana.units.raw.urldecode
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

@@ -4,4 +4,5 @@
 .. automodule:: katana.units.gzip.extract
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

@@ -4,4 +4,5 @@
 .. automodule:: katana.units.esoteric.cow
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

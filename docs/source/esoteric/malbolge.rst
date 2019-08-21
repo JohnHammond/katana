@@ -4,4 +4,5 @@
 .. automodule:: katana.units.esoteric.malbolge
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

@@ -4,3 +4,5 @@
 .. automodule:: katana.unit
    :members:
    :undoc-members:
+   :noindex:
+   

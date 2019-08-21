@@ -4,4 +4,5 @@
 .. automodule:: katana.units.forensics.binwalk
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

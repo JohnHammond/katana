@@ -4,4 +4,5 @@
 .. automodule:: katana.units.web.git
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

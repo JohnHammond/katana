@@ -4,4 +4,5 @@
 .. automodule:: katana.units.pcap.tcpflow
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

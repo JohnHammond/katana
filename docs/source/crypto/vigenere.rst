@@ -4,4 +4,5 @@
 .. automodule:: katana.units.crypto.vigenere
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

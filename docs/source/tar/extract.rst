@@ -4,4 +4,5 @@
 .. automodule:: katana.units.tar.extract
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

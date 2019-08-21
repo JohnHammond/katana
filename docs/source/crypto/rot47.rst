@@ -4,4 +4,5 @@
 .. automodule:: katana.units.crypto.rot47
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

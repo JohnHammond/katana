@@ -4,4 +4,5 @@
 .. automodule:: katana.units.esoteric.pikalang
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

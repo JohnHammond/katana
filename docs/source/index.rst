@@ -19,14 +19,10 @@ Getting Started
    about
    install
 
-
-Module Index
---------------
-
 .. toctree::
-
 	:maxdepth: 1
 	:caption: Modules
+
 	hook
 	target
 	unit

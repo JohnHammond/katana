@@ -4,4 +4,5 @@
 .. automodule:: katana.units.web.robots
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:

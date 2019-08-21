@@ -4,4 +4,5 @@
 .. automodule:: katana.units.raw.morsecode
    :members:
    :undoc-members:
+   :noindex:
    :show-inheritance:
