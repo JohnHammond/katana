@@ -26,7 +26,9 @@ dependencies = [
 	'PyPDF2',
 	'pyopenssl',
 	'pwntools @ https://github.com/arthaud/python3-pwntools',
-	'primefac @ https://github.com/elliptic-shiho/primefac-fork' 
+	'primefac @ https://github.com/elliptic-shiho/primefac-fork',
+	'sphinx',
+	'sphinx-rtd-theme'
 ]
 dependency_links = [
 	'git+https://github.com/arthaud/python3-pwntools.git#egg=pwntools-1.0.0',

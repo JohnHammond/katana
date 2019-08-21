@@ -11,3 +11,4 @@ build/
 dist/
 katana.egg-info
 .requirements.txt.swp
+docs/build

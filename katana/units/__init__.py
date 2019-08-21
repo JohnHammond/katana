@@ -1,4 +1,22 @@
 # -*- coding: utf-8 -*-
+r"""
+Base unit class definitions
+
+Defining a new Unit Class
+-----------------------------------
+
+	A new unit is defined within the directory tree underneath "units." They
+	should be organized by the type of problem they are trying to solve. For
+	example, units which solve cryptography problems would be placed under the
+	`katana/units/crypto` directory.
+
+	Each unit must contain at least a single class named `Unit`, which must 
+	inherit from the `BaseUnit` class. There are some other helper classes
+	defined below which do some basic target checks and will signal 
+	NotApplicable in common cases (such as a unit requiring a file, or a 
+	unit requiring printable data).
+
+"""
 # @Author: John Hammond
 # @Date:   2019-02-28 22:33:18
 # @Last Modified by:   John Hammond
