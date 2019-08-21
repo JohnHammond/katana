@@ -1,0 +1,7 @@
+:mod:`katana.units.crypto.t9` --- T9 phone keypad cipher
+=========================================================
+
+.. automodule:: katana.units.crypto.t9
+   :members:
+   :undoc-members:
+   :show-inheritance:
