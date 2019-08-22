@@ -1,4 +1,49 @@
 #!/usr/bin/env python
+r"""
+The :class:`KatanaHook` class provides an interface to capture results and status from
+the katana engine asynchronously during evaluation of a target. This includes
+generic unit results as well as artifacts, flags, and completion notifications.
+
+The provided default hooks do some basic output that we have used for testing
+thus far. These output formats include a Jinja2 based HTML output as well as
+raw JSON output.
+
+We don't expect these to be subclassed much further unless different front-ends
+are being built for Katana. :class:`DefaultKatanaHook` will dump the results to a
+JSON file. :class:`JinjaKatanaHook` will dump both the JSON and a single page HTML
+file containing the results in a readable format. :class:`LoggingKatanaHook` is
+the one used for command-line Katana runs. This will inherit from
+:class:`JinjaKatanaHook` but also output status messages to the command line (not
+optimal for a katana GUI for example).
+
+If you are manually rolling your own Katana script, you can specify the type of
+Katana hook when instantiating your katana instance:
+
+.. code-block:: python
+	:linenos:
+
+	# Instantiate a unit finder
+	finder = units.UnitFinder(configuration)
+	for unit in finder.load_units():
+		pass
+
+	# Validate your configuration
+	config = finder.validate_config(configuration)
+
+	# Create a Katana instance (with your custom hook class)
+	katana = Katana(config, finder, MyCustomHookClass())
+
+	# Evaluate your target
+	katana.evaluate()
+
+**NOTE** when implementing your own Katana hook, you should keep in mind that
+these hooks should execute as quickly as possible. The default hooks attempt to
+queue results until a completion notification and only then do any text/image
+processing to create the output. This is because the call to these hooks are
+synchronous, and the Katana threads will wait until the hook completes it's
+callback.
+
+"""
 from collections import deque
 from pwn import *
 import jinja2
@@ -12,27 +57,35 @@ import sys
 from katana import utilities
 
 class KatanaHook(object):
+	r"""This defines the base Katana hook. It does nothing by default and simply
+	passes on all notifications. As noted above, these call backs are
+	synchronous, and should return execution control to the calling unit as
+	soon as possible.
+	"""
 
 	def __init__(self):
 		self.katana = None
 		pass
 
 	def flag(self, flag):
-		""" Notified when a unit locates a flag """
+		""" Called when a unit identifies a string which matches the flag
+		format """
 		pass
 	
 	def result(self, unit, result):
-		""" Notified when a unit produces some result dict from a target """
+		""" This is an arbitrary dictionary of results. It is unit specific,
+		and could be anything (raw data output, file names, etc). """
 		pass
 	
 	def artifact(self, unit, artifact, isdir):
-		""" Notified when a unit produces a file. `artifact` is the path
-			to the new artifact under the results directory. """
+		""" Units sometimes create artifacts (files or directories) during
+		processing. This is to notify the hook that a unit has created such an
+		artifact. """
 		pass
 
 	def image(self, image):
-		""" If an artifact is an image, receive a notification. Useful for
-			displaying real-time results as needed """
+		""" This is a special type of artifact which has been identified as an
+		image. :data:`image` is the path to the image file. """
 		pass
 
 	def recurse(self, target):
