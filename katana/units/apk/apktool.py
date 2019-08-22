@@ -1,75 +1,91 @@
-from katana.unit import BaseUnit
-from collections import Counter
-import sys
-from io import StringIO
-import argparse
-from pwn import *
-import subprocess
-from katana.units import forensics
-import os
-from katana import utilities
-import glob
-from hashlib import md5
+"""
+
+Run ``apktool`` on the host system. For this unit to work, it depends on the 
+``apktool`` program to be in the system ``PATH`` environment variable.
+
+This unit hashes each file it detects, so it does not recursively process 
+itself.
+
+"""
+
 from katana import units
 
-DEPENDENCIES = [ 'apktool' ]
+from hashlib import md5
+from io import StringIO
+from pwn import *
+import subprocess
+import os
+
+
+DEPENDENCIES :list = [ 'apktool' ]
+
 
 class Unit(units.FileUnit):
+	""" 
+	This unit inherits from the ``unit.NotEnglishUnit`` because it must be 
+	working with a ``.apk`` file. 
 
-	PRIORITY = 40
+	This unit hashes its findings, so it will not recurse on duplicate data.
+	"""
 
-	# JOHN: This MUST be in the class... 
-	PROTECTED_RECURSE = True
+	PRIORITY :int = 40
+
+	PROTECTED_RECURSE :bool = True
 	
-	# We do not need to include the constructor here 
-	# because the ForensicsUnit parent will pull from FileUnit, 
-	# to ensure the target is in fact a file.
-
 	def __init__(self, katana, target):
+		'''
+		The constructor is in included, so we can specify that this file
+		type magic string must include the word "archive", as that is 
+		generally part of an APK file's description.
+		'''
 		super(Unit, self).__init__(katana, target, keywords=['archive'])	
 
-	def evaluate(self, katana, case):
 
-		def __init__(self, katana, target):
-			# This ensures it is a PDF
-			super(Unit, self).__init__(katana, target, keywords=['zip archive', 'java archive'])
+	def evaluate(self, katana, case):
+		'''
+		Run the ``apktool`` command on the target, and add results.
+		'''
 
 		# Find/create the output artifact directory
-		apktool_directory = katana.get_artifact_path(self)
+		apktool_directory :str = katana.get_artifact_path(self)
 
-		p = subprocess.Popen(['apktool', 'decode', '-f', self.target.path, '-o', apktool_directory ], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+		# Run the apktool command outputting to the artifact directory
+		p = subprocess.Popen(['apktool', 'decode', '-f', self.target.path, 
+							  '-o', apktool_directory ], 
+							  stdout = subprocess.PIPE, 
+							  stderr = subprocess.PIPE)
 		p.wait()
 		
-		results = {
+		# Keep track of the results in a dictionary, so we can add the 
+		# appropriate artifact directory to each. 
+		results :dict = {
 			"extracted_files" : []
 		}
 
+		# Hash the target, so we know not to recurse on that in the future.
 		target_hash = md5()
 		with open(self.target.path, 'rb') as st:
 			for chunk in iter(lambda: st.read(4096), b''):
-				# Update the hash with this chunk
-				target_hash.update(chunk)
+				target_hash.update(chunk) # Update the hash with this chunk
 
+		# After all the files have been extract with apktool, 
+		# loop through them, keeping track of their hashes
 		for (directory, dirs, files) in os.walk(apktool_directory):
 			dirs[:] = [d for d in dirs if d not in ['android']]
 			for filename in files:
-				# print('starting to loop')
-				# Get the relative path
 				file_path = os.path.join(directory, filename)
-				# print(file_path)
 				
 				path_hash = md5()
 				with open(file_path, 'rb') as st:
 					for chunk in iter(lambda: st.read(4096), b''):
-						# Update the hash with this chunk
-						path_hash.update(chunk)
+						path_hash.update(chunk) # Update the hash
 
 				# Don't recurse on the same file, or the report
 				if filename != 'apktool.yml' and target_hash != path_hash:
 					katana.recurse(self, file_path)
 					results["extracted_files"].append(filename)
 
-
+		# If we actually extracted anything, add them to Katana's results.
 		if results['extracted_files']:
 			results['artifact_directory'] = apktool_directory
 			katana.add_results(self, results)

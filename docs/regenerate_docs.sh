@@ -28,5 +28,5 @@ python3 setup.py install || failed "failed to install katana"
 
 # Come back to the docs folder to build the documentation from a clean slate
 popd
-rm -r build
+# rm -r build
 make html
