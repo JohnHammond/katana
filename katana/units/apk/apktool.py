@@ -22,8 +22,8 @@ DEPENDENCIES :list = [ 'apktool' ]
 
 class Unit(units.FileUnit):
 	""" 
-	This unit inherits from the ``unit.NotEnglishUnit`` because it must be 
-	working with a ``.apk`` file. 
+	This unit inherits from the :class:``katana.units.FileUnit`` class 
+	because it must be working with a ``.apk`` file. 
 
 	This unit hashes its findings, so it will not recurse on duplicate data.
 	"""
