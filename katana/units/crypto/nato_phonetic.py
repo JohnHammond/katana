@@ -1,16 +1,14 @@
-from katana.unit import BaseUnit
-from collections import Counter
-import sys
-from io import StringIO
-import argparse
-from pwn import *
-import os
-from katana.units import crypto
+"""
+
+NATO phonetic alphabet translater.
+
+This unit will translate the code words found in the NATO phonetic alphabet to 
+their corresponding letter mapping.
+
+"""
+
 from katana.units import NotApplicable
 from katana import units
-
-import string
-import collections
 
 # Duplicate entries for things that may be represented 
 # in multiple ways
@@ -21,12 +19,22 @@ nato_mappings = [
 	'victor', 'whiskey', 'x-ray', 'xray', 'yankee', 'zulu'
 ]
 
+
 class Unit(units.PrintableDataUnit):
-# class Unit(units.NotEnglishUnit):
+	'''
+	This unit inherits from the :class:`katana.units.PrintableDataUnit` class, 
+	as the target will have to be printable if it were to contain
+	the NATO phonetic words like Alfa, Bravo, Charlie, etc.
+	'''
 
 	PRIORITY = 50
 
 	def __init__(self, katana, target, keywords=[]):
+		"""
+		The constructor removes spaces from the text and quits if it fails to
+		decode the target.
+		"""
+		
 		super(Unit, self).__init__(katana, target)
 
 		try:
@@ -37,6 +45,10 @@ class Unit(units.PrintableDataUnit):
 
 
 	def evaluate(self, katana, case):
+		'''
+		Perform a simple ``replace()`` call on the target with the NATO
+		alphabet, and both add and recurse on the new result.
+		'''
 
 		result = self.raw_target
 		for mapping in nato_mappings:
