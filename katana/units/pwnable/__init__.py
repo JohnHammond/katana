@@ -13,7 +13,7 @@ class ElfUnit(units.FileUnit):
 		
 		# Load the binary
 		try:
-			self.elf = ELF(self.target.path, checksec=False)
+			self.elf = ELF(self.target.path)
 		except:
 			raise units.NotApplicable("not an elf binary")
 	

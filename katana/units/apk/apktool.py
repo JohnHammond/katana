@@ -8,16 +8,13 @@ itself.
 
 """
 
+import os
+import subprocess
+from hashlib import md5
+
 from katana import units
 
-from hashlib import md5
-from io import StringIO
-from pwn import *
-import subprocess
-import os
-
-
-DEPENDENCIES :list = [ 'apktool' ]
+DEPENDENCIES: list = ['apktool']
 
 
 class Unit(units.FileUnit):

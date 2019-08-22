@@ -20,7 +20,6 @@ class Unit(units.PrintableDataUnit):
 	A, T, C, G or U.
 	'''
 
-	PRIORITY = 50
 
 	def __init__(self, katana, target, keywords=[]):
 		"""

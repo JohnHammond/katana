@@ -18,7 +18,7 @@ def decryptFence(cipher, rails, offset=0):
 	if offset:
 		t = encryptFence('o'*offset + 'x'*len(cipher), rails)
 		for i in range(len(t)):
-			if(t[i] == 'o'):
+			if t[i] == 'o':
 				cipher = cipher[:i] + '#' + cipher[i:]
 	
 	length = len(cipher)
@@ -29,7 +29,7 @@ def decryptFence(cipher, rails, offset=0):
 	for rail in range(rails):
 		p = (rail != (rails-1))
 		x = rail
-		while (x < length and i < length):
+		while x < length and i < length:
 			fence[rail][x] = cipher[i]
 			if p:
 				x += 2*(rails - rail - 1)
@@ -68,9 +68,12 @@ class Unit(units.NotEnglishUnit):
 		},
 	]
 
-	def __init__(self, katana, target, keywords=[]):
+	def __init__(self, katana, target, keywords=None):
 		super(Unit, self).__init__(katana, target)
-		
+
+		self.completed = True
+		if keywords is None:
+			keywords = []
 		if target.is_url:
 			raise NotApplicable('target is a URL')
 
@@ -99,7 +102,7 @@ class Unit(units.NotEnglishUnit):
 
 		for i in number_of_rails:
 
-			plaintext = decryptFence(self.raw_target, i, offset=0)
+			plaintext = decryptFence(self.raw_target, i)
 			if plaintext not in seen_plaintext:
 
 				seen_plaintext.append(plaintext)
@@ -108,5 +111,5 @@ class Unit(units.NotEnglishUnit):
 
 				# STRICT: Only report a flag match if it matches, END TO END!
 				if katana.locate_flags(self, plaintext, strict = True):
-					self.completed = True
+					pass
 				katana.add_results(self, plaintext)

@@ -18,9 +18,11 @@ class Unit(units.NotEnglishAndPrintableUnit):
 	PROTECTED_RECURSE = True
 	PRIORITY = 45
 
-	def __init__(self, katana, target, keywords=[]):
+	def __init__(self, katana, target, keywords=None):
 		super(Unit, self).__init__(katana, target)
 
+		if keywords is None:
+			keywords = []
 		try:
 			self.raw_target = self.target.stream.read().decode('utf-8')
 		except UnicodeDecodeError:
@@ -31,7 +33,7 @@ class Unit(units.NotEnglishAndPrintableUnit):
 		x = []
 		for i in range(len(s)):
 			j = ord(s[i])
-			if j >= 33 and j <= 126:
+			if 33 <= j <= 126:
 				x.append(chr(33 + ((j + 14) % 94)))
 			else:
 				x.append(s[i])

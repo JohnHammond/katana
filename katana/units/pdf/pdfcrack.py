@@ -22,6 +22,7 @@ class Unit(units.FileUnit):
 		# This ensures it is a PDF
 		super(Unit, self).__init__(katana, target, keywords=['pdf document'])
 
+		self.completed = True
 		try:
 			with open(self.target.path, 'rb') as f:
 				pdf = PdfFileReader(f)
@@ -63,5 +64,4 @@ class Unit(units.FileUnit):
 
 			if pdf.decrypt(password):
 				katana.add_results(self, '{0}: {1}'.format(self.target.path, password))
-				self.completed = True
 

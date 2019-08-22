@@ -53,9 +53,11 @@ class Unit(units.PrintableDataUnit):
 
 	PRIORITY = 50
 
-	def __init__(self, katana, target, keywords=[]):
+	def __init__(self, katana, target, keywords=None):
 		super(Unit, self).__init__(katana, target)
 
+		if keywords is None:
+			keywords = []
 		self.raw_target = self.target.stream.read().decode('utf-8').upper()
 
 		# JOHN: Just do a cursory test if there are any numbers to begin with

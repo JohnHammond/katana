@@ -14,7 +14,7 @@ class Unit(WebUnit):
 	
 	def evaluate(self, katana, case):
 
-   		# Return the cookies
+		# Return the cookies
 		result = [ vars(cookie) for cookie in self.target.request.cookies if cookie ]
 		
 		# Hunt for flags...

@@ -37,6 +37,8 @@ class Unit(units.PrintableDataUnit):
 		
 		super(Unit, self).__init__(katana, target)
 
+		if keywords is None:
+			keywords = []
 		try:
 			self.raw_target = self.target.stream.read().decode('utf-8').lower()
 			self.raw_target = self.raw_target.replace(' ', '')
