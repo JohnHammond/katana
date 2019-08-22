@@ -20,7 +20,7 @@ from pwn import *
 BYTES_ALPHABET = bytes(alphabet, 'utf-8')
 
 
-def affine(letter, a, b):
+def affine(letter :str, a :int, b :int) -> bytes:
 	'''
 	Perform the affine cipher operation per letter with the given ``a`` and 
 	``b`` values.
@@ -33,7 +33,7 @@ def affine(letter, a, b):
 		return letter
 
 
-def decrypt( ciphertext, a = 1, b = 1, alphabet = alphabet):
+def decrypt( ciphertext :str, a :int = 1, b :int = 1, alphabet :str = alphabet) ->bytes:
 	'''
 	Decrypt potential ciphertext with the affine cipher.
 	'''

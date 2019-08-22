@@ -1,34 +1,42 @@
-from katana.unit import BaseUnit
-from collections import Counter
-import sys
-from io import StringIO
-import argparse
-from pwn import *
-import os
-from katana.units import crypto
-import string
-import collections
-import io
+"""
+Classic atbash cipher.
+"""
+
 from katana import units
 
-# class Unit(units.PrintableDataUnit):
+from pwn import *
+import string
+import io
+
 class Unit(units.NotEnglishAndPrintableUnit):
+	'''
+	This unit inherits from the :class:`katana.units.NotEnglishUnit` class, as
+	we will likely only perform atbash ciphers on data that is 
+	printable but does not look English plaintext already.
 
-	PROTECTED_RECURSE = True
-	PRIORITY = 60	
-	def __init__(self, katana, target, keywords=[]):
-		super(Unit, self).__init__(katana, target)
+	:data:`PROTECTED_RECURSE` is ``True`` for this unit, because we do not 
+	results	that come from this unit being processed *yet again* by this unit. 
+	That would make for pointless computation and potentially an infinite 
+	loop.
 
-		try:
-			self.raw_target = self.target.stream.read().decode('utf-8')
-		except UnicodeDecodeError:
-			raise units.NotApplicable("unicode error, unlikely usable cryptogram")
+	:data:`PRIORITY` is set to 60, as this has potential to be a long and 
+	time-consuming operation. 
+	'''
+
+	PROTECTED_RECURSE :bool = True
+	PRIORITY :int = 60	
 
 	def evaluate(self, katana, case):
-		new_string = []
-		reverse_upper = string.ascii_uppercase[::-1]
-		reverse_lower = string.ascii_lowercase[::-1]
+		'''
+		Perform the atbash operation on the given target.
+		'''
 
+		new_string :list = []
+		reverse_upper :str = string.ascii_uppercase[::-1]
+		reverse_lower :str = string.ascii_lowercase[::-1]
+
+		# For each character, grab and add its corresponding one in the atbash 
+		# alphabet.
 		with io.TextIOWrapper(self.target.stream, encoding='utf-8') as stream:
 			try: 
 				for character in iter(lambda: stream.read(1), ''):
@@ -39,7 +47,7 @@ class Unit(units.NotEnglishAndPrintableUnit):
 					else:
 						new_string.append(character)
 			except UnicodeDecodeError:
-				# We can't decode this.... must usable...
+				# We can't decode this character. Ignore it.
 				pass
 
 		result = ''.join(new_string)
