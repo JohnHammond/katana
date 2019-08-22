@@ -9,15 +9,22 @@
 # codebase. So, to see the proper changes, we need to on-the-fly
 # remove the Katan module, rebuild it, and THEN generate the documentation.
 
+# This can just be used at the end of a call such as:
+# something_that_could_be_fatal || failure "this is why we failed"
+function failed
+{
+	echo "[$(tput setaf 1)error$(tput sgr0)]" ${@:1} >&2
+	exit 1
+}
+
 # Remove Katana temporarily
-yes | pip3 uninstall katana
+yes | pip3 uninstall katana || failed "failed to uninstall katana"
 
 # Move back up to get Katana's source root
-pushd .
-cd ..
+pushd ..
 
 # Reinstall Katana
-python3 setup.py install --user
+python3 setup.py install || failed "failed to install katana" 
 
 # Come back to the docs folder to build the documentation from a clean slate
 popd
