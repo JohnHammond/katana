@@ -119,7 +119,7 @@ class Unit(units.NotEnglishUnit):
 		elif ( katana.config['affine_a'] != -1 and \
 			   katana.config['affine_b'] == -1 ):
 			for b in range(len(katana.config['affine_alphabet'])):
-				if gcd(a, len(katana.config['affine_alphabet'])):
+				if gcd(katana.config['affine_a'], len(katana.config['affine_alphabet'])):
 					yield (katana.config['affine_a'] % \
 						   len(katana.config['affine_alphabet']), b)
 
@@ -132,7 +132,7 @@ class Unit(units.NotEnglishUnit):
 		else:
 			if ( katana.config['affine_a'] != -1 and \
 				 katana.config['affine_b'] != -1 ):
-				if gcd(a, len(katana.config['affine_alphabet'])):
+				if gcd(katana.config['affine_a'], len(katana.config['affine_alphabet'])):
 					yield katana.config['affine_a'], katana.config['affine_b']
 
 

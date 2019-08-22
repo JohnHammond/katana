@@ -123,7 +123,6 @@ def execute(code, inf=sys.stdin.buffer, allow_not_isprint=False, debug=False):
 			output += one_output
 		except StopIteration:
 			return ''.join(output)
-			break
 	
 class Unit(NotEnglishUnit):
 
