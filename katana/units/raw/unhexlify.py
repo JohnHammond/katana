@@ -14,7 +14,9 @@ import traceback
 import magic
 from katana import units
 
-HEX_PATTERN = rb'((0x)?[a-f0-9]{4,})'
+import mmap
+
+HEX_PATTERN = rb'((0x)?[a-f0-9]{2,})'
 HEX_REGEX = re.compile(HEX_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
 
 class Unit(BaseUnit):
@@ -25,11 +27,14 @@ class Unit(BaseUnit):
 		super(Unit, self).__init__(katana, target)
 
 		# We don't need to operate on files
-		if not self.target.is_printable or self.target.is_file or self.target.is_english:
-			raise NotApplicable("is a file")
+		if not self.target.is_printable or self.target.is_english:
+			raise NotApplicable("not printable text or english text")
 
 		# Check if there is hex in it, remove spaces and commas
-		self.raw_target = self.target.raw.replace(b' ',b'').replace(b',',b'')
+		self.raw_target = self.target.raw
+		if isinstance(self.raw_target, mmap.mmap):
+			self.raw_target = self.target.raw.read()
+		self.raw_target = self.raw_target.replace(b' ',b'').replace(b',',b'')
 		self.matches = HEX_REGEX.findall(self.raw_target)
 
 		if self.matches is None or self.matches == []:

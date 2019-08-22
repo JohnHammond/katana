@@ -21,5 +21,5 @@ python3 setup.py install --user
 
 # Come back to the docs folder to build the documentation from a clean slate
 popd
-rm -r build
+# rm -r build
 make html
