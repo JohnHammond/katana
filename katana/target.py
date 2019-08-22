@@ -1,3 +1,21 @@
+r"""
+In it's most basic sense, a target is any kind of data. Practically, a target
+may come in many forms. A target may be specified as a URL, a file path, raw
+data, base64 encoded data, so on and so forth. The ways data can be encoded or
+passed is nearly infinite.
+
+:class:`Target` attempts to encapsulate as many different target
+representations as possible and hide their details from the individual units.
+For example, a unit which looks for Base64 encoded text may not care whether
+the text to search came from a file, raw data, or a web page. In any case, the
+unit wants a file-like object to retrieve data from.
+
+To this end, there are some assumptions, and nasty regex's used below to
+identify different types of targets and automatically serve the correct data up
+to the units. Most of the things in this class are properties which make some
+comparisons or judgements on the data within the class, and return an
+encapsulated object (such as an open file object or a String/BytesIO object).
+"""
 import requests
 import magic
 import re
@@ -25,10 +43,17 @@ class Target(object):
 		This class encapsulates all interactions that units should
 		have with a target while abstracting away the details.
 
-		For example, a unit may look at only the upstream, but want
-		to ensure that it is a URL or a file. Similarly, a unit may
-		not care what type of target it was, but simply want a file-
-		like object to use for processing.
+		Properties not described below:
+
+		- :data:`is_printable` - whether the data is completely printable
+		- :data:`is_english` - whether the data contains english text
+		- :data:`is_base64` - whether the data is base64
+		- :data:`is_url` - whether the data looks like a URL
+		- :data:`is_file` - whether the data looks like a file path
+		- :data:`magic` - if this is a file, the libmagic type for this file
+		- :data:`upstream` - the original raw target data
+		- :data:`hash` - a hash of the target content (not necessarily of upstream)
+		- :data:`path` - the file path, if it exists on disk
 	"""
 
 	def __init__(self, katana, upstream, parent=None):
@@ -187,6 +212,8 @@ class Target(object):
 			# print(self.web_protocol, self.web_host, self.web_port, self.web_uri, self.web_query, self.is_website_root, self.website_root, self.is_webpage)
 	
 	def __repr__(self):
+		""" Create a representation of this object based on it's upstream
+		source """
 		try:
 			return self.upstream.decode('utf-8')
 		except:
@@ -207,6 +234,9 @@ class Target(object):
 			in memory, it will return the bytes object. For files or larger
 			objects not in memory, it will return an mmap object, which will
 			act the same as a bytes object in most situations.
+
+			This allows inividual units requiring generic "data" to act the
+			same for any type of target.
 		"""
 		if self.content is not None:
 			return self.content
@@ -221,6 +251,10 @@ class Target(object):
 	
 	@property
 	def stream(self):
+		""" This will return a stream opened in binary mode for the given
+		target. This property does not care whether the target is a file or
+		something else, and will wrap the data in a BytesIO object if needed.
+		"""
 		if self.content is not None:
 			return BytesIO(self.content)
 		elif self.is_file:
@@ -234,6 +268,7 @@ class Target(object):
 
 	@property
 	def web_protocol(self):
+		""" if this is a URL, return the protocol """
 		if self.is_url:
 			val = self.url_pieces.groupdict()['protocol']
 			return val.decode() if isinstance(val, bytes) else val
@@ -242,6 +277,7 @@ class Target(object):
 
 	@property
 	def web_host(self):
+		""" if this is a URL, return the hostname """
 		if self.is_url:
 			val = self.url_pieces.groupdict()['host']
 			return val.decode('utf-8') if isinstance(val, bytes) else val
@@ -250,6 +286,7 @@ class Target(object):
 
 	@property
 	def web_port(self):
+		""" if this is a URL, return the port number """
 		if self.is_url:
 			val = self.url_pieces.groupdict()['port']
 			return val.decode('utf-8') if isinstance(val, bytes) else val
@@ -258,6 +295,7 @@ class Target(object):
 
 	@property
 	def web_uri(self):
+		""" if this is a url, return the URI """
 		if self.is_url:
 			val = self.url_pieces.groupdict()['uri']
 			return val.decode('utf-8') if isinstance(val, bytes) else val
@@ -266,6 +304,7 @@ class Target(object):
 
 	@property
 	def web_query(self):
+		""" if this is a url, return the query string """
 		if self.is_url:
 			val = self.url_pieces.groupdict()['query']
 			return val.decode('utf-8') if isinstance(val, bytes) else val
@@ -274,6 +313,7 @@ class Target(object):
 
 	@property
 	def website_root(self):
+		""" if this is a url, return the root of the URL (without any URI) """
 		if self.is_url:
 			if self.web_port:
 				return f"{self.web_protocol}://{self.web_host}:{self.web_port}/"
@@ -282,11 +322,12 @@ class Target(object):
 
 	@property
 	def is_website_root(self):
+		""" if this is a URL, return whether we are at the root of the URL """
 		return self.upstream.decode('utf-8') == self.website_root \
 			and not self.web_uri and not self.web_query
 
-
 	@property
 	def is_webpage(self):
+		""" Opposite of is_website_root? """
 		return bool(self.upstream.decode('utf-8') != self.website_root \
 			and self.web_uri)

@@ -36,12 +36,14 @@ Katana hook when instantiating your katana instance:
 	# Evaluate your target
 	katana.evaluate()
 
-**NOTE** when implementing your own Katana hook, you should keep in mind that
-these hooks should execute as quickly as possible. The default hooks attempt to
-queue results until a completion notification and only then do any text/image
-processing to create the output. This is because the call to these hooks are
-synchronous, and the Katana threads will wait until the hook completes it's
-callback.
+.. note::
+
+	When implementing your own Katana hook, you should keep in mind that these
+	these hooks should execute as quickly as possible. The default hooks attempt to
+	queue results until a completion notification and only then do any text/image
+	processing to create the output. This is because the call to these hooks are
+	synchronous, and the Katana threads will wait until the hook completes it's
+	callback.
 
 """
 from collections import deque
@@ -89,7 +91,8 @@ class KatanaHook(object):
 		pass
 
 	def recurse(self, target):
-		""" Notified when a unit returns data that can be recursed on """
+		""" When a unit identifies data which may be suitable for recursion,
+		this function is called with the new target """
 		pass
 	
 	def begin(self):
@@ -97,15 +100,14 @@ class KatanaHook(object):
 		pass
 	
 	def complete(self):
-		""" Notified when katana has finished running all applicable units, and
-			the results have been written (in both HTML and JSON) in the output
-			directory """
+		""" This function serves to notify the caller that all processing is
+		complete. At this point, it is safe to do any longer processing needed
+		such as generating output/result documents. """
 		pass
 
 	def failure(self, message):
-		""" Notified when some failure condition was met. `message` describes
-			the failure in text for the user. `results` is True if there were
-			any results to write to a file. """
+		""" Notified when some failure condition was met. :data:`message` describes
+			the failure in text for the user. """
 		pass
 	
 	def status(self, status):
@@ -113,10 +115,12 @@ class KatanaHook(object):
 		pass
 	
 	def work_status(self, ident, status):
-		""" Notified when a thread posts an update
-			_NOTE_ This happens very often for short units. You shouldn't do
-			any intense processing here. Log a quick message if needed, and
-			that's it.
+		""" Notified when a thread posts an update. :data:`ident` is a unique
+		thread identifier. :data:`status` is a human readable status message.
+		
+		**NOTE** This happens very often for short units. You shouldn't do
+		any intense processing here. Log a quick message if needed, and
+		that's it.
 		"""
 		pass
 
@@ -126,7 +130,7 @@ class KatanaHook(object):
 		pass
 
 class DefaultKatanaHook(KatanaHook):
-	""" The default Katana results hook will recieve all flags, results,
+	""" The default Katana results hook will store all flags, results,
 		artifacts, and images in queues. Upon completion or failure,
 		the known results are compiled into a clean JSON object and saved
 		to `outdir`/katana.json. These results are also stored in
@@ -191,7 +195,7 @@ class DefaultKatanaHook(KatanaHook):
 		return False
 
 	def locate_result(self, results, unit):
-		""" This just searches the results dict and returns a reference to the
+		""" Search the results dict and returns a reference to the
 			results specifically for the specified unit. It has to look for
 			and possible create all the parent results objects before it can
 			return it. It's kinda gross, but it only happens at the end...
@@ -298,7 +302,7 @@ class DefaultKatanaHook(KatanaHook):
 
 
 	def write(self):
-		""" Write katana output in JSON and HTML """
+		""" Write katana output in JSON """
 
 		# Initial results structure
 		results = {
@@ -357,7 +361,7 @@ class DefaultKatanaHook(KatanaHook):
 class JinjaKatanaHook(DefaultKatanaHook):
 	""" This hook inherits the DefaultKatanaHook behavior, but adds
 		katana.html output using the specified Jinja2 template and
-		the DefaultKatanaHook.results dict.
+		the :data:`DefaultKatanaHook.results` dictionary.
 	"""
 
 	def write(self):
@@ -392,7 +396,7 @@ class JinjaKatanaHook(DefaultKatanaHook):
 
 
 class LoggingKatanaHook(JinjaKatanaHook):
-	""" This katana hook vareity inherits the Default hook behavior
+	""" This katana hook variety inherits the Default hook behavior
 		as well as the HTML hook behavior, and adds console logging.
 		This should only be used if the person running your application
 		is meant to see the logging messages from katana.
