@@ -28,7 +28,8 @@ class Unit(units.NotEnglishUnit):
 
 	:data:`PROTECTED_RECURSE` is ``True`` for this unit, because we do not 
 	results	that come from this unit being processed *yet again* by this unit. 
-	That would make for pointless computation and potentially an infinite loop.
+	That would make for pointless computation and potentially an infinite 
+	loop.
 
 	:data:`PRIORITY` is set to 60, as this has potential to be a long and 
 	time-consuming operation. 
