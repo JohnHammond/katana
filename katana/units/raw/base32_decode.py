@@ -4,7 +4,7 @@ import re
 
 import magic
 from katana import utilities
-from katana.unit import BaseUnit
+from katana.units import BaseUnit
 from katana.units import NotApplicable
 
 BASE32_PATTERN = rb'[A-Z2-7+/]+={0,6}'

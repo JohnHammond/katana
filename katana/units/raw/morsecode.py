@@ -1,6 +1,6 @@
 # -* coding: utf-8 *-
 
-from katana.unit import BaseUnit
+from katana.units import BaseUnit
 from collections import Counter
 import sys
 from io import StringIO

@@ -40,7 +40,7 @@ from katana.imagegui import GUIKatana
 from katana import hook
 from katana import utilities
 from katana.utilities import ArgumentParserWithHelp
-from katana.unit import BaseUnit
+from katana.units import BaseUnit
 
 log = pwnlib.log.getLogger(__name__)
 

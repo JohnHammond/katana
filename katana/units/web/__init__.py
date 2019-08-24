@@ -5,7 +5,7 @@
 # @Last Modified time: 2019-06-15 16:48:43
 
 from pwn import *
-from katana.unit import BaseUnit
+from katana.units import BaseUnit
 from katana import units
 import os
 from katana.units import NotApplicable

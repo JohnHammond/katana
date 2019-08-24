@@ -1,6 +1,6 @@
 import subprocess
 
-from katana.unit import BaseUnit
+from katana.units import BaseUnit
 from katana.units import NotApplicable
 
 DEPENDENCIES = ['strings']

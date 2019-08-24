@@ -4,7 +4,7 @@ import re
 import base58
 import magic
 from katana import utilities
-from katana.unit import BaseUnit
+from katana.units import BaseUnit
 from katana.units import NotApplicable
 
 BASE58_PATTERN = rb'[a-zA-Z0-9+/]+'

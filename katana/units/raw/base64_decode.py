@@ -4,7 +4,7 @@ import re
 
 import magic
 from katana import utilities
-from katana.unit import BaseUnit
+from katana.units import BaseUnit
 from katana.units import NotApplicable
 
 BASE64_PATTERN = rb'[a-zA-Z0-9+/]+={0,2}'
