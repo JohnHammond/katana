@@ -1,29 +1,33 @@
 # -*- coding: utf-8 -*-
 r"""
-Base unit class definitions
+This is the heart and soul of Katana. The units define how Katana evaluates
+targets and what data is returned in the results. A unit is a generic "scanner"
+which can take a target and evaluate it based on some specific type of
+challenge/obfuscation/vulnerability.
 
-Defining a new Unit Class
------------------------------------
+For example, a unit may look for base64 encoded text, scrape a webpage, or
+perform basic SQL inject attacks on a URL. The unit interface allows the writer
+to abstract away the processing of targets, and focus solely on the evaluation
+of a specific and small subset of CTF challenges.
 
-	A new unit is defined within the directory tree underneath "units." They
-	should be organized by the type of problem they are trying to solve. For
-	example, units which solve cryptography problems would be placed under the
-	`katana/units/crypto` directory.
+At it's core, a unit simply needs to exist under the :mod:`units` package
+and implement a class named `Unit` which inherits from the :class:`BaseUnit`.
+In practice, most units will inherit directly from one of the helper units such
+as :class:`FileUnit`, :class:`PrintableDataUnit`, etc. in order to further
+abstract target error checking.
 
-	Each unit must contain at least a single class named `Unit`, which must 
-	inherit from the `BaseUnit` class. There are some other helper classes
-	defined below which do some basic target checks and will signal 
-	NotApplicable in common cases (such as a unit requiring a file, or a 
-	unit requiring printable data).
+For detailed examples of subclassing the :class:`BaseUnit` class, see it's
+definition. Examples of using the specialized units are given below.
+
+.. automodule:: katana.unit
+	:members:
+	:undoc-members:
+	:noindex:
 
 """
 import importlib
 import pkgutil
 import subprocess
-# @Author: John Hammond
-# @Date:   2019-02-28 22:33:18
-# @Last Modified by:   John Hammond
-# @Last Modified time: 2019-05-27 00:18:23
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -33,238 +37,313 @@ from katana.unit import BaseUnit
 
 @dataclass(order=True)
 class UnitWorkWrapper(object):
-    priority: int
-    action: Any = field(compare=False)
-    item: Any = field(compare=False)
+	r""" This is the object which is tracked in the work queue by katana. It is
+	never used by units themselves. Only the expanded :data:`item` field is
+	passed to the :func:`BaseUnit.evaluate` method.
+	"""
+	priority: int
+	action: Any = field(compare=False)
+	item: Any = field(compare=False)
 
 
 class NotApplicable(Exception):
-    pass
+	r"""
+	This exception is raised by the Unit constructor to signal to Katana
+	that the given target is not applicable to this unit. It will stop the
+	loading of this unit.
+	"""
+	pass
 
 
 class DependancyError(Exception):
-    def __init__(self, unit, dep):
-        self.unit = unit
-        self.dependancy = dep
+	r"""
+	This exception is used internally by Katana to signal when a specified
+	unit dependancy is not satisfied on the current system. Dependancies are
+	specified by defining a module-scope global variable in your unit source
+	named `DEPENDENCIES` which is an array of strings naming binaries which
+	must be available within the system path.
+	"""
+	def __init__(self, unit, dep):
+		self.unit = unit
+		self.dependancy = dep
 
 
 class FileUnit(BaseUnit):
+	r""" This unit base class requires that the given target be a file, and also
+	optionally have a libmagic signature which contains one of a specified set
+	of keywords. To use this unit, you simply pass a special `keywords`
+	argument to its constructor in your unit subclass:
 
-    def __init__(self, katana, target, keywords=None):
-        super(FileUnit, self).__init__(katana, target)
+	.. code-block:: python
+		
+		# A unit that requires a file containing some sort of image
+		class Unit(units.FileUnit):
+			def __init__(self, katana, target):
+				super(Unit, self).__init__(katana, target, keywords=['image'])
+	"""
 
-        if keywords is None:
-            keywords = []
-        if not self.target.is_file:
-            raise NotApplicable("not a file")
+	def __init__(self, katana, target, keywords=None):
+		super(FileUnit, self).__init__(katana, target)
 
-        # JOHN: I do this so only ONE of the supplied keywords needs to be there.
-        #       This is to handle things like "jpg" or "jpeg" and other cases
-        if keywords:
-            keyword_found = False
-            for k in keywords:
-                if k.lower() in self.target.magic.lower():
-                    keyword_found = True
-            if not keyword_found:
-                raise NotApplicable("no matching magic keywords")
+		if keywords is None:
+			keywords = []
+		if not self.target.is_file:
+			raise NotApplicable("not a file")
+
+		# JOHN: I do this so only ONE of the supplied keywords needs to be there.
+		#	   This is to handle things like "jpg" or "jpeg" and other cases
+		if keywords:
+			keyword_found = False
+			for k in keywords:
+				if k.lower() in self.target.magic.lower():
+					keyword_found = True
+			if not keyword_found:
+				raise NotApplicable("no matching magic keywords")
 
 
 class PrintableDataUnit(BaseUnit):
+	r""" This unit base class ensures that the target content contains only
+	printable data (that is, data which is not binary/is readable). """
 
-    def __init__(self, katana, target):
-        super(PrintableDataUnit, self).__init__(katana, target)
+	def __init__(self, katana, target):
+		super(PrintableDataUnit, self).__init__(katana, target)
 
-        if not self.target.is_printable:
-            raise NotApplicable("not printable data")
+		if not self.target.is_printable:
+			raise NotApplicable("not printable data")
 
 
 class NotEnglishUnit(BaseUnit):
+	r""" This unit base class ensures that the target content contains mostly
+	english text. """
 
-    def __init__(self, katana, target):
-        super(NotEnglishUnit, self).__init__(katana, target)
+	def __init__(self, katana, target):
+		super(NotEnglishUnit, self).__init__(katana, target)
 
-        if self.target.is_english:
-            raise NotApplicable("potential english text")
+		if self.target.is_english:
+			raise NotApplicable("potential english text")
 
 
 class NotEnglishAndPrintableUnit(BaseUnit):
+	r""" This unit base class ensures that the target content is printable, and
+	is also *not* english text (e.g. base64 data, white space, etc.) """
 
-    def __init__(self, katana, target):
-        super(NotEnglishAndPrintableUnit, self).__init__(katana, target)
+	def __init__(self, katana, target):
+		super(NotEnglishAndPrintableUnit, self).__init__(katana, target)
 
-        if self.target.is_english and not self.target.is_printable:
-            raise NotApplicable("not english and not printable")
+		if self.target.is_english and not self.target.is_printable:
+			raise NotApplicable("not english and not printable")
 
 
 class UnitFinder(object):
-    """ The unit finder will use the given unit path and exclusion list to
-        locate valid units for a given target. It also has helper functions
-        to validate configuration dicts and produce valid argparse parsers
-        given a list of units.
-    """
+	r"""
+	The unit finder locates units within the :mod:`units` package and
+	dynamically loads them. It will check their dependencies and only load
+	units which can be used in the current environment.
 
-    def __init__(self, exclusions):
-        self.units = []
-        self.exclusions = ['katana.units.' + e for e in exclusions]
+	While not strictly necessary, subclassing this object is possible. It is
+	created prior to creating the Katana object and passed into the
+	:class:`katana.Katana` constructor. If subclassed or reimplemented, you
+	must implement the :func:`find` method, as this is what Katana will expect
+	to exist.
 
-    # self.load_units(unit_path, exclusions)
+	Example usage:
 
-    def load_units(self):
-        """ Load all units in the unit path, and ensure they are valid """
-        # This is bad, but I need to not import it at the global level here :(
-        import pwnlib.log
-        log = pwnlib.log.getLogger(__name__)
+	.. code-block:: python
+		:linenos:
 
-        for importer, name, ispkg in pkgutil.walk_packages(katana.units.__path__, 'katana.units.'):
+		# Create a unit finder which excludes all crypto units
+		finder = units.UnitFinder(exclusions=['crypto'])
 
-            # Check the exclusion list to see if this unit matches
-            try:
-                for exclude in self.exclusions:
-                    if name == exclude or name.startswith(exclude.rstrip('.') + '.'):
-                        raise NotApplicable
-            except NotApplicable:
-                # Ignore excluded modules
-                continue
+		# Load all matching units
+		for unit in finder.load_units():
+			print('loaded unit: {0}'.format(unit))
 
-            # Load the module
-            module = importlib.import_module(name)
+	.. note::
+		This code will automatically load all ``*.py`` scripts underneath the
+		``units`` directory and look for a ``Unit`` class. This could be
+		dangerous. Don't put random scripts in this directory.
+	"""
 
-            # Grab the dependencies list if defined
-            try:
-                deps = module.DEPENDENCIES
-            except AttributeError:
-                deps = []
+	def __init__(self, exclusions):
+		self.units = []
+		self.exclusions = ['katana.units.' + e for e in exclusions]
 
-            # dependencies should be a list
-            if not isinstance(deps, list):
-                deps = []
+	# self.load_units(unit_path, exclusions)
 
-            # Check all dependencies
-            try:
-                for dep in deps:
-                    subprocess.check_output(['which', dep])
-            except (FileNotFoundError, subprocess.CalledProcessError):
-                log.failure('{0}: dependancy not satisfied: {1}'.format(
-                    name, dep
-                ))
-                continue
-            # raise DependancyError(name, dep) # JOHN: This is now longer caught, so...
+	def load_units(self):
+		r""" Iterate over all modules within the ``units`` directory and look
+		for valid units (modules defining a ``Unit`` class).
 
-            # Grab the unit class
-            try:
-                unit_class = module.Unit
-            except AttributeError:
-                # We are blindly loading all python modules, some might not be
-                # units...
-                continue
+		For each identified unit, the finder will do the following:
 
-            # Track the module list
-            self.units.append(unit_class)
+		- Ensure it is not in the exclusion list.
+		- Attempt to dynamically load the module
+		- Check for the DEPENDENCIES global
+			- If the global exists, verify the existence of all binaries
+			  defined within the list (using the `which` command)
+		- Verify existence of the ``Unit`` class, and store it.
+		- yield the unit class to the caller, in order to support incremental
+		  progress while loading. For a large list of units, this may take some
+		  time which is why it yields after every unit load.
+		"""
+		# This is bad, but I need to not import it at the global level here :(
+		import pwnlib.log
+		log = pwnlib.log.getLogger(__name__)
 
-            # This allows the caller to track progress. This can take a while.
-            yield unit_class
+		for importer, name, ispkg in pkgutil.walk_packages(katana.units.__path__, 'katana.units.'):
 
-    def construct_parser(self, parser):
-        """ Build a argparse parser based on loaded unit config requirements
+			# Check the exclusion list to see if this unit matches
+			try:
+				for exclude in self.exclusions:
+					if name == exclude or name.startswith(exclude.rstrip('.') + '.'):
+						raise NotApplicable
+			except NotApplicable:
+				# Ignore excluded modules
+				continue
 
-            This function may raise argparse exceptions for duplicate names.
-        """
+			# Load the module
+			module = importlib.import_module(name)
 
-        for unit in self.units:
-            # Grab the argument array
-            try:
-                args = unit.ARGUMENTS
-            except AttributeError:
-                # We don't care if units don't define arguments
-                continue
+			# Grab the dependencies list if defined
+			try:
+				deps = module.DEPENDENCIES
+			except AttributeError:
+				deps = []
 
-            # Iterate through each argument
-            for arg in args:
-                parser.add_argument('--{0}'.format(arg['name'].replace('_', '-')), type=arg['type'],
-                                    default=arg['default'], help=arg['help'])
+			# dependencies should be a list
+			if not isinstance(deps, list):
+				deps = []
 
-    def validate_config(self, config):
-        """ Validate the configuration dictionary based on the loaded units """
+			# Check all dependencies
+			try:
+				for dep in deps:
+					subprocess.check_output(['which', dep])
+			except (FileNotFoundError, subprocess.CalledProcessError):
+				log.failure('{0}: dependancy not satisfied: {1}'.format(
+					name, dep
+				))
+				continue
+			# raise DependancyError(name, dep) # JOHN: This is now longer caught, so...
 
-        for unit in self.units:
-            # Grab argument array
-            try:
-                args = unit.ARGUMENTS
-            except AttributeError:
-                # That's fine
-                continue
+			# Grab the unit class
+			try:
+				unit_class = module.Unit
+			except AttributeError:
+				# We are blindly loading all python modules, some might not be
+				# units...
+				continue
 
-            # Iterate over arguments
-            for arg in args:
-                # Ensure it exists
-                if arg['name'] not in config:
-                    if 'default' in arg:
-                        config[arg['name']] = arg['default']
-                    else:
-                        raise RuntimeError('{0}: missing argument'.format(arg['name']))
-            # Ensure it's the right type
-        # elif not isinstance(config[arg['name']], arg['type']):
-        #	raise RuntimeError('{0}: invalid type'.format(arg['name']))
+			# Track the module list
+			self.units.append(unit_class)
 
-        return config
+			# This allows the caller to track progress. This can take a while.
+			yield unit_class
 
-    def find(self, katana, target, requested=None):
-        """ Use the specified katana object to locate units applicable to the
-            given target. `target` is a Target object. `katana` is a Katana
-            object with a validated config.
-        """
+	def construct_parser(self, parser):
+		""" Use the defined unit arguments to build augment an existing
+		:mod:`argparse` parser. If you defined any arguments which overlap with
+		existing unit arguments, this function may throw argparse exceptions.
+		See the argparse ``add_argument`` documentation for more details.
+		"""
 
-        valid_units = []
-        ignored_units = []
+		for unit in self.units:
+			# Grab the argument array
+			try:
+				args = unit.ARGUMENTS
+			except AttributeError:
+				# We don't care if units don't define arguments
+				continue
 
-        # This is only used in this function. It just says this unit isn't used.
-        class NotRequested(Exception):
-            pass
+			# Iterate through each argument
+			for arg in args:
+				parser.add_argument('--{0}'.format(arg['name'].replace('_', '-')), type=arg['type'],
+									default=arg['default'], help=arg['help'])
 
-        # These are synonymous
-        if not requested:
-            requested = None
+	def validate_config(self, config):
+		""" Validate the given configuration values based on the
+		defined/required arguments within all the loaded units. If an argument
+		is missing, raise a :class:`RuntimeError`.
+		"""
 
-        if requested is not None:
-            requested = ['katana.units.' + r for r in requested]
+		for unit in self.units:
+			# Grab argument array
+			try:
+				args = unit.ARGUMENTS
+			except AttributeError:
+				# That's fine
+				continue
 
-        # Iterate through known units to find ones we are interested in
-        for unit_class in self.units:
-            try:
-                # Check if this was a requested unit
-                if requested is not None:
-                    try:
-                        for name in requested:
-                            if name == unit_class.__module__ or unit_class.__module__.startswith(
-                                    name.rstrip('.') + '.'):
-                                # It matched one of the requested
-                                raise StopIteration
-                    except StopIteration:
-                        # We found a matching requested unit, so we can continue
-                        pass
-                    else:
-                        # We didn't find a matching requested unit, so this isn't applicable
-                        raise NotRequested
+			# Iterate over arguments
+			for arg in args:
+				# Ensure it exists
+				if arg['name'] not in config:
+					if 'default' in arg:
+						config[arg['name']] = arg['default']
+					else:
+						raise RuntimeError('{0}: missing argument'.format(arg['name']))
+			# Ensure it's the right type
+		# elif not isinstance(config[arg['name']], arg['type']):
+		#	raise RuntimeError('{0}: invalid type'.format(arg['name']))
 
-                # Adhere to protected recurse
-                if unit_class.PROTECTED_RECURSE and target.parent is not None:
-                    if target.parent.PROTECTED_RECURSE:
-                        raise NotApplicable
+		return config
 
-                unit = unit_class(katana, target)
-                valid_units.append(unit)
-            except NotApplicable as e:
-                # Return the not applicable exception so
-                ignored_units.append((unit_class, e))
-            except NotRequested:
-                # Just ignore these
-                pass
+	def find(self, katana, target, requested=None):
+		""" Use the specified katana object to locate units applicable to the
+			given target. `target` is a Target object. `katana` is a Katana
+			object with a validated config.
+		"""
 
-        if not katana.config['no_priority']:
-            valid_units = sorted(valid_units)
+		valid_units = []
+		ignored_units = []
 
-        # We return a list of units that were not applicable
-        # if requested was specified, ignored_units will only
-        # contain units that were not applicable that appeared
-        # in the requested list.
-        return valid_units, ignored_units
+		# This is only used in this function. It just says this unit isn't used.
+		class NotRequested(Exception):
+			pass
+
+		# These are synonymous
+		if not requested:
+			requested = None
+
+		if requested is not None:
+			requested = ['katana.units.' + r for r in requested]
+
+		# Iterate through known units to find ones we are interested in
+		for unit_class in self.units:
+			try:
+				# Check if this was a requested unit
+				if requested is not None:
+					try:
+						for name in requested:
+							if name == unit_class.__module__ or unit_class.__module__.startswith(
+									name.rstrip('.') + '.'):
+								# It matched one of the requested
+								raise StopIteration
+					except StopIteration:
+						# We found a matching requested unit, so we can continue
+						pass
+					else:
+						# We didn't find a matching requested unit, so this isn't applicable
+						raise NotRequested
+
+				# Adhere to protected recurse
+				if unit_class.PROTECTED_RECURSE and target.parent is not None:
+					if target.parent.PROTECTED_RECURSE:
+						raise NotApplicable
+
+				unit = unit_class(katana, target)
+				valid_units.append(unit)
+			except NotApplicable as e:
+				# Return the not applicable exception so
+				ignored_units.append((unit_class, e))
+			except NotRequested:
+				# Just ignore these
+				pass
+
+		if not katana.config['no_priority']:
+			valid_units = sorted(valid_units)
+
+		# We return a list of units that were not applicable
+		# if requested was specified, ignored_units will only
+		# contain units that were not applicable that appeared
+		# in the requested list.
+		return valid_units, ignored_units
