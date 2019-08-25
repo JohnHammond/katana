@@ -32,31 +32,83 @@ import base64
 import katana.units
 
 class BaseUnit(object):
+	r"""
+	This class defines the basic unit interactions which Katana expects when
+	evaluating targets. The only *strictly* required things to implement are
+	the :func:`evaluate` and :func:`enumerate` methods. Everything else is
+	optional, but could make your life easier.
 
-	# Set this to True to protect this unit from recursing into another
-	# protected unit
+	A unit should attempt to solve very small and very specific problems.
+	Over-reaching units could cause issues with performance or simply fail to
+	find flags in generic cases. For example, a challenge which requires you to
+	base64 decode a string, then decode a caeser cipher should be solved using
+	two separate units (base64, and caeser). This allows Katana to also
+	seamlessly solve more generic problems which may combine these smaller
+	chunks later.
+
+	.. list-table::
+		:widths: 1 2
+		:header-rows: 1
+
+		* - Attributes
+		  - Description
+		* - PROTECTED RECURSE
+		  - If set to true, prevents this unit from recursing into any unit which shares this unit as a parent (or itself).
+		* - PRIORITY
+		  - Defines an integer priority for this unit. Zero is the highest, while 100 is the lowest. The default is 60.
+		* - NO_RECURSE
+		  - Do not allow any recursion for this unit
+
+	A basic unit can be created by first creating a module within the
+	:mod:`katana.units` package, and defining at a minimum the `Unit` class:
+
+	.. code-block:: python
+		:linenos:
+
+		import re
+
+		from katana.units import BaseUnit
+
+		class Unit(BaseUnit):
+
+			PATTERN = re.compile("my_challenge_pattern",
+				re.MULTILINE | re.DOTALL | re.IGNORECASE)
+			
+			def __init__(self, katana, target):
+				super(Unit, self).__init__(katana, target)
+
+				self.matches = self.PATTERN.findall(self.target.raw)
+				if self.matches is None:
+					raise NotApplicable("does not match this challenge")
+
+			def enumerate(self, katana):
+				for match in self.matches:
+					yield match
+
+			def evaluate(self, katana, case):
+				# Do something fancy to decode/find the flag
+				decoded = case
+
+				# This will search for matching flag format for you and also
+				# will add the given decoded object to the unit results.
+				katana.add_results(self, decoded)
+
+	"""
+	
 	PROTECTED_RECURSE = False
 
-	# The unit priority. 50 is default. 1 is highest. 100 is lowest.
 	PRIORITY = 50
 
-	# Recursion is fine
 	NO_RECURSE = False
 
 	def __lt__(self, other):
 		return self.PRIORITY < other.PRIORITY
 
-	@classmethod
-	def add_arguments(cls, katana, parser):
-		""" Add whatever arguments are needed by this unit to the given
-			parser
-		"""
-		return
-
 	# Unit constructor (saves the config)
 	def __init__(self, katana, target):
-		
-		
+		r""" When defining your constructor, you should call this first before
+		doing any processing. It will setup the :data:`target` attribute and
+		check for violations of recursion flags. """
 		if target.parent is not None and self.PROTECTED_RECURSE and target.parent.PROTECTED_RECURSE:
 			# Protected recursion means that two protected recurse units
 			# can't follow one another. This protects recurse swapping
@@ -91,9 +143,9 @@ class BaseUnit(object):
 			This allows Unit writer to utilize the threading functionality implemented
 			in Katana, without special consideration.
 
-			The value returned from this function is passed directly to the evaluate
-			method in order to evaluate that test case. By default, this just the name
-			of the target for simple tests.
+			If there will only ever be a single case, you can safely return
+			``None`` here, and use the :data:`target` attribute within the
+			:func:`evaluate` method directly.	
 		"""
 		
 		yield None
@@ -103,6 +155,18 @@ class BaseUnit(object):
 		return self.__class__.__module__
 
 	def evaluate(self, case):
+		r""" This is the meat of a unit. It performs any evaluation needed, and
+		stores results from the unit. It will be called for each item yielded
+		from :func:`enumerate`. The :data:`case` parameter will be whatever is
+		returned from :func:`enumerate`. 
+
+		Upon coming across some possibly usable data, you should call
+		:func:`katana.Katana.add_result` to store the result and also evaluate
+		the result against the known flag format. If you don't do this, your
+		unit will never find flags, nor will it have any results at all.
+
+		No value is returned from this method.
+		"""
 		raise RuntimeError('{0}: no evaluate implemented: bad unit'.format(self.unit_name))
 	
 	@property
