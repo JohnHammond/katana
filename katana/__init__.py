@@ -45,6 +45,46 @@ from katana.units import BaseUnit
 log = pwnlib.log.getLogger(__name__)
 
 class Katana(object):
+	r"""
+	This class provides the interface into the Katana boss, and the ability to
+	evaluate targets. The `katana.py` script uses this class to evaluate
+	targets you provide via the command line. Most users will not need to use
+	this class, unless you are embedding Katana within another application
+	(such as an alternative user interface).
+
+	To evaluate a target, a few things must be completed:
+
+	1. Build a ``config`` dictionary housing all your parameters. These are the same as the parameters used at the command line, but without the "--" and with "_" vice "-".
+	2. Create a :class:`units.UnitFinder` object which will be used to locate all applicable units for a given target.
+	3. Create a Katana object, passing in the ``config``, ``UnitFinder``, and your chosen Katana hook object for callback/results processing.
+	4. Call :func:`Katana.evaluate`.
+
+	For code oriented individuals, this will look something like:
+
+	.. code-block:: python
+		:linenos:
+
+		# Create katana configuration
+		config = { 'target': 'ctf-thing.png', 'flag_format': 'FLAG{.*}',
+		'auto': True, 'recurse': True, 'unit': [], 'download': True,
+		'no_priority': False, 'dict': None, 'outdir': './results'  }
+
+		# Build a unit finder
+		finder = units.UnitFinder()
+
+		for unit in finder.load_units():
+			print('[*] loaded unit {0}'.format(unit.__module__))
+
+		# Validate our configuration based on loaded units
+		# This will fill in default values as well
+		config = finder.validate_config(config)
+
+		# Build katana
+		katana = Katana(config, finder, CustomKatanaHook())
+
+		# Evaluate the target
+		katana.evaluate()
+	"""
 
 	def __init__(self, config, finder, hook):
 		self.threads = []
@@ -144,6 +184,8 @@ class Katana(object):
 
 	@property
 	def completed(self):
+		""" Returns true when Katana has finished processing units and is
+		shutting down """
 		return self._completed
 
 	@completed.setter
@@ -167,7 +209,14 @@ class Katana(object):
 			return None
 		return self.config['target']
 
-	def get_artifact_path(self, unit):
+	def get_artifact_path(self, unit = None):
+		""" Retrieve the path to the artifact directory for the given unit.
+		This encorporates the full family tree (possibly recursive parents) and
+		builts a directory tree under :data:`self.config['outdir']` for a given
+		unit's artifacts.
+
+		If no unit is specified, the output directory is returned.
+		"""
 		if unit is None:
 			return self.config['outdir']
 
@@ -186,14 +235,20 @@ class Katana(object):
 
 	def create_artifact(self, unit, name, mode='w', create=True, asdir=False):
 		""" Create a new artifact for the given unit. The artifact will be
-			tracked in the results, so the unit doesn't need to dump that out.
+			tracked in the results, so the unit doesn't need to add that to the
+			results manually.
 
-			NOTE: The created artifact may have a different name than provided. 
+			This function returns a tuple containing ``(artifact_path,
+			file_handle)``.
+
+			.. note::
+				The created artifact may have a different name than provided. 
 				If the requested name already exists, the name will have a number
 				appended between the name and the extension. The actual path created
 				is returned along with the open file reference for created files.
 
-			NOTE 2: The number appending only works if `create` is True. if it isn't,
+			.. note::
+				The number appending only works if `create` is True. if it isn't,
 				then no existence checks are performed. You should handle this on
 				your own during creation...
 		"""
@@ -229,24 +284,41 @@ class Katana(object):
 		return (path, file_handle)
 
 	def add_artifact(self, unit, path):
+		r""" Track a new artifact for the given unit. This is not necessary for
+		artifacts generated using :func:`Katana.create_artifact` however, may
+		be necessary if some external tool used for the unit creates
+		files/directories.
+		"""
 		self.hook.artifact(unit, path, False)
 
 	# Add some results to the result object
 	def add_results(self, unit, d):
+		r""" Add the given dictionary to the results for this unit. These
+		results could be anything from decrypted text to data found in the file
+		that may be useful upon recursion. """
 		self.hook.result(unit, d)
 	
 	# Queue an image to be added to the final results
 	def add_image(self, image):
+		r""" An image is a special type of artifact which can be specially
+		handled by Katana. If an artifact is an image, it's best to track it
+		this way. At the very least, it will normally be displayed in a cleaner
+		fashion in the evaluation results. """
 		self.hook.image(image)
 		return
 	
 	# Add a potential flag to the flag queue
 	def add_flag(self, flag):
+		r""" Notify Katana that you've found a flag. This is normally not
+		necessary and flags are searched for automatically as units turn in
+		results. """
 		self.hook.flag(flag)
 		return
 
 	def evaluate(self):
-		""" Start processing all units """
+		""" Start processing all units. This function does not return until all
+		units have completed evaluation and no more recursion is
+		necessary/possible."""
 		self.start = time.time()
 
 		# Evaluate the given target as a target object
@@ -351,7 +423,18 @@ class Katana(object):
 				self.total_work += 1
 	
 	def locate_flags(self, unit, output, stop=True, strict=False):
-		""" Look for flags in the given data/output """
+		r"""
+		Search the given unit output for flags. :data:`output` can be either
+		a raw string/bytes or a list/tuple. If a list/tuple is given, each item
+		in the list will be searched for flags automatically. This function
+		returns True if a flag was found.
+
+		Parameters
+			- :data:`unit`: the unit which obtained the output
+			- :data:`output`: the output data to be searched
+			- :data:`stop`: whether to stop katana when a flag is located (default: True)
+			- :data:`strict`: only identify a flag :data:`output` contains only the flag.
+		"""
 
 		if isinstance(output, list) or isinstance(output, tuple):
 			count = 0
@@ -410,6 +493,14 @@ class Katana(object):
 		return False
 
 	def recurse(self, parent, data, verify_length = True):
+		r"""
+		This function takes raw data from the evaluation of a unit and attempts
+		to identify other units which can be run against it (potentially
+		running the same unit again, AKA recursion). 
+
+		This function also checks the data for existence of any flags based on
+		the flag format specified in the configuration.
+		"""
 		# JOHN: If this `recurse` is set to True, it will recurse 
 		#       WITH EVERYTHING even IF you specify a single unit.
 		#       This is the intent, but should be left to "False" for testing

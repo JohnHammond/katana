@@ -14,15 +14,16 @@ Getting Started
 ------------------
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   about
-   install
+    about
+    install
 
 .. toctree::
 	:maxdepth: 1
 	:caption: Modules
 
+	katana
 	hook
 	target
 	unit
@@ -30,24 +31,24 @@ Getting Started
 	imagegui
 
 .. toctree::
-    :maxdepth: 1
-    :caption: Units
+	:maxdepth: 1
+	:caption: Units
 
-    apk
-    crack
-    crypto
-    esoteric
-    forensics
-    gzip
-    ocr
-    pcap
-    pdf
-    pwnable
-    raw
-    stego
-    tar
-    web
-    zip
+	apk
+	crack
+	crypto
+	esoteric
+	forensics
+	gzip
+	ocr
+	pcap
+	pdf
+	pwnable
+	raw
+	stego
+	tar
+	web
+	zip
 
 
 
