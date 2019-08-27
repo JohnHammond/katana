@@ -3,5 +3,4 @@
 
 .. autoclass:: katana.Katana
     :members:
-    :undoc-members:
     :noindex:

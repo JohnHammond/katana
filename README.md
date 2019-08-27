@@ -9,7 +9,7 @@ This repository attempts to offer code and material to automate "running through
 
 A lot of the context and ideas from this stem from the living document at [https://github.com/JohnHammond/ctf-katana](https://github.com/JohnHammond/ctf-katana)
 
-**Katana is written in Python3.**
+**Katana is written in Python 3.**
 
 Virtual Environment
 -------------
@@ -36,25 +36,9 @@ Framework Methodology
 
 Katana works with a "boss -> worker" topology. One thread (the boss) spins off other threads (the workers) and returns the results once they have all completed. Each worker is called a "unit". The unit is what actually goes about and accomplishes the task.
 
-To add functionality to Katana, you simply need to create units. The boss will then handle them appropriately. Currently, the units we have defined are:
+To add functionality to Katana, you simply need to create units. The boss will then handle them appropriately.
 
-```
-apk/apktool.py			esoteric/cow.py			raw/base85_decode.py		stego/snow.py
-crypto/caesar.py		esoteric/malbolge.py		raw/base64_decode.py		stego/stegsolve.py
-crypto/caesar255.py		esoteric/ook.py			raw/exiftool.py			stego/zsteg.py
-crypto/atbash.py		esoteric/piet.py		raw/qrcode.py			stego/jsteg.py
-crypto/vigenere.py		esoteric/pikalang.py		raw/undecimal.py		web/dir.py
-crypto/rsa.py			forensics/foremost.py		raw/unhexlify.py		web/cookies.py
-crypto/t9.py			forensics/binwalk.py		raw/ascii85_decode.py		web/spider.py
-crypto/reverse.py		ocr/tesseract.py		raw/base32_decode.py		web/git.py
-crypto/xor.py			pcap/tcpflow.py			raw/urldecode.py		web/basic_sqli.py
-crypto/rot47.py			pdf/pdf2text.py			raw/base58_decode.py		web/logon_cookies.py
-crypto/affine.py		pdf/pdfimages.py		raw/unbinary.py			web/basic_img_shell.py
-crypto/polybius.py		pdf/pdfinfo.py			raw/strings.py			web/robots.py
-crypto/railfence.py		pdf/pdfcrack.py			stego/audio_spectrogram.py	web/basic_nosqli.py
-crypto/dna.py			pwnable/stdin.py		stego/steghide.py		web/form_submit.py
-esoteric/brainfuck.py		raw/morsecode.py		stego/whitespace.py		zip/crack.py
-```
+You can read more about it in the `docs` directory.
 
 -------
 
@@ -78,8 +62,12 @@ Whenever Katana runs, it creates a `results` directory where it stores its findi
 
 If you are running Katana multiple times and just want to see the output, you may want to prepend a `rm -r results;` before your Katana command. **ENSURE THAT THE SEMI-COLON IS IN PLACE SO YOU DO NOT REMOVE KATANA AND YOUR FILES.**
 
+Contributing
+------------
 
-Contributions and Credits
+If you would like to contribute to Katana, please see [`CONTRIBUTING.md`](CONTRIBUTING.md)
+
+Thank You and Credits
 -------------------------
 
 As we got further along in development, we asked members of my Discord server if they would like to assist in creating units. The following is a list of units that were contributions from these members and their names, to offer our kudos and thank you. This project would not be what it is without your help!
@@ -96,246 +84,4 @@ hash.md5 - John Kazantzis
 esoteric.jsfuck - Zwedgy
 crypto.playfair - voidUpdate
 crypto.nato_phonetic - voidUpdate
-```
-
-Cookbooks
-----------
-
-__strings__
-
-
-```
-rm -r results/ ; ./katana.py --unit raw ./tests/orchestra -ff 'USCGA{.*?}'
-```
-
-__exiftool__
-
-This detects the Base64 encoded flag.
-
-```
-rm -r results/ ; ./katana.py --unit raw ./tests/woof64.jpg --flag-format 'USCGA{.*?}' --exclude crypto
-```
-
-__Morsecode__
-
-This detects the hex encoded flag
-
-```
-rm -r results/ ; ./katana.py --unit raw ./tests/tamuctf_morsecode.txt --flag-format 'gigem{.*?}' --exclude crypto
-```
-
-__QR code__
-
-```
-rm -r results/ ; ./katana.py --unit raw ./tests/qrcode.png --flag-format 'USCGA{.*}'
-```
-
-
-__steghide__
-
-Without a password: 
-
-```
-rm -r results/; ./katana.py --unit raw --unit stego ./tests/rubber_ducky.jpg -ff "USCGA{.*?}"
-```
-
-With a password:
-
-```
-rm -r results/; ./katana.py --unit raw --unit stego ./tests/evil_ducky.jpg --dict /opt/rockyou.txt -ff "USCGA{.*?}"
-```
-
-__snow__
-
-```
-rm -r results/; ./katana.py --unit raw --unit stego ./tests/let_it_snow.txt -ff "USCGA{.*?}"
-```
-
-__zsteg__
-
-```
-rm -r results/; ./katana.py --unit raw --unit stego ./tests/pierre.png -ff "USCGA{.*?}"
-```
-
-__robots.txt__
-
-```
-rm -r results/; ./katana.py --unit web.robots http://johnhammond.org -ff "FLAG{.*?}"
-```
-
-__Basic SQL Injection__
-
-```
-rm -r results/; ./katana.py --unit web http://2018shell.picoctf.com:53261/ -ff "picoCTF{.*}"
-```
-
-__Cookies__
-
-```
-rm -r results/; ./katana.py --unit web.cookies http://johnhammond.org -ff "FLAG{.*?}"
-```
-
-__ROT47__
-
-```
-rm -r results/ ; ./katana.py --unit raw --unit crypto ./tests/welcome_crypto.txt -ff 'sun{.*?}'
-```
-
-__Brainfuck__
-
-```
-rm -r results/ ; ./katana.py --unit esoteric.brainfuck ./tests/brainmeat.txt -ff 'sun{.*?}'
-rm -r results/ ; ./katana.py -a ./tests/brainfuck.txt -ff 'USCGA{.*?}'
-```
-
-__Pikalang__
-
-```
-rm -r results/ ; ./katana.py --unit esoteric ./tests/it.pokeball -ff "HELLO WORLD"
-rm -r results/ ; ./katana.py --unit esoteric ./tests/pikalang.pokeball -ff 'USCGA{.*?}'
-```
-
-__Malbolge__
-
-```
-rm -r results/ ; ./katana.py --unit esoteric ./tests/malbolge.txt -ff "Hello World"
-```
-
-__DNA__
-
-```
-rm -r results/ ; ./katana.py -a "gtcactagacagttgagacagttgaaattgcatacacagcat" -ff 'This is a test'
-```
-
-__T9 Cipher__
-
-```
-rm -r results/ ; ./katana.py -a "8 44 444 7777 0 444 7777 0 2 0 8 33 7777 8 0 333 555 2 4 0" -ff 'this is a test flag'
-```
-
-__Whitespace Stego__
-
-```
-rm -r results/ ; ./katana.py --unit stego.whitespace "tests/whitespace.txt" -ff 'FLAG{.*?}'
-```
-
-__Piet__
-
-```
-rm -r results/ ; ./katana.py --unit esoteric.piet "tests/piet_hello_world.png" -ff 'Hello, World!'
-```
-
-__quipqiup__
-
-```
-rm -r results/ ; ./katana.py -a "tests/subtest.txt"
-```
-
-PicoCTF Cookbook
-================
-
-__Resources__
-
-```
-rm -r results/ ; ./katana.py -a "https://picoctf.com/resources" -ff 'picoCTF{.*?}'
-```
-
-__Crypto Warmup 2__
-
-```
-rm -r results/ ; ./katana.py -a "cvpbPGS{guvf_vf_pelcgb!}" -ff 'picoCTF{.*?}'
-```
-
-__grep 1__
-
-```
-rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/805ac70722810caa0b1c02bc88ef68d8/file" -ff 'picoCTF{.*?}'
-```
-
-__strings__
-
-```
-rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/a3d311b507256d5d9299c0e94dfc4fc5/strings" -ff 'picoCTF{.*?}'
-```
-
-__Logon__
-
-```
-rm -r results/ ; ./katana.py -a "http://2018shell.picoctf.com:5477/" -ff 'picoCTF{.*?}'
-```
-
-__Reading Between the Eyes__
-
-```
-rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/9129761dbc4bf494c47429f85ddf7434/husky.png" -ff 'picoCTF{.*?}'
-```
-
-__Recovering from the Snap__
-
-```
-rm -r results/ ; ./katana.py -a -i -d "https://2018shell.picoctf.com/static/b8561b04f5c7107ecb2f15c9a8c79fb8/animals.dd" -ff 'picoCTF{.*?}'
-```
-
-__admin panel__
-
-```
-rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/1a6db339e11fa100ef52d944edaa9612/data.pcap" -ff 'picoCTF{.*?}'
-```
-
-__caesar cipher 1__
-
-This does not solve as it should, because the file in fact already
-has the picoCTF{} flag format inside. We cannot avoid this.
-
-```
-rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/9c305b1460312c3bcfc6dd5741990c26/ciphertext" -ff 'picoCTF{.*?}'
-```
-
-__hex editor__
-
-```
-rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/ccad03a151a0edac8bd01e665a595b7a/hex_editor.jpg" -ff 'picoCTF{.*?}'
-```
-
-__Irish Name Repo__
-
-```
-rm -r results/ ; ./katana.py --unit web.spider "http://2018shell.picoctf.com:52135/" -ff 'picoCTF{.*?}'
-```
-
-__Mr. Robots__
-
-```
-rm -r results/ ; ./katana.py -a "http://2018shell.picoctf.com:10157/" -ff 'picoCTF{.*?}'
-```
-
-__Truly an Artist__
-
-```
-rm -r results/ ; ./katana.py -a -d "https://2018shell.picoctf.com/static/69b2020b48082fb24714bf93707183e8/2018.png" -ff 'picoCTF{.*?}'
-```
-
-
-__now you don't__
-
-```
-rm -r results/ ; ./katana.py -a "https://2018shell.picoctf.com/static/eee00c8559a93bfde1241d5e00c2df37/nowYouDont.png" -d -ff 'picoCTF{.*?}'
-```
-
-__The Vault__
-
-```
-rm -r results/ ; ./katana.py -a "http://2018shell.picoctf.com:53261/" -ff 'picoCTF{.*?}'
-```
-
-__What's my Name?__
-
-```
-rm -r results/ ; ./katana.py -a "https://2018shell.picoctf.com/static/6ae91abb9e70e527e32729413103af90/myname.pcap" -d -ff 'picoCTF{.*?}'
-```
-
-__caesar cipher 2__
-
-```
-rm -r results/ ; ./katana.py -a "https://2018shell.picoctf.com/static/bed1fba9caa8aeda29580c36bf0d0276/ciphertext" -d -ff 'picoCTF{.*?}' -v
 ```

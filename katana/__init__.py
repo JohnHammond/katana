@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-# from pwn import *
 import pwnlib.log
 import argparse
 import json
@@ -44,30 +43,31 @@ from katana.units import BaseUnit
 
 log = pwnlib.log.getLogger(__name__)
 
+
 class Katana(object):
 	r"""
 	This class provides the interface into the Katana boss, and the ability to
-	evaluate targets. The `katana.py` script uses this class to evaluate
+	evaluate targets. The ``katana.py`` script uses this class to evaluate
 	targets you provide via the command line. Most users will not need to use
 	this class, unless you are embedding Katana within another application
 	(such as an alternative user interface).
 
 	To evaluate a target, a few things must be completed:
 
-	1. Build a ``config`` dictionary housing all your parameters. These are the same as the parameters used at the command line, but without the "--" and with "_" vice "-".
+	1. Build a ``config`` dictionary housing all your parameters. These are the same as the parameters used at the command line, but without the hyphens ``--`` and with underscores ``_`` vice ``-``.
 	2. Create a :class:`units.UnitFinder` object which will be used to locate all applicable units for a given target.
 	3. Create a Katana object, passing in the ``config``, ``UnitFinder``, and your chosen Katana hook object for callback/results processing.
 	4. Call :func:`Katana.evaluate`.
 
-	For code oriented individuals, this will look something like:
+	For code-oriented individuals, this will look something like:
 
 	.. code-block:: python
 		:linenos:
 
 		# Create katana configuration
 		config = { 'target': 'ctf-thing.png', 'flag_format': 'FLAG{.*}',
-		'auto': True, 'recurse': True, 'unit': [], 'download': True,
-		'no_priority': False, 'dict': None, 'outdir': './results'  }
+		  'auto': True, 'recurse': True, 'unit': [], 'download': True,
+		  'no_priority': False, 'dict': None, 'outdir': './results'  }
 
 		# Build a unit finder
 		finder = units.UnitFinder()
@@ -182,11 +182,13 @@ class Katana(object):
 
 		self.hook.status('initialization complete')
 
+
 	@property
 	def completed(self):
-		""" Returns true when Katana has finished processing units and is
-		shutting down """
+		""" Returns ``True`` when Katana has finished processing units and is
+		shutting down. """
 		return self._completed
+
 
 	@completed.setter
 	def completed(self, v):
@@ -202,12 +204,14 @@ class Katana(object):
 		with self.work.not_full:
 			self.work.not_full.notify_all()
 
+
 	@property
 	def original_target(self):
-		""" Shorthand for grabbing the target """
+		""" Shorthand for grabbing the target. """
 		if isinstance(self.config['target'], str):
 			return None
 		return self.config['target']
+
 
 	def get_artifact_path(self, unit = None):
 		""" Retrieve the path to the artifact directory for the given unit.
@@ -233,6 +237,7 @@ class Katana(object):
 
 		return path
 
+
 	def create_artifact(self, unit, name, mode='w', create=True, asdir=False):
 		""" Create a new artifact for the given unit. The artifact will be
 			tracked in the results, so the unit doesn't need to add that to the
@@ -248,7 +253,7 @@ class Katana(object):
 				is returned along with the open file reference for created files.
 
 			.. note::
-				The number appending only works if `create` is True. if it isn't,
+				The number appending only works if ``create`` is ``True``. if it isn't,
 				then no existence checks are performed. You should handle this on
 				your own during creation...
 		"""
@@ -283,13 +288,15 @@ class Katana(object):
 		# Return both the open file handle (if created) and the path
 		return (path, file_handle)
 
+
 	def add_artifact(self, unit, path):
 		r""" Track a new artifact for the given unit. This is not necessary for
-		artifacts generated using :func:`Katana.create_artifact` however, may
+		artifacts generated using :func:`katana.create_artifact` however, may
 		be necessary if some external tool used for the unit creates
 		files/directories.
 		"""
 		self.hook.artifact(unit, path, False)
+
 
 	# Add some results to the result object
 	def add_results(self, unit, d):
@@ -297,6 +304,7 @@ class Katana(object):
 		results could be anything from decrypted text to data found in the file
 		that may be useful upon recursion. """
 		self.hook.result(unit, d)
+
 	
 	# Queue an image to be added to the final results
 	def add_image(self, image):
@@ -306,6 +314,7 @@ class Katana(object):
 		fashion in the evaluation results. """
 		self.hook.image(image)
 		return
+
 	
 	# Add a potential flag to the flag queue
 	def add_flag(self, flag):
@@ -314,6 +323,7 @@ class Katana(object):
 		results. """
 		self.hook.flag(flag)
 		return
+
 
 	def evaluate(self):
 		""" Start processing all units. This function does not return until all
@@ -407,6 +417,7 @@ class Katana(object):
 
 		self.hook.complete()
 
+
 	def add_to_work(self, units):
 		# Add all the cases to the work queue
 		for unit in units:
@@ -422,6 +433,7 @@ class Katana(object):
 				))
 				self.total_work += 1
 	
+
 	def locate_flags(self, unit, output, stop=True, strict=False):
 		r"""
 		Search the given unit output for flags. :data:`output` can be either
@@ -453,6 +465,7 @@ class Katana(object):
 		no_xml = re.sub(b'<[^<]+>', b'', output)
 		if no_xml != output:
 			self.locate_flags(unit, no_xml, stop=stop)
+
 
 		def handle_flag_finding(flag_regex_object, output):
 			match = flag_regex_object.search(output)
@@ -491,6 +504,7 @@ class Katana(object):
 		handle_flag_finding(self.hotfix_flag, output)
 
 		return False
+
 
 	def recurse(self, parent, data, verify_length = True):
 		r"""
@@ -535,8 +549,9 @@ class Katana(object):
 			for u in units:
 				self.recurse_queue.append((u, None))	
 
+
 	def progress_worker(self, done_event):
-		""" This is the thread that monitors status, and prints a nice message """
+		""" This is the thread that monitors status, and prints a nice message. """
 
 		while not self.completed:
 			if self.total_work > 0:
@@ -544,6 +559,7 @@ class Katana(object):
 				done = self.total_work - left
 				self.hook.status('{0:.2f}% work queue utilization; {1} total items queued'.format((float(self.work.qsize())/float(self.config['threads']*4))*100, self.total_work, done))
 			time.sleep(1.0)
+
 	
 	def unit_worker(self, ident, unit, case):
 
@@ -565,8 +581,9 @@ class Katana(object):
 		except:
 			traceback.print_exc()
 
+
 	def worker(self, thread_number):
-		""" Katana worker thread to process unit execution """
+		""" Katana worker thread to process unit execution. """
 
 		class WorkDone(Exception):
 			pass
@@ -646,6 +663,7 @@ class Katana(object):
 				pass
 		
 		self.hook.work_status(thread_number, 'exiting')
+
 
 def main():
 	# Initial parser is for unit directory. We need to process this argument first,
