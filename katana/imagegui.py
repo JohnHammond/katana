@@ -1,13 +1,22 @@
-# -*- coding: utf-8 -*-
-# @Author: John Hammond
-# @Date:   2019-05-07 17:57:40
-# @Last Modified by:   John Hammond
-# @Last Modified time: 2019-06-01 20:49:03
+'''
+This module attempts to offer a quick, on-the-fly image viewer to see pictures
+that Katana has uncovered as it works through a target. Sometimes flags can be
+displayed in a picture and that may not be detected with OCR, so we allow them
+to be viewed as Katana is working.
 
-import time
-import tkinter
+You can view the ImageGUI with Katana by passing the ``-i`` argument.
+
+This is accomplished with Tkinter, just the typical built-in Python GUI 
+library. Because the GUI still needs to update and work alongside Katana, if
+this functionality is put to use, the GUI thread runs first. That means
+that it needs the Katana unit passed to it as an argument.
+
+'''
+
 from PIL import ImageTk, Image
 import threading
+import tkinter
+import time
 import os
 
 
@@ -20,17 +29,17 @@ class GUIThread(threading.Thread):
 	'''
 
 	def __init__(self, tk_root, katana):
-		# Store the arguments passed, and create a thread for itself.
+		''' Store the arguments passed, and create a thread for itself. '''
 		self.root = tk_root
 		self.katana = katana
 		threading.Thread.__init__(self)
 
 	def run(self):
 		# Call katana.evaluate, so the real application runs.
-		self.katana.evaluate()
 		# Loop forever, so this thread stays alive.
+		self.katana.evaluate()
 		try:
-			while 1:
+			while True:
 				time.sleep(1)
 		except KeyboardInterrupt:
 			return
@@ -49,6 +58,7 @@ class GUIKatana(tkinter.Tk):
 		katana.gui = self
 		self.geometry('900x600')
 		self.title('Katana - Image Results')
+
 		# Create its thread with Katana passed along, so it can run evaluate.
 		self.thread = GUIThread(self, katana )
 
@@ -109,6 +119,10 @@ class GUIKatana(tkinter.Tk):
 
 
 	def resize_image(self, event):
+		'''
+		This is a callback event, just to handle resizing the image
+		if the window itself is resized.
+		'''
 		new_width = event.width
 		new_height = event.height
 		if self.copy_of_image is not None:
@@ -122,6 +136,12 @@ class GUIKatana(tkinter.Tk):
 		'''
 		This function adds to the images list. If it is the first image added,
 		it goes ahead and shows that image.
+
+		.. note ::
+
+			This is called whenever you run ``katana.add_image``, so a new
+			picture is displayed as needed.
+
 		'''
 		self.listbox.insert(tkinter.END, filename)
 		if len(self.listbox.curselection()) == 0:
@@ -141,6 +161,7 @@ class GUIKatana(tkinter.Tk):
 				self.image_label.image = image
 				window_w = self.thread.root.winfo_width()
 				window_h = self.thread.root.winfo_height()
+
 				if window_w < raw_image_w or window_h < raw_image_h:
 					
 					image = self.copy_of_image.resize((window_w, window_h-150))

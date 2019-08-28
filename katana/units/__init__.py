@@ -55,7 +55,7 @@ class BaseUnit(object):
 		* - PROTECTED RECURSE
 		  - If set to true, prevents this unit from recursing into any unit which shares this unit as a parent (or itself).
 		* - PRIORITY
-		  - Defines an integer priority for this unit. Zero is the highest, while 100 is the lowest. The default is 60.
+		  - Defines an integer priority for this unit. Zero is the highest, while 100 is the lowest. The default is 50.
 		* - NO_RECURSE
 		  - Do not allow any recursion for this unit
 

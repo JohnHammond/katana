@@ -1,3 +1,43 @@
+'''
+Functions were defined in this module if they needed to be used
+often throughout multiple other places across the project.
+
+Some variables that were not explicitly covered below
+are:
+
+.. code-block:: python
+	:linenos:
+
+	good_magic_strings = [
+	'image', 'document', 'archive', 'file', 'database',
+	'package', 'binary', 'video', 'executable', 'format',
+	'certificate', 'bytecode'
+	]
+
+	dictionary = enchant.Dict()
+	english_words_threshold = 1
+
+
+The ``good_magic_strings`` variable is a list of strings that
+are known to be given as part of a trusted file identification
+given by the ``magic`` module. These are typically seen when you
+run the ``file`` command at the command-line.
+
+The ``dictionary`` variable, from the ``enchant`` module is used 
+to detect a certain amount of English text. Katana will deem some 
+data to be "English text" if it finds a count of more English words 
+than supplied in the ``english_words_threshold`` value.
+
+
+.. note::
+
+	We still need to make this ``english_words_threshold`` something
+	that can be configured by the user as an argument. Currently, it is only 
+	this hardcoded value here.
+
+'''
+
+
 import os
 import importlib
 import argparse
@@ -23,9 +63,18 @@ dictionary = enchant.Dict()
 english_words_threshold = 1
 
 class FoundFlag(Exception):
+	'''
+	This class does nothing. It inherits from ``Exception`` and is meant to be
+	sub-classed if any units need it.
+	'''
 	pass
 
-def isprintable(data):
+def isprintable(data) -> bool:
+	'''
+	This is a convenience function to be used rather than the usual 
+	``str.printable`` boolean value, as that built-in **DOES NOT** consider
+	newlines to be part of the printable data set (weird!)
+	'''
 	
 	if type(data) is str:
 		data = data.encode('utf-8')
@@ -35,11 +84,18 @@ def isprintable(data):
 
 	return True
 
-def is_good_magic(magic_string):
+
+def is_good_magic(magic_string:str) -> bool:
+	'''
+	This function simply returns True or False is a given string has one
+	of the ``good_magic_string`` values (described above) present.
+	'''
+
 	for good in good_magic_strings:
 		if magic_string in good_magic_strings:
 			return True
 	return False
+
 
 def async_raise(tid, excobj):
     res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(excobj))
@@ -51,6 +107,7 @@ def async_raise(tid, excobj):
         ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, 0)
         raise SystemError("PyThreadState_SetAsyncExc failed")
 
+
 # This subclass of argparse will print the help whenever there
 # is a syntactic error in the options parsing
 class ArgumentParserWithHelp(argparse.ArgumentParser):
@@ -59,17 +116,20 @@ class ArgumentParserWithHelp(argparse.ArgumentParser):
 		self.print_help()
 		sys.exit(2)
 
+
 # argparse type to automatically verify that the specified path
 # exists and is a directory
-def DirectoryArgument(name):
+def DirectoryArgument(name:str):
 	fullpath = os.path.abspath(os.path.expanduser(name))
 	if not os.path.isdir(fullpath):
 		raise argparse.ArgumentTypeError('{0} is not a directory'.format(name))
 	return fullpath
 
+
 # This is dumb, but it makes the code more expressive...
 def GetUnitName(unit):
 	return unit.__module__
+
 
 # Gets a fully qualified class name
 def GetFullyQualifiedClassName(o):
@@ -79,22 +139,39 @@ def GetFullyQualifiedClassName(o):
 	else:
 		return module + '.' + o.__class__.__name__
 
-def is_english(string):
-	# Filter out words that are only two letters long...
-	all_words = list(filter(lambda word : len(word)>2, re.findall('[A-Za-z]+', string)))
-	english_words = list(filter(lambda word : len(word)>2, [ word for word in all_words if dictionary.check(word) ]))
 
-	return len(english_words) >= (len(all_words) - english_words_threshold) and len(english_words) != 0
+def is_english(string) -> bool:
+	'''
+	This returns True or False depending on if all of the words in a string 
+	(minus ``english_words_threshold``) are English.
+
+	.. note::
+		
+		This filters out words that are less than three letters long.
+	'''
+
+	# Filter out words that are less than two letters long...
+	all_words = list(filter(lambda word : len(word)>2, 
+				re.findall('[A-Za-z]+', string)))
+
+	english_words = list(filter(lambda word : len(word)>2, 
+					[ word for word in all_words if dictionary.check(word) ]))
+
+	return len(english_words) >= ((len(all_words) - english_words_threshold))\
+								 and len(english_words) != 0
 
 
 def jinja_pretty_json(value):
 	return json.dumps(value, sort_keys=True, indent=4, separators=(',', ': '))
 
-# -------------------------------------------------------------------
 
-# These are utility functions that may be used in more than one module.
-
-def process_output(popen_object):
+def process_output(popen_object) -> dict:
+	'''
+	This function expects a ``subprocess.Popen`` object, to read the standard
+	output and standard error streams. It reads these line-by-line, stripping
+	whitespace, and adds them to a ``results`` dictionary so it could be 
+	easily given back to Katana.
+	'''
 
 	result = {
 		"stdout": [],
@@ -117,8 +194,11 @@ def process_output(popen_object):
 	if result != {}:
 		return result
 
-def is_image(filename):
-	# Ensure it's a file, and get it's mime type
+def is_image(filename) -> bool:
+	'''
+	This function returns True or False if it can retrieve the magic string
+	for a file and "image" is present.
+	'''
 	try:
 		t = magic.from_file(filename).lower()
 	except (FileNotFoundError, IsADirectoryError, ValueError, OSError):
