@@ -30,14 +30,20 @@ source env/bin/activate
 python setup.py install
 ```
 
+If things seemed to wrong during your installation, and you just want a clean slate, you can tear down your virtual environment and start again. Note that you will need to run `python setup.py install` one more time.
+
+```
+deactivate; rm -r env; python3.7 -m venv env; source env/bin/activate
+```
+
 Usage
 ----------------
 
-Whenever Katana runs, it creates a `results` directory where it stores its findings and **artifacts** (files et. al.) that may be generated from any units.
+Whenever Katana runs, it creates a `results` directory where it stores its findings and **artifacts** (files et. al.) that may be generated from units.
 
 **Katana will not run if the `results` directory already exists.**
 
-If you are running Katana multiple times and just want to see the output, you may want to prepend a `rm -r results;` before your Katana command. **ENSURE THAT THE SEMI-COLON IS IN PLACE SO YOU DO NOT REMOVE KATANA AND YOUR FILES.**
+If you are running Katana multiple times and just want to see the output, you may want to prepend a `rm -r results;` before your Katana command. **ENSURE THAT THE SEMI-COLON IS IN PLACE SO YOU DO NOT REMOVE KATANA AND ALL OF YOUR FILES.**
 
 Katana can operate in ``auto`` mode -- as in, try every single unit applicable and throw the kitchen sink -- or it can run with individual units specified. No matter how you start Katana, you will always need to supply a *target*.
 
@@ -50,7 +56,6 @@ rm -r results; ./katana.py -a ctf_image.png
 * Using specific units:
 
 ```
-
 rm -r results; ./katana.py --unit stego ctf_image.png
 rm -r results; ./katana.py --unit stego.zsteg ctf_image.png
 ```
@@ -80,7 +85,8 @@ To add functionality to Katana, you simply need to create units. The boss will t
 
 You can read more about it in the `docs` directory.
 
--------
+
+
 
 Contributing
 ------------
