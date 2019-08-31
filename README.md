@@ -11,7 +11,14 @@ A lot of the context and ideas from this stem from the living document at [https
 
 **Katana is written in Python 3.**
 
-Virtual Environment
+DISCLAIMER
+----------
+
+**Katana will _automatically_ run code and do _potentially_ "malicious" things to its target.** It may throw SQL injection, it may try test for local file inclusion, uploading web shells or finding a means of remote code execution. **DO NOT, by any means, run this utility against ANYTHING that you do not have explicit permission and authorization to test.**
+
+We do not claim responsibility or involvement for anything you break or any trouble you may get into by using this tool.
+
+Getting Started
 -------------
 
 We recommend running this with the latest version of Python and inside of virtual environment. If you need a hand getting the latest version of Python, I've found some help [here](https://tecadmin.net/install-python-3-7-on-ubuntu-linuxmint/).
