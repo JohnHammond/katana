@@ -40,7 +40,7 @@ BLUE "steghide (no password)"
 rm -r results/; ./katana.py -ff "USCGA{.*?}" -a ./tests/rubber_ducky.jpg  
 
 BLUE "steghide (with password)"
-rm -r results/; ./katana.py -ff "USCGA{.*?}" -a ./tests/evil_ducky.jpg --dict /opt/rockyou.txt  
+rm -r results/; ./katana.py -ff "USCGA{.*?}" -a ./tests/evil_ducky.jpg --dict ./tests/rockyou.txt  
 
 
 BLUE "snow"
