@@ -27,15 +27,40 @@ We recommend running this with the latest version of Python and inside of a virt
 sudo apt-get install -y python3.7-tk tk-dev python3.7 python3-pip python3-setuptools python3.7-dev python3.7-venv libffi-dev libssl-dev pandoc libgmp3-dev libzbar-dev tesseract-ocr xsel libpoppler-cpp-dev
 python3.7 -m venv env
 source env/bin/activate
+python setup.py install
 ```
 
-From there, you can safely install dependencies with the environment's `pip` (as in, **do not** use sudo).
+Usage
+----------------
 
-Dependencies 
----------------
+Whenever Katana runs, it creates a `results` directory where it stores its findings and **artifacts** (files et. al.) that may be generated from any units.
+
+**Katana will not run if the `results` directory already exists.**
+
+If you are running Katana multiple times and just want to see the output, you may want to prepend a `rm -r results;` before your Katana command. **ENSURE THAT THE SEMI-COLON IS IN PLACE SO YOU DO NOT REMOVE KATANA AND YOUR FILES.**
+
+Katana can operate in ``auto`` mode -- as in, try every single unit applicable and throw the kitchen sink -- or it can run with individual units specified. No matter how you start Katana, you will always need to supply a *target*.
+
+- Using auto mode:
 
 ```
-pip install -r requirements.txt
+rm -r results; ./katana.py -a ctf_image.png
+```
+
+* Using specific units:
+
+```
+
+rm -r results; ./katana.py --unit stego ctf_image.png
+rm -r results; ./katana.py --unit stego.zsteg ctf_image.png
+```
+
+In these examples, the target supplied is the simple `ctf_image.png` file. You could instead supply a URL, or just given data like a ciphertext. **Note, if you supply a file that does not exist (perhaps after a typo!) Katana will treat it as data, and operate regardless of whether or not you realize your mistake.**
+
+Arguably the best feature of Katana is the ability to hunt for a flag amongst the data it cuts through. You can supply ``--flag-format`` (or shorthand ``-ff``) with a regular expression to return a flag if there was one in Katana's findings.
+
+```
+rm -r results; ./katana.py --unit raw --unit stego pierre.png --flag-format FLAG{.*}
 ```
 
 Running Tests
@@ -56,26 +81,6 @@ To add functionality to Katana, you simply need to create units. The boss will t
 You can read more about it in the `docs` directory.
 
 -------
-
-Support for Flag Formats
--------------
-
-Katana offers support to hunt for a flag, if a flag format is supplied. You can supply `--flag-format` (or shorthand `-ff`) with a regular expression to return a flag if there was one in Katana's findings.
-
-Examples:
-
-```
-$ ./katana --unit raw --unit stego pierre.png --flag-format USCGA{.*}
-```
-
-`results` Directory
------------
-
-Whenever Katana runs, it creates a `results` directory where it stores its findings and **artifacts** (files et. al.) that may be generated from any units.
-
-**Katana will not run if the `results` directory already exists.**
-
-If you are running Katana multiple times and just want to see the output, you may want to prepend a `rm -r results;` before your Katana command. **ENSURE THAT THE SEMI-COLON IS IN PLACE SO YOU DO NOT REMOVE KATANA AND YOUR FILES.**
 
 Contributing
 ------------
