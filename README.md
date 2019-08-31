@@ -19,7 +19,7 @@ DISCLAIMER
 We do not claim responsibility or involvement for anything you break or any trouble you may get into by using this tool.
 
 Getting Started
--------------
+---------------
 
 We recommend running this with the latest version of Python and inside of a virtual environment. If you need a hand getting the latest version of Python, I've found some help [here](https://tecadmin.net/install-python-3-7-on-ubuntu-linuxmint/).
 
@@ -37,6 +37,14 @@ Dependencies
 ```
 pip install -r requirements.txt
 ```
+
+Running Tests
+-------------
+
+We have no formal "unittests" for Katana, admittedly. We do however have a directory `tests` where we store some of the CTF challenges or files that we have been testing Katana _against._ We do not include this in the Git repo, because that would make for a horrific mess.
+
+If you are interested, [you can download the `test` directory here.](https://www.dropbox.com/sh/j0lgpwdp86j96rb/AAC5OKKAzgE69L9geBIEvOjGa?dl=0). That will allow you to run `./tests.sh` (John's bad rendition) or `./katana-test.py` (Caleb's rendition).
+
 
 Framework Methodology
 ---------------------

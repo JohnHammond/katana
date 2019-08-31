@@ -32,7 +32,7 @@ dependencies = [
 ]
 dependency_links = [
 	'git+https://github.com/arthaud/python3-pwntools.git#egg=pwntools-1.0.0',
-	'git+https://github.com/elliptic-shiho/primefac-fork#egg=primefac-1.0.0'
+	'git+git://github.com/elliptic-shiho/primefac-fork@master'
 ]
 
 
