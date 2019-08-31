@@ -29,7 +29,7 @@ Once you are ready to do a pull-request, you should figure out if your changes
 constitutes a new feature or a bugfix in stable or beta. If it is a bugfix in
 stable or beta, you should do the pull-request against the branch in question,
 and otherwise your pull-request should be against the dev branch.
-cd
+
 Thank You!
 ----------
 
