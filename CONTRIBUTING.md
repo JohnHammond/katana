@@ -11,6 +11,12 @@ support open-source projects. Basically the steps are:
 4. [Make a Pull Request](https://guides.github.com/activities/forking/#making-a-pull-request)
 5. [And you're done!](https://guides.github.com/activities/forking/#huzzah)
 
+Tabs vs. Spaces
+---------------
+
+We are a tabs family. Please ensure your editors insert actual tab characters
+and not spaces. We will deny your pull requests.
+
 Documentation
 -------------
 
