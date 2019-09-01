@@ -266,10 +266,10 @@ class Unit(units.NotEnglishUnit):
 			return
 
 
-		# Try an nth root attack!
-		if self.n != -1:
+		# If e is small, try an nth root attack!
+		if self.e <= 0x10001 and self.n != -1:
 
-			# Take the cubed root of c to find the plaintext message
+			# Take the e'th root of c to find the plaintext message
 			root, exact = gmpy.root(self.c, self.e)
 			
 			# Was it a perfect power?
