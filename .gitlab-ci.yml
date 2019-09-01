@@ -3,7 +3,7 @@ image: ubuntu:18.04
 pages:
     script:
     - apt-get update
-    - DEBIAN_FRONTEND=noninteractive apt-get install -y python3.7-tk tk-dev python3.7 python3-pip python3-setuptools python3.7-dev python3.7-venv libffi-dev libssl-dev pandoc libgmp3-dev libzbar-dev tesseract-ocr xsel libpoppler-cpp-dev libenchant-dev
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y python3.7-tk tk-dev python3.7 python3-pip python3-setuptools python3.7-dev python3.7-venv libffi-dev libssl-dev pandoc libgmp3-dev libzbar-dev tesseract-ocr xsel libpoppler-cpp-dev libenchant-dev git
     - python3.7 setup.py install
     - pushd docs && ./regenerate_docs.sh && popd
     - mv ./docs/build/html public
