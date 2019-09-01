@@ -203,6 +203,7 @@ class Unit(units.NotEnglishUnit):
         self.q = parse_int(katana.config['rsa_q'])
         self.p = parse_int(katana.config['rsa_p'])
         self.d = parse_int(katana.config['rsa_d'])
+        self.phi = parse_int(katana.config['rsa_phi'])
 
         if katana.config['rsa_c']:
             try:
@@ -295,6 +296,7 @@ class Unit(units.NotEnglishUnit):
             pass
 
         # Now that all the given values are found, try to calcuate phi
+        self.phi = (self.q - 1) * (self.p - 1)
 
         # If d is not supplied (which is normal) calculate it
         if self.d == -1:
@@ -307,10 +309,3 @@ class Unit(units.NotEnglishUnit):
 
         katana.add_results(self, result)
         katana.recurse(self, result)
-
-
-# 
-'''
-
-crypto.load_publickey(crypto.FILETYPE_PEM, h)
-'''
