@@ -187,6 +187,13 @@ class Unit(units.NotEnglishUnit):
          'required': False,
          'help': 'c value for RSA cryptography'
          },
+
+         {'name': 'rsa_phi',
+         'type': str,
+         'default': "",
+         'required': False,
+         'help': 'Phi value for RSA cryptography'
+         },
     ]
 
     def __init__(self, katana, target):
@@ -296,7 +303,8 @@ class Unit(units.NotEnglishUnit):
             pass
 
         # Now that all the given values are found, try to calcuate phi
-        self.phi = (self.q - 1) * (self.p - 1)
+        if self.phi == -1:
+            self.phi = (self.q - 1) * (self.p - 1)
 
         # If d is not supplied (which is normal) calculate it
         if self.d == -1:
