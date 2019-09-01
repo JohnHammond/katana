@@ -689,7 +689,7 @@ def main():
 		help='directory to house results')
 	# A Regular Expression patter for units to match
 	parser.add_argument('--flag-format', '-ff', default=None,
-		help='regex pattern for output (e.g. "FLAG{.*}")')
+		help='regex pattern for output (e.g. "FLAG{.*}")', required=True)
 	parser.add_argument('--auto', '-a', default=False,
 		action='store_true', help='automatically search for matching units in unitdir')
 	parser.add_argument('--recurse', '-r', type=int, default=5,
