@@ -98,7 +98,10 @@ def find_variables(text):
 		'N',
 		'exponent',
 		'ciphertext',
+		'ct',
 		'message',
+		'dq',
+		'dp',
 		'd',
 		'p',
 		'phi',
@@ -119,6 +122,10 @@ def find_variables(text):
 					letter = 'n'
 				if letter.startswith('p') and middle.startswith('hi'):
 					letter = 'phi'
+				if letter.startswith('d') and middle.startswith('p'):
+					letter = 'dp'
+				if letter.startswith('d') and middle.startswith('q'):
+					letter = 'dq'
 
 			yield letter, value
 
@@ -175,6 +182,20 @@ class Unit(units.NotEnglishUnit):
 		 'help': 'p factor for RSA cryptography'
 		 },
 
+		{'name': 'rsa_dq',
+		 'type': str,
+		 'default': "",
+		 'required': False,
+		 'help': 'differential q factor for RSA cryptography'
+		 },
+
+		{'name': 'rsa_dp',
+		 'type': str,
+		 'default': "",
+		 'required': False,
+		 'help': 'differential p factor for RSA cryptography'
+		 },
+
 		{'name': 'rsa_d',
 		 'type': str,
 		 'default': "",
@@ -211,6 +232,8 @@ class Unit(units.NotEnglishUnit):
 		self.q = parse_int(katana.config['rsa_q'])
 		self.p = parse_int(katana.config['rsa_p'])
 		self.d = parse_int(katana.config['rsa_d'])
+		self.dq = parse_int(katana.config['rsa_d'])
+		self.dp = parse_int(katana.config['rsa_d'])
 		self.phi = parse_int(katana.config['rsa_phi'])
 
 		if katana.config['rsa_c']:
@@ -244,6 +267,17 @@ class Unit(units.NotEnglishUnit):
 
 	def evaluate(self, katana, case):
 
+		def factor_n():
+			# if n is given but p and q are not, try TO factor n.
+			if self.p == -1 and self.q == -1 and self.n != -1:
+				factors = list([int(x) for x in primefac.factorint(self.n)])
+				if len(factors) == 2:
+					self.p, self.q = factors
+				elif len(factors) == 1:
+					raise NotImplemented("factordb could not factor this!")
+				else:
+					raise NotImplemented("We need support for multifactor RSA!")
+
 		# If e is not given, assume it is the standard 65537
 		if self.e == -1:
 			self.e = 0x10001
@@ -252,6 +286,28 @@ class Unit(units.NotEnglishUnit):
 		if self.n == -1 and self.p != -1 and self.q != -1:
 			self.n = self.p * self.q
 
+
+		# if we have a differential RSA problem, try that first.
+		if self.dp != -1 and self.dq != -1:
+			# if we have n, but not p and q, try and factor n
+			if self.n == -1 and self.p != -1 and self.q != -1:
+				factor_n()
+			
+			# if we have p and q and dp and dq, we can try this attack.
+			if self.q != -1 and self.p != -1:
+
+				qinv = inverse(self.q,self.p)
+
+				m1 = pow(self.c,self.dp,self.p)
+				m2 = pow(self.c,self.dq,self.q)
+				h = qinv * (m1-m2)
+				self.m = m2 + h*self.q
+
+				result = long_to_bytes(self.m).decode()
+
+				katana.add_results(self, result)
+				katana.recurse(self, result)
+				return
 
 		# If e is large, we might have a Weiner's Little D attack!
 		if self.e > 0x10001 and self.n != -1:
@@ -282,17 +338,7 @@ class Unit(units.NotEnglishUnit):
 				katana.recurse(self, result)
 				return
 
-		# if n is given but p and q are not, try TO factor n.
-		if self.p == -1 and self.q == -1 and self.n != -1:
-			factors = list([int(x) for x in primefac.factorint(self.n)])
-			if len(factors) == 2:
-				self.p, self.q = factors
-			elif len(factors) == 1:
-				raise NotImplemented("factordb could not factor this!")
-			else:
-				raise NotImplemented("We need support for multifactor RSA!")
-
-			pass
+		factor_n() # set self.p, and self.q 
 
 		# Now that all the given values are found, try to calcuate phi
 		if self.phi == -1:
