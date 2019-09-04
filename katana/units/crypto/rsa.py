@@ -2,7 +2,8 @@ import binascii
 import decimal
 
 import primefac
-from Crypto.Util.number import inverse
+import gmpy
+from Crypto.Util.number import inverse, long_to_bytes
 from OpenSSL import crypto
 from katana import units
 from katana import utilities
@@ -247,58 +248,49 @@ class Unit(units.NotEnglishUnit):
 		if self.e == -1:
 			self.e = 0x10001
 
+		# if n is NOT given but p and q are, multiply them to get n
+		if self.n == -1 and self.p != -1 and self.q != -1:
+			self.n = self.p * self.q
+
+
 		# If e is large, we might have a Weiner's Little D attack!
 		if self.e > 0x10001 and self.n != -1:
 			self.d = weiners_little_d(self.e, self.n)
 
 			# Attempt to decrypt!!!
 			self.m = pow(self.c, self.d, self.n)
-			try:
-				result = binascii.unhexlify(hex(self.m)[2:].rstrip('L'))
-			except binascii.Error:
-				result = binascii.unhexlify(str('0' + hex(self.m)[2:].rstrip('L')))
+			result = long_to_bytes(self.m).decode()
 
 			katana.add_results(self, result)
 			katana.recurse(self, result)
 			return
 
-		# if n is NOT given but p and q are, multiply them to get n
-		if self.n == -1 and self.p != -1 and self.q != -1:
-			self.n = self.p * self.q
 
-		# If e is only 3, we might have a cubed root attack!
-		if self.e == 3 and self.n != -1:
-			# Set laaaarrge precision
-			decimal.getcontext().prec = 3000
+		# If e is small, try an nth root attack!
+		if self.e <= 0x10001 and self.n != -1:
 
-			# The ciphertext must be in this new object form
-			c_decimal = decimal.Decimal(str(self.c))
+			# Take the e'th root of c to find the plaintext message
+			root, exact = gmpy.root(self.c, self.e)
+			
+			# Was it a perfect power?
+			if exact:
+				self.m = int(root)
+				
+				result = long_to_bytes(self.m).decode()
 
-			# Take the cubed root of c to find the plaintext message
-			self.m = c_decimal ** (decimal.Decimal('1') / 3)
-
-			# This needs to be rounded... a fine cheap hack is just round up
-			self.m = int(self.m) + 1
-
-			try:
-				result = binascii.unhexlify(hex(self.m)[2:].rstrip('L'))
-			except binascii.Error:
-				result = binascii.unhexlify(str('0' + hex(self.m)[2:].rstrip('L')))
-
-			katana.add_results(self, result)
-			katana.recurse(self, result)
-			return
+				katana.add_results(self, result)
+				katana.recurse(self, result)
+				return
 
 		# if n is given but p and q are not, try TO factor n.
 		if self.p == -1 and self.q == -1 and self.n != -1:
 			factors = list([int(x) for x in primefac.factorint(self.n)])
 			if len(factors) == 2:
 				self.p, self.q = factors
+			elif len(factors) == 1:
+				raise NotImplemented("factordb could not factor this!")
 			else:
-				if len(factors) == 1:
-					raise NotImplemented("factordb could not factor this!")
-				else:
-					raise NotImplemented("We need support for multifactor RSA!")
+				raise NotImplemented("We need support for multifactor RSA!")
 
 			pass
 
@@ -313,10 +305,7 @@ class Unit(units.NotEnglishUnit):
 		# Calculate message
 		self.m = pow(self.c, self.d, self.n)
 
-		try:
-			result = binascii.unhexlify(hex(self.m)[2:].rstrip('L'))
-		except binascii.Error:
-			result = binascii.unhexlify(str('0' + hex(self.m)[2:].rstrip('L')))
+		result = long_to_bytes(self.m).decode()
 
 		katana.add_results(self, result)
 		katana.recurse(self, result)
