@@ -71,3 +71,6 @@ rm -r results/; ./katana.py -ff "actf{.*?}" -a './tests/blank_paper.pdf'
 
 BLUE "Malbolge"
 rm -r results; ./katana.py -a -ff "InnoCTF{.*?}" tests/inno.txt
+
+BLUE "Differential RSA"
+rm -r results/ ; ./katana.py -ff '.*RSA' --unit crypto.rsa tests/weird_rsa.txt
