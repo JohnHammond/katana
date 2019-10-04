@@ -50,6 +50,15 @@ If things seemed to wrong during your installation, and you just want a clean sl
 deactivate; rm -r env; python3.7 -m venv env; source env/bin/activate
 ```
 
+Suggested Tools
+--------------
+
+Katana will automatically call some other tools to try and track down a flag.
+
+```
+yay -S android-apktool
+```
+
 Usage
 ----------------
 
