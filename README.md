@@ -56,7 +56,8 @@ Suggested Tools
 Katana will automatically call some other tools to try and track down a flag.
 
 ```
-yay -S android-apktool
+yay -S android-apktool perl-image-exiftool ruby
+gem install zsteg
 ```
 
 Usage

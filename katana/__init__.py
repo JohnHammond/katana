@@ -342,7 +342,6 @@ class Katana(object):
 
 			# Find units which match this target
 			units, ignored = self.finder.find(self, self.config['target'], requested=self.config['unit'])
-
 			# Notify user of requested units that weren't applicable/found
 			if len(self.config['unit']) > 0:
 				for cls,exc in ignored:
