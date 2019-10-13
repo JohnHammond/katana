@@ -35,9 +35,9 @@ class Unit(units.FileUnit):
     def __init__(self, katana, target):
         super(Unit, self).__init__(katana, target)
 
-        self.completed = True
         if not 'image' in self.target.magic:
             raise NotApplicable("not an image")
+
 
     def evaluate(self, katana, case):
 
