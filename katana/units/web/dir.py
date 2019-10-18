@@ -22,6 +22,8 @@ class Unit(WebUnit):
 		  'help': 		'given word list for bruteforcing web locations'
 		},
 	]
+	BAD_MIME_TYPES = [ 'application/octet-stream' ]
+	BAD_DISPOSITIONS = [ 'attachment' ]
 
 	def __init__(self, katana, target):
 		# Run the parent constructor, to ensure this is a valid URL
@@ -45,6 +47,20 @@ class Unit(WebUnit):
 		# This should have failed
 		if r.status_code < 400 or r.status_code >= 500:
 			raise NotApplicable('did not respond negatively to non-existent file')
+
+		# Make sure this isn't an attachment
+		if 'Content-Disposition' in r.headers:
+			for disposition in self.BAD_DISPOSITIONS:
+				if disposition in r.headers['Content-Disposition'].lower():
+					raise NotApplicable(
+							'{0} not supported for dirbusting'.format(disposition)
+						)
+
+		# make sure it's not an octet-stream (probalby a download, not a page)
+		if 'Content-Type' in r.headers:
+			for bad_type in self.BAD_MIME_TYPES:
+				if bad_type in r.headers['Content-Type'].lower():
+					raise NotApplicable('bad mime type')
 
 
 	# JOHN: This SHOULD be removed following the new unit argument restructure

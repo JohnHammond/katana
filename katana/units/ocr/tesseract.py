@@ -9,43 +9,43 @@ DEPENDENCIES = ['tesseract']
 
 
 def attempt_ocr(image_path):
-    try:
-        ocr_data = pytesseract.image_to_string(Image.open(image_path))
+	try:
+		ocr_data = pytesseract.image_to_string(Image.open(image_path))
 
-    # This is function is meant to run as a standalone, so catch this exception
-    # in case we aren't doing dependency checking...
-    except pytesseract.pytesseract.TesseractNotFoundError:
-        ocr_data = None
+	# This is function is meant to run as a standalone, so catch this exception
+	# in case we aren't doing dependency checking...
+	except pytesseract.pytesseract.TesseractNotFoundError:
+		ocr_data = None
 
-    # JOHN: I don't know when this will go wrong, but when it does....
-    # except pytesseract.pytesseract.TesseractError:
+	# JOHN: I don't know when this will go wrong, but when it does....
+	# except pytesseract.pytesseract.TesseractError:
 
-    except:
-        traceback.print_exc()
-        ocr_data = None
+	except:
+		traceback.print_exc()
+		ocr_data = None
 
-    return ocr_data
+	return ocr_data
 
 
 class Unit(units.FileUnit):
-    # JOHN: This MUST be in the class...
-    PROTECTED_RECURSE = True
-    PRIORITY = 25
+	# JOHN: This MUST be in the class...
+	PROTECTED_RECURSE = True
+	PRIORITY = 25
 
-    def __init__(self, katana, target):
-        super(Unit, self).__init__(katana, target)
+	def __init__(self, katana, target):
+		super(Unit, self).__init__(katana, target)
 
-        self.completed = True
-        if not 'image' in self.target.magic:
-            raise NotApplicable("not an image")
+		self.completed = True
+		if not 'image' in self.target.magic:
+			raise NotApplicable("not an image")
 
-    def evaluate(self, katana, case):
+	def evaluate(self, katana, case):
+		print("WAT")
+		ocr_data = attempt_ocr(self.target.path)
 
-        ocr_data = attempt_ocr(self.target.path)
+		if ocr_data:
+			# We don't locate flags any more because recurse does this for us.
+			katana.recurse(self, ocr_data)
+			katana.add_results(self, ocr_data)
 
-        if ocr_data:
-            # We don't locate flags any more because recurse does this for us.
-            katana.recurse(self, ocr_data)
-            katana.add_results(self, ocr_data)
-
-        return
+		return
