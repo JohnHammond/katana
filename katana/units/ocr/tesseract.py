@@ -40,7 +40,6 @@ class Unit(units.FileUnit):
 			raise NotApplicable("not an image")
 
 	def evaluate(self, katana, case):
-		print("WAT")
 		ocr_data = attempt_ocr(self.target.path)
 
 		if ocr_data:

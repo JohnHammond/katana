@@ -23,8 +23,22 @@ Getting Started
 
 We recommend running this with the latest version of Python and inside of a virtual environment. If you need a hand getting the latest version of Python, I've found some help [here](https://tecadmin.net/install-python-3-7-on-ubuntu-linuxmint/).
 
+
+**On Ubuntu**
+
 ```
-sudo apt-get install -y python3.7-tk tk-dev python3.7 python3-pip python3-setuptools python3.7-dev python3.7-venv libffi-dev libssl-dev pandoc libgmp3-dev libzbar-dev tesseract-ocr xsel libpoppler-cpp-dev
+sudo apt-get install -y python3.7-tk tk-dev python3.7 python3-pip python3-setuptools python3.7-dev python3.7-venv libffi-dev libssl-dev pandoc libgmp3-dev libzbar-dev tesseract-ocr xsel libpoppler-cpp-dev libmpc-dev 
+```
+
+**On Arch**
+
+```
+yay -S enchant1.6 aspell aspell-en tk
+```
+
+**Setup**
+
+```
 python3.7 -m venv env
 source env/bin/activate
 python setup.py install
@@ -34,6 +48,16 @@ If things seemed to wrong during your installation, and you just want a clean sl
 
 ```
 deactivate; rm -r env; python3.7 -m venv env; source env/bin/activate
+```
+
+Suggested Tools
+--------------
+
+Katana will automatically call some other tools to try and track down a flag.
+
+```
+yay -S android-apktool perl-image-exiftool ruby
+gem install zsteg
 ```
 
 Usage

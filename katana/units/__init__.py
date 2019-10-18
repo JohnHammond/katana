@@ -375,7 +375,7 @@ class UnitFinder(object):
 			# Check all dependencies
 			try:
 				for dep in deps:
-					subprocess.check_output(['which', dep])
+					subprocess.check_output(['which', dep], stderr=subprocess.PIPE)
 			except (FileNotFoundError, subprocess.CalledProcessError):
 				log.failure('{0}: dependancy not satisfied: {1}'.format(
 					name, dep

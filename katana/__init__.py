@@ -180,6 +180,7 @@ class Katana(object):
 				))
 				raise RuntimeError('dictionary does not exist')
 
+
 		self.hook.status('initialization complete')
 
 
@@ -331,18 +332,17 @@ class Katana(object):
 		necessary/possible."""
 		self.start = time.time()
 
+
 		# Evaluate the given target as a target object
 		try:
 			self.config['target'] = Target(self,self.config['target'])
 		except utilities.FoundFlag:
 			pass
 		else:
-
 			self.hook.begin()
 
 			# Find units which match this target
 			units, ignored = self.finder.find(self, self.config['target'], requested=self.config['unit'])
-
 			# Notify user of requested units that weren't applicable/found
 			if len(self.config['unit']) > 0:
 				for cls,exc in ignored:
@@ -355,7 +355,6 @@ class Katana(object):
 
 			if not self.config['flag_format']:
 				self.hook.warning("no flag format was specified, advise looking at saved results")
-
 			self.hook.status('starting threads')
 
 			# Create all the threads
@@ -381,7 +380,7 @@ class Katana(object):
 				log.info('wat')
 
 			status_done.set()
-			status_thread.join()
+			status_thread.join() # This is the problem line for OCR - Tesseract for some reason
 
 			self.hook.status('all units complete. waiting for thread exit')
 
