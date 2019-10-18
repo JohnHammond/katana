@@ -4,7 +4,7 @@ import logging
 import sys
 
 from katana.manager import Manager
-from katana.monitor import Monitor
+from katana.monitor import Monitor, LoggingMonitor
 from katana.target import Target
 from katana.unit import Unit
 
@@ -63,7 +63,7 @@ def main():
 	args, remaining_args = parser.parse_known_args()
 
 	# Build our katana monitor
-	monitor = ConsoleMonitor()
+	monitor = LoggingMonitor()
 
 	# Create our katana manager
 	manager = Manager(monitor=monitor, config_path=args.config)
