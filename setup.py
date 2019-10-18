@@ -25,14 +25,12 @@ dependencies = [
 	'pdftotext',
 	'PyPDF2',
 	'pyopenssl',
-	'pwntools @ https://github.com/arthaud/python3-pwntools',
 	'primefac @ https://github.com/elliptic-shiho/primefac-fork',
 	'sphinx',
 	'sphinx-rtd-theme',
-        'gmpy'
+	'gmpy'
 ]
 dependency_links = [
-	'git+https://github.com/arthaud/python3-pwntools.git#egg=pwntools-1.0.0',
 	'git+https://github.com/elliptic-shiho/primefac-fork#egg=primefac-1.0.0'
 ]
 
@@ -40,13 +38,13 @@ dependency_links = [
 
 # Setup
 setup(name='katana',
-	  version='1.0',
+	  version='2.0',
 	  description='Automatic Capture the Flag Problem Solver',
 	  author='John Hammond/Caleb Stewart',
 	  url='https://github.com/JohnHammond/katana',
 	  packages=find_packages(),
 	  package_data={'katana': ['templates/*']},
-	  entry_points={'console_scripts': ['katana=katana:main']},
+	  entry_points={'console_scripts': ['katana=katana.__main__:main']},
 	  install_requires=dependencies,
 	  dependency_links=dependency_links
 	)

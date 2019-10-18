@@ -1,34 +1,42 @@
+#!/usr/bin/env python3
+from typing import Any
 import subprocess
 
-from katana import utilities
-from katana.units import FileUnit
-
-DEPENDENCIES = ['exiftool']
-
+from katana.unit import FileUnit, NotApplicable
+from katana.manager import Manager
+from katana.target import Target
+import katana.util
 
 class Unit(FileUnit):
-    PRIORITY = 25
 
-    def __init__(self, katana, target):
-        super(Unit, self).__init__(katana, target)
+	# We depend on the system tool `exiftool`
+	DEPENDENCIES = ['exiftool']
+	# Moderate-to-high priority
+	PRIORITY = 25
 
-    def evaluate(self, katana, case):
+	def __init__(self, manager: Manager, target: Target):
+		super(Unit, self).__init__(manager, target)
 
-        p = subprocess.Popen(['exiftool', self.target.path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	def evaluate(self, case):
 
-        # Look for flags, if we found them...
-        response = utilities.process_output(p)
-        if response:
-            if 'stdout' in response:
-                for line in response['stdout']:
-                    delimited = line.split(':')
-                    metadata = delimited[0].strip()
-                    value = ':'.join(delimited[1:]).strip()
+		# Run exiftool on the target file
+		p = subprocess.Popen(['exiftool', self.target.path],
+				stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-                    # JOHN: We do NOT recurse on the metadata, because that is probably
-                    #       NOT going to contain a flag
-                    # katana.recurse(self, metadata)
-                    if metadata in ['Comment', 'Album', 'Artist', 'Title']:
-                        katana.recurse(self, value)
+		# Look for flags, if we found them...
+		response = katana.util.process_output(p)
+		if response:
+			if 'stdout' in response:
+				for line in response['stdout']:
+					delimited = line.split(':')
+					metadata = delimited[0].strip()
+					value = ':'.join(delimited[1:]).strip()
 
-            katana.add_results(self, response)
+					# Most metadata won't have useful recursion data
+					# but these commonly do (e.g. Base64, caeser, etc)
+					if metadata in ['Comment', 'Album', 'Artist', 'Title']:
+						self.manager.queue_target(value, parent=self)
+	
+			# Don't recurse on this data, just save it for review and check for
+			# flags
+			self.manage.register_data(self, response, recurse=False)

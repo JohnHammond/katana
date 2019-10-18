@@ -1,44 +1,51 @@
-import base64
+#!/usr/bin/env python3
+from typing import Any
 import binascii
-
+import base64
 import magic
-from katana import utilities
-from katana.units import BaseUnit
-from katana.units import NotApplicable
 
+from katana.unit import Unit as BaseUnit
+from katana.unit import NotApplicable
+from katana.manager import Manager
+from katana.target import Target
+import katana.util
 
 class Unit(BaseUnit):
-    PRIORITY = 60
 
-    def __init__(self, katana, target):
-        super(Unit, self).__init__(katana, target)
+	# Low priority unit, uncommon and highly matching
+	PRIORITY = 60
 
-        if not self.target.is_printable:
-            raise NotApplicable("not printable data")
+	def __init__(self, manager: Manager, target: Target):
+		super(Unit, self).__init__(manager, target)
 
-        if self.target.is_english:
-            raise NotApplicable("seemingly english")
+		# Ensure the target is printable data
+		if not self.target.is_printable:
+			raise NotApplicable("not printable data")
 
-    def evaluate(self, katana, case):
-        try:
-            result = base64.a85decode(self.target.raw)
+		# Ensure the target is english
+		if self.target.is_english:
+			raise NotApplicable("seemingly english")
 
-            if utilities.isprintable(result):
-                katana.recurse(self, result)
-                katana.add_results(self, result)
+	def evaluate(self, case: Any):
+		
+		try:
+			# Attemp a85decode of raw data
+			result = base64.a85decode(self.target.raw)
 
-            # if it's not printable, we might only want it if it is a file...
-            else:
-                magic_info = magic.from_buffer(result)
-                if utilities.is_good_magic(magic_info):
-                    katana.add_results(self, result)
-
-                    filename, handle = katana.create_artifact(self, "decoded", mode='wb', create=True)
-                    handle.write(result)
-                    handle.close()
-                    katana.recurse(self, filename)
-
-        except (UnicodeDecodeError, binascii.Error, ValueError):
-            # This won't decode right... must not be right! Ignore it.
-            # I return here because we are only trying to decode ONE string
-            return
+			# Check that the result is printable data
+			if katana.util.isprintable(result):
+				self.manager.register_data(self, result)
+			else:
+				# if it's not printable, we might only want it if it is a file...
+				magic_info = magic.from_buffer(result)
+				if katana.util.is_good_magic(magic_info):
+					# Create the artifact and dump the data
+					filename, handle = self.generate_artifact("decoded", mode='wb', create=True)
+					handle.write(result)
+					handle.close()
+					# Register the artifact with the manager
+					self.manager.register_artifact(self, filename)	
+		except (UnicodeDecodeError, binascii.Error, ValueError):
+			# This won't decode right... must not be right! Ignore it.
+			# I return here because we are only trying to decode ONE string
+			return

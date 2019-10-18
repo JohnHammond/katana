@@ -1,58 +1,72 @@
+#!/usr/bin/env python3
+from typing import Any
 import binascii
-
 import magic
-from katana import utilities
-from katana.units import BaseUnit
-from katana.units import NotApplicable
-from pwn import *
+import re
+
+from katana.unit import Unit as BaseUnit
+from katana.unit import NotApplicable
+from katana.manager import Manager
+from katana.target import Target
+import katana.util
 
 DECIMAL_PATTERN = rb'[0-9]{1,3}'
 DECIMAL_REGEX = re.compile(DECIMAL_PATTERN, flags=re.MULTILINE | \
-                                                  re.DOTALL | re.IGNORECASE)
-
+												  re.DOTALL | re.IGNORECASE)
 
 class Unit(BaseUnit):
-    PRIORITY = 25
 
-    def __init__(self, katana, target):
-        super(Unit, self).__init__(katana, target)
+	# Moderate-high unit priority
+	PRIORITY = 25
 
-        # We don't need to operate on files
-        if not self.target.is_printable or self.target.is_file or self.target.is_english:
-            raise NotApplicable("is a file")
+	def __init__(self, manager: Manager, target: Target):
+		super(Unit, self).__init__(manager, target)
 
-        self.matches = DECIMAL_REGEX.findall(self.target.raw)
+		# We don't need to operate on files
+		if self.target.is_file:
+			raise NotApplicable("is a file")
 
-        if self.matches is None:
-            raise NotApplicable("no decimal values found")
+		# We want printable
+		if not self.target.is_printable:
+			raise NotApplicable("not printable data")
 
-        for decimal in self.matches:
-            if int(decimal) not in range(255):
-                raise NotApplicable("decimal value larger than 255 was found")
+		# We don't want english text
+		if self.target.is_english:
+			raise NotApplicable("english data; expected decimal numbers")
 
-    def evaluate(self, katana, case):
+		# Find matching data
+		self.matches = DECIMAL_REGEX.findall(self.target.raw)
 
-        try:
-            result = ''.join(chr(int(d)) for d in self.matches)
-        # If this fails, it's probably not decimal we can deal with...
-        except (UnicodeDecodeError, binascii.Error):
-            return None
+		# Ensure we have something to work with
+		if self.matches is None:
+			raise NotApplicable("no decimal values found")
 
-        # JOHN: The question of whether or not we should only handle
-        #       printables came up when we worked on XOR...
-        #       ... but we left it raw, because what if it uncovers a file?
-        # if new_result.replace('\n', '').isprintable():
-        if utilities.isprintable(result):
-            katana.recurse(self, result)
-            katana.add_results(self, result)
+		# CALEB: Um.... I feel like this could be an issue, but whatever
+		for decimal in self.matches:
+			if int(decimal) not in range(255):
+				raise NotApplicable("decimal value larger than 255 was found")
 
-        # if it's not printable, we might only want it if it is a file...
-        else:
-            magic_info = magic.from_buffer(result)
-            if utilities.is_good_magic(magic_info):
-                katana.add_results(self, result)
+	def evaluate(self, case):
 
-                filename, handle = katana.create_artifact(self, "decoded", mode='wb', create=True)
-                handle.write(bytes(result, 'utf-8'))
-                handle.close()
-                katana.recurse(self, filename)
+		try:
+			# Decode all matches as one string
+			result = ''.join(chr(int(d)) for d in self.matches)
+		# If this fails, it's probably not decimal we can deal with...
+		except (UnicodeDecodeError, binascii.Error):
+			return None
+
+		
+		if katana.util.isprintable(result):
+			# If it's printable save the results
+			self.manager.register_data(self, result)
+		else:
+			# if it's not printable, we might only want it if it is a file...
+			magic_info = magic.from_buffer(result)
+			if katana.util.is_good_magic(magic_info):
+				# Generate a new artifact
+				filename, handle = self.generate_artifact("decoded",
+						mode='wb', create=True)
+				handle.write(result)
+				handle.close()
+				# Register the artifact
+				self.manager.register_artifact(self, filename)

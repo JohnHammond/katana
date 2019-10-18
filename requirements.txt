@@ -1,1 +1,26 @@
-.
+wheel
+requests
+argparse
+python-magic
+pyzbar
+pillow
+clipboard
+jinja2
+pyenchant
+pycrypto
+pytesseract
+dulwich
+bs4
+base58
+pysocks
+scipy
+pydub
+matplotlib
+pdftotext
+PyPDF2
+pyopenssl
+primefac @ https://github.com/elliptic-shiho/primefac-fork
+sphinx
+sphinx-rtd-theme
+gmpy
+git+https://github.com/elliptic-shiho/primefac-fork#egg=primefac-1.0.0

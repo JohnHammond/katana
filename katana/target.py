@@ -1,30 +1,20 @@
-r"""
-In it's most basic sense, a target is any kind of data. Practically, a target
-may come in many forms. A target may be specified as a URL, a file path, raw
-data, base64 encoded data, so on and so forth. The ways data can be encoded or
-passed is nearly infinite.
-
-:class:`Target` attempts to encapsulate as many different target
-representations as possible and hide their details from the individual units.
-For example, a unit which looks for Base64 encoded text may not care whether
-the text to search came from a file, raw data, or a web page. In any case, the
-unit wants a file-like object to retrieve data from.
-
-To this end, there are some assumptions, and nasty regex's used below to
-identify different types of targets and automatically serve the correct data up
-to the units. Most of the things in this class are properties which make some
-comparisons or judgements on the data within the class, and return an
-encapsulated object (such as an open file object or a String/BytesIO object).
+#!/usr/bin/env python
 """
+Classes and methods wrapping arbitrary files and data into a common Target
+interface for units.
+"""
+from __future__ import annotations
+from typing import Any, List, BinaryIO
+from io import StringIO, BytesIO
 import requests
+import hashlib
+import enchant
+import string
 import magic
+import mmap
 import re
 import os
-import hashlib
-from io import StringIO, BytesIO
-import string
-import enchant
-import mmap
+
 
 ADDRESS_PATTERN = rb'^((?P<protocol>http|https):\/\/)(?P<host>[a-zA-Z0-9][a-zA-Z0-9\-_.]*)(:(?P<port>[0-9]{1,5}))?(\/(?P<uri>[^?]*))?(\?(?P<query>.*))?$'
 BASE64_PATTERN = rb'^[a-zA-Z0-9+/]+={0,2}$'
@@ -38,60 +28,62 @@ PRINTABLE_BYTES = bytes(string.printable, 'utf-8')
 BASE64_BYTES = bytes(string.ascii_letters+string.digits+'=', 'utf-8')
 
 class Target(object):
-	""" A Katana target.
 
-		This class encapsulates all interactions that units should
-		have with a target while abstracting away the details.
+	def __init__(self, manager: katana.manager.Manager, upstream: bytes,
+			parent: katana.unit.Unit = None):
 
-		Properties not described below:
-
-		- :data:`is_printable` - whether the data is completely printable
-		- :data:`is_english` - whether the data contains english text
-		- :data:`is_base64` - whether the data is base64
-		- :data:`is_url` - whether the data looks like a URL
-		- :data:`is_file` - whether the data looks like a file path
-		- :data:`magic` - if this is a file, the libmagic type for this file
-		- :data:`upstream` - the original raw target data
-		- :data:`hash` - a hash of the target content (not necessarily of upstream)
-		- :data:`path` - the file path, if it exists on disk
-	"""
-
-	def __init__(self, katana, upstream, parent=None):
-		
-		# The target class operates entirely off of bytes
+		# The target class expects the upstream to be bytes
 		if isinstance(upstream, str):
 			upstream = upstream.encode('utf-8')
 
-		# Initialize internal properties
-		self.katana = katana
-		self.parent = parent
+		# Initialize local variables
 		self.upstream = upstream
+		self.parent = parent
 		self.is_printable = True
 		self.is_english = True
 		self.is_image = False
 		self.is_base64 = False
 		self.path = False
+		self.completed = False
 
+		# Parse out URL pieces (also decide if this is a URL)
 		self.url_pieces = ADDRESS_REGEX.match(self.upstream)
 		self.is_url = self.url_pieces is not None
 		# This zero test is here because os.path.isfile chokes on a null-byte
 		self.is_file = 0 not in self.upstream and os.path.isfile(self.upstream)
 		
+		# Initial assumed libmagic file type is just "data"
 		self.magic = 'data'
 
+		# Analyze a file target
 		if self.is_file:
+
+			# Assume initially that it is not a file on this system
 			is_sub_target = True
 			is_sub_results = True
-			results_path = os.path.realpath(katana.config['outdir'])
-			if katana.original_target is not None and katana.original_target.is_file:
-				base_target_path = os.path.dirname(katana.original_target.path)
-				base_target_path = os.path.realpath(base_target_path)
-				if not upstream.startswith(bytes(str(base_target_path), 'utf-8')+b'/'):
-					is_sub_target = False
 
+			# Grab the full path to the output/artifacts directory
+			results_path = os.path.realpath(manager['manager']['outdir'])
+
+			# Check if this is a subdirectory of the origin/base target in this
+			# chain, if there is a chain
+			if parent is not None:
+				origin = parent.origin
+				if origin.is_file:
+					base_target_path = os.path.dirname(origin.path)
+					base_target_path = os.path.realpath(base_target_path)
+					if not upstream.startswith(bytes(str(base_target_path), 'utf-8')+b'/'):
+						is_sub_target = False
+			else:
+				is_sub_target = True
+
+			# Is this a sub-directory of the base results/output directory?
 			if not upstream.startswith(bytes(results_path+'/', 'utf-8')):
 				is_sub_results = False
 
+			# We only analyze things as files if they are either
+			# sub-directories/files of the original target or of the results
+			# directory itself
 			if not is_sub_results and not is_sub_target:
 				self.is_file = False
 			
@@ -99,15 +91,15 @@ class Target(object):
 		# Download the target of a URL
 		if self.is_url:
 			self.url_root = '/'.join(upstream.decode('utf-8').split('/')[:3]) + '/'
-			if not katana.config['no_download']:
+			if manager['manager'].getboolean('download'):
 				try:
 					url_accessible = True
 					self.request = requests.get(upstream)
 				except requests.exceptions.ConnectionError:
 					url_accessible = False
 					self.is_url = False
-				
-				if url_accessible:
+					self.content = self.upstream
+				else:	
 					self.content = self.request.content
 					self.path, filp = katana.create_artifact(parent,
 							hashlib.md5(upstream).hexdigest(),
@@ -119,13 +111,12 @@ class Target(object):
 						filp.write(self.content)
 					self.is_file = True
 					# Carve out the root of the URL
-				else:
-					# This is if we COULDN'T download the page...
-					# we just treat the content as the upstream
-					self.content = self.upstream
 			else:
+				# We were asked not to download URLs
 				self.content = self.upstream
 				try:
+					# CALEB: I don't know why we are ignoring the download
+					# option here...
 					self.request = requests.get(self.upstream)
 				except requests.exceptions.ConnectionError:
 					self.is_url = False
@@ -150,15 +141,18 @@ class Target(object):
 
 		# JOHN: Add a test to determine if this is in fact an image
 		if 'image' in self.magic.lower():
-			if self.path:
-				katana.add_image(os.path.abspath(self.path))
+			# CALEB: Not sure how I want to handle this in the new version...
+#			if self.path:
+#				katana.add_image(os.path.abspath(self.path))
 			self.is_image = True
 		
 		# CALEB: if we do this, do we need strings?
 		#katana.locate_flags(parent, self.raw)
 
 		# CALEB: This used to happen in a separate unit but it was silly
-		katana.locate_flags(parent, self.magic)
+		# ALSO CALEB: But... why? How would there be a flag in the magic
+		# results? :?
+		#katana.locate_flags(parent, self.magic)
 
 		all_words = 0
 		english_words = 0
@@ -206,20 +200,18 @@ class Target(object):
 		if self.path and self.path.startswith('./'):
 			self.path = os.path.abspath(self.path)
 
-		if self.is_url:
-			pass
-			# print"(we are the thing")
-			# print(self.web_protocol, self.web_host, self.web_port, self.web_uri, self.web_query, self.is_website_root, self.website_root, self.is_webpage)
-	
 	def __repr__(self):
-		""" Create a representation of this object based on it's upstream
-		source """
+		""" Create a representation of this object based on it's upstream path
+		"""
 		try:
 			return self.upstream.decode('utf-8')
 		except:
 			return repr(self.upstream)
-
+	
 	def __getitem__(self, key):
+		""" Get a slice of the upstream... this seems very inneficient, but it
+		was in the old version, and I don't want to break too much... """
+
 		if isinstance(key, slice):
 			try:
 				return ''.join([ self.upstream.decode('utf-8')[ii] for ii in
@@ -229,14 +221,12 @@ class Target(object):
 						range(*key.indices(len(self.upstream.decode('latin-1')))) ])
 
 	@property
-	def raw(self):
-		""" This will return a bytes-like object. For small objects already
-			in memory, it will return the bytes object. For files or larger
-			objects not in memory, it will return an mmap object, which will
-			act the same as a bytes object in most situations.
+	def raw(self) -> str:
+		""" Return a bytes-like object for any given target type:
 
-			This allows inividual units requiring generic "data" to act the
-			same for any type of target.
+			- Files/content already in memory: return self.content
+			- Files already written to disk: return a mmap object
+			- For all other unknown data: return self.upstream directly
 		"""
 		if self.content is not None:
 			return self.content
@@ -250,10 +240,12 @@ class Target(object):
 			return self.upstream
 	
 	@property
-	def stream(self):
-		""" This will return a stream opened in binary mode for the given
-		target. This property does not care whether the target is a file or
-		something else, and will wrap the data in a BytesIO object if needed.
+	def stream(self) -> BinaryIO:
+		""" Return a file-like object for any given target type:
+
+			- Files/content already in memory: return a BytesIO object
+			- Files already written to disk: return an binary file handle
+			- For all other unknown data: return a BytesIO object of upstream
 		"""
 		if self.content is not None:
 			return BytesIO(self.content)
@@ -262,12 +254,8 @@ class Target(object):
 		else:
 			return BytesIO(self.upstream)
 
-
-# ------------------------------------------------------------
-# JOHN: Below is information to handle web things.
-
 	@property
-	def web_protocol(self):
+	def web_protocol(self) -> str:
 		""" if this is a URL, return the protocol """
 		if self.is_url:
 			val = self.url_pieces.groupdict()['protocol']
@@ -276,7 +264,7 @@ class Target(object):
 			return None
 
 	@property
-	def web_host(self):
+	def web_host(self) -> str:
 		""" if this is a URL, return the hostname """
 		if self.is_url:
 			val = self.url_pieces.groupdict()['host']
@@ -285,7 +273,7 @@ class Target(object):
 			return None
 
 	@property
-	def web_port(self):
+	def web_port(self) -> str:
 		""" if this is a URL, return the port number """
 		if self.is_url:
 			val = self.url_pieces.groupdict()['port']
@@ -294,7 +282,7 @@ class Target(object):
 			return None
 
 	@property
-	def web_uri(self):
+	def web_uri(self) -> str:
 		""" if this is a url, return the URI """
 		if self.is_url:
 			val = self.url_pieces.groupdict()['uri']
@@ -303,7 +291,7 @@ class Target(object):
 			return None
 
 	@property
-	def web_query(self):
+	def web_query(self) -> str:
 		""" if this is a url, return the query string """
 		if self.is_url:
 			val = self.url_pieces.groupdict()['query']
@@ -312,7 +300,7 @@ class Target(object):
 			return None
 
 	@property
-	def website_root(self):
+	def website_root(self) -> str:
 		""" if this is a url, return the root of the URL (without any URI) """
 		if self.is_url:
 			if self.web_port:
@@ -321,13 +309,13 @@ class Target(object):
 				return f"{self.web_protocol}://{self.web_host}/"
 
 	@property
-	def is_website_root(self):
+	def is_website_root(self) -> bool:
 		""" if this is a URL, return whether we are at the root of the URL """
 		return self.upstream.decode('utf-8') == self.website_root \
 			and not self.web_uri and not self.web_query
 
 	@property
-	def is_webpage(self):
+	def is_webpage(self) -> bool:
 		""" Opposite of is_website_root? """
 		return bool(self.upstream.decode('utf-8') != self.website_root \
 			and self.web_uri)

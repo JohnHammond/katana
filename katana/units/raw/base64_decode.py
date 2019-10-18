@@ -1,58 +1,62 @@
-import base64
+#!/usr/bin/env python3
+from typing import Any
 import binascii
+import base64
+import magic
 import re
 
-import magic
-from katana import utilities
-from katana.units import BaseUnit
-from katana.units import NotApplicable
+from katana.unit import Unit as BaseUnit
+from katana.unit import NotApplicable
+from katana.manager import Manager
+from katana.target import Target
+import katana.util
 
 BASE64_PATTERN = rb'[a-zA-Z0-9+/]+={0,2}'
 BASE64_REGEX = re.compile(BASE64_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
 
-
 class Unit(BaseUnit):
-    PRIORITY = 25
 
-    def __init__(self, katana, target):
-        super(Unit, self).__init__(katana, target)
+	# High priority. Base64 is quick and common and matches fairly unilaterally
+	PRIORITY = 25
 
-        if not self.target.is_printable:
-            raise NotApplicable("not printable data")
+	def __init__(self, manager: Manager, target: Target):
+		super(Unit, self).__init__(manager, target)
 
-        if self.target.is_english:
-            raise NotApplicable("seemingly english")
+		# Must be printable
+		if not self.target.is_printable:
+			raise NotApplicable("not printable data")
 
-        self.matches = BASE64_REGEX.findall(self.target.raw)
-        if self.matches is None:
-            raise NotApplicable("no base64 text found")
+		# Must not be english text
+		if self.target.is_english:
+			raise NotApplicable("seemingly english")
 
-    def evaluate(self, katana, case):
-        for match in self.matches:
-            try:
-                decoded = base64.b64decode(match)
+		# Find matching base64 chunks
+		self.matches = BASE64_REGEX.findall(self.target.raw)
+		if self.matches is None:
+			raise NotApplicable("no base64 text found")
 
-                # We want to know about this if it is printable!
-                if utilities.isprintable(decoded):
-                    katana.recurse(self, decoded)
-                    katana.add_results(self, decoded)
+	def evaluate(self, case):
+		# Iterate over matches
+		for match in self.matches:
+			try:
+				# Decode chunk
+				result = base64.b64decode(match)
 
-                # if it's not printable, we might only want it if it is a file...
-                else:
-                    magic_info = magic.from_buffer(decoded)
-                    if utilities.is_good_magic(magic_info):
-
-                        katana.add_results(self, decoded)
-
-                        filename, handle = katana.create_artifact(self, "decoded", mode='wb', create=True)
-                        handle.write(decoded)
-                        handle.close()
-                        katana.recurse(self, filename)
-                        if 'image' in magic_info:
-                            print(magic_info, filename)
-
-            except (UnicodeDecodeError, binascii.Error, ValueError):
-
-                # This won't decode right... must not be right! Ignore it.
-                # I pass here because there might be more than one string to decode
-                pass
+				# Keep it if it is printable
+				if katana.util.isprintable(result):
+					self.manager.register_data(self, result)
+				else:
+					# if it's not printable, we might only want it if it is a file...
+					magic_info = magic.from_buffer(result)
+					if katana.util.is_good_magic(magic_info):
+						# Generate a new artifact
+						filename, handle = self.generate_artifact("decoded",
+								mode='wb', create=True)
+						handle.write(result)
+						handle.close()
+						# Register the artifact with the manager
+						self.manager.register_artifact(self, filename)
+			except (UnicodeDecodeError, binascii.Error, ValueError):
+				# This won't decode right... must not be right! Ignore it.
+				# I pass here because there might be more than one string to decode
+				pass
