@@ -15,6 +15,16 @@ class Monitor(object):
 	def __init__(self):
 		return
 
+	def on_depth_limit(self, manager: katana.manager.Manager,
+			target: katna.target.Target, unit: katana.unit.Unit) -> None:
+		""" This means we reached the manager['manager']['max-depth'] limit
+		during recursion. """
+
+		logger.warning(f" {target}: reached max depth of \
+				{manager['manager']['max-depth']}")
+
+		return
+
 	def on_data(self, manager: katana.manager.Manager,
 			unit: katana.unit.Unit, data: Any) -> bool:
 		""" Notify the monitor of arbitrary data returned by a unit. The data

@@ -53,7 +53,8 @@ class Manager(configparser.ConfigParser):
 			'timeout': 0.1,
 			'password': [],
 			'prioritize': True,
-			'default-units': True
+			'default-units': True,
+			'max-depth': 10
 		}
 
 		self['manager'] = {}
@@ -174,7 +175,12 @@ class Manager(configparser.ConfigParser):
 
 		# Don't recurse if the parent is already done
 		if parent is not None:
+			# Don't queue recursion for a completed target
 			if parent.origin.completed:
+				return None
+			# Maximum depth reached!
+			if (parent.depth+1) >= self['manager'].getint('max-depth'):
+				self.monitor.on_depth_limit(self, parent.target, parent)
 				return None
 
 		# Create the target object

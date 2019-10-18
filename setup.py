@@ -34,8 +34,6 @@ dependency_links = [
 	'git+https://github.com/elliptic-shiho/primefac-fork#egg=primefac-1.0.0'
 ]
 
-
-
 # Setup
 setup(name='katana',
 	  version='2.0',

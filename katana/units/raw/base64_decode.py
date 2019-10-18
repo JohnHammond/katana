@@ -18,6 +18,8 @@ class Unit(BaseUnit):
 
 	# High priority. Base64 is quick and common and matches fairly unilaterally
 	PRIORITY = 25
+	# Groups this unit belongs
+	GROUPS = ['raw', 'decode']
 
 	def __init__(self, manager: Manager, target: Target):
 		super(Unit, self).__init__(manager, target)

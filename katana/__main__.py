@@ -52,15 +52,26 @@ def main():
 	# Setup basic logging
 	logging.basicConfig(level=logging.INFO)
 
+	# Build the argument parse object
+	parser = argparse.ArgumentParser(prog='katana',
+			description='Automatically identify and solve basic Capture the Flag challenges',
+			add_help=False)
+
+	# Parse config option first
+	parser.add_argument('--config', '-c', help='configuration file',
+			default=None)
+	args, remaining_args = parser.parse_known_args()
+
 	# Build our katana monitor
 	monitor = ConsoleMonitor()
 
 	# Create our katana manager
-	manager = Manager(monitor=monitor)
+	manager = Manager(monitor=monitor, config_path=args.config)
 
-	# Build the argument parse object
+	# Build final parser
 	parser = argparse.ArgumentParser(prog='katana',
-			description='Automatically identify and solve basic Capture the Flag challenges')
+			description='Automatically identify and solve basic Capture the Flag challenges',
+			add_help=False)
 
 	# Add global arguments
 	parser.add_argument('--config', '-c', help='configuration file',
@@ -77,7 +88,7 @@ def main():
 			help='comma separated unit configuration')
 	
 	# Parse arguments
-	args = parser.parse_args()
+	args = parser.parse_args(remaining_args)
 
 	# Load configuration file
 	if args.config is not None:

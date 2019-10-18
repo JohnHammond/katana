@@ -40,6 +40,8 @@ class Unit(object):
 
 	# Default unit priority
 	PRIORITY: int = 50
+	# Allow self-recursion
+	RECURSE_SELF: bool = False
 	# Whether this unit is allowed to recurse into itself
 	NO_RECURSE: bool = False
 	# Whether this unit is allowed to recurse from other protected recurse
@@ -50,6 +52,10 @@ class Unit(object):
 	# If set, flags for this unit must be alone on a line with the data being
 	# analyzed
 	STRICT_FLAGS: bool = False
+	# Groups this unit belongs to (e.g. 'crypto', 'bruteforce', 'stego', etc)
+	GROUPS = [ ]
+	# Groups this unit is not allowed to recurse into
+	BLOCKED_GROUPS = [ ]
 
 	def __init__(self, manager: katana.manager.Manager,
 					target: katana.target.Target):
@@ -71,11 +77,13 @@ class Unit(object):
 		self.manager = manager
 		self.output_dir = None # We calculate this at runtime when needed
 		self.completed = False
+		self.depth = 0
 
 		# Save origin target
 		self.origin = target
 		if target.parent is not None:
 			self.origin = target.parent.origin
+			self.depth = target.parent.depth + 1
 
 	def __str__(self) -> str:
 		""" Default string conversion reports the module name for this unit """
@@ -96,6 +104,30 @@ class Unit(object):
 		# defaults can propagate
 		if cls.get_name() not in manager:
 			manager[cls.get_name()] = {}
+	
+	def can_recurse(self, unit_class: Type[katana.unit.Unit],
+			direct: bool = True) -> bool:
+		""" Checks recursion rules and returns whether or not recursion is
+		allowed into the given unit class. This unit has already been matched
+		to a given recursion target from this unit.
+
+		Direct indicates whether this is the direct child or an ancestor of
+		self. """
+
+		# Can we recurse into ourselves?
+		if unit_class is self.__class__ and not self.RECURSE_SELF:
+			return False
+
+		# Is this unit name in the blocked groups list?
+		if unit_class.get_name() in self.BLOCKED_GROUPS:
+			return False
+		
+		# Check that we haven't blocked this group
+		for group in self.BLOCKED_GROUPS:
+			if group in unit_class.GROUPS:
+				return False
+
+		return True
 
 	def enumerate(self):
 		r""" Yield cases for evaluation given the target and manager
@@ -366,6 +398,11 @@ class Finder(object):
 		applicable units """
 
 		for unit_class in self.units:
+
+			# Obey recursion rules
+			if target.parent is not None and \
+					not target.parent.can_recurse(unit_class):
+				continue
 			
 			try:
 				# Attempt to create a new unit for this target

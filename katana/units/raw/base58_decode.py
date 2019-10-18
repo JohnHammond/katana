@@ -14,7 +14,11 @@ BASE58_PATTERN = rb'[a-zA-Z0-9+/]+'
 BASE58_REGEX = re.compile(BASE58_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
 
 class Unit(BaseUnit):
+
+	# Low priority
 	PRIORITY = 60
+	# Group settings
+	GROUPS = ['raw', 'decode']
 
 	def __init__(self, manager: Manager, target: Target):
 		super(Unit, self).__init__(manager, target)
