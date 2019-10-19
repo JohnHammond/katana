@@ -30,3 +30,32 @@ def ellipsize(data: str, length: int = 64) -> str:
 	if len(data) > (length-3):
 		data = data[:length-3] + '...'
 	return data
+
+def process_output(popen_object) -> dict:
+	'''
+	This function expects a ``subprocess.Popen`` object, to read the standard
+	output and standard error streams. It reads these line-by-line, stripping
+	whitespace, and adds them to a ``results`` dictionary so it could be
+	easily given back to Katana.
+	'''
+
+	result = {
+		"stdout": [],
+		"stderr": [],
+	}
+
+	output = bytes.decode(popen_object.stdout.read(),'latin-1')
+	error = bytes.decode(popen_object.stderr.read(),'latin-1')
+
+	for line in [ l.strip() for l in error.split('\n') if l ]:
+		result["stderr"].append(line)
+	for line in [ l.strip() for l in output.split('\n') if l ]:
+		result["stdout"].append(line)
+
+	if not len(result['stderr']):
+		result.pop('stderr')
+	if not len(result['stdout']):
+		result.pop('stdout')
+
+	if result != {}:
+		return result

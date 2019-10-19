@@ -9,16 +9,10 @@ from katana.target import Target
 from katana.unit import Unit
 
 class ConsoleMonitor(JsonMonitor, LoggingMonitor):
+	""" This monitor implements the console logging features of LoggingMonitor
+	and uses the JSON output feature from JsonMonitor to create a suitable
+	monitor for command line execution. """
 	pass
-#	def on_completion(self, manager: Manager, did_timeout: bool):
-#		print('uhhhh')
-#		JsonMonitor.on_completion(self, manager, did_timeout)
-
-def ellipsize(s: str, length=64):
-	s = s.split('\n')[0]
-	if len(s) >= (length-3):
-		s = s[:length-3] + '...'
-	return s
 
 def main():
 

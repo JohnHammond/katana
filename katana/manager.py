@@ -105,7 +105,16 @@ class Manager(configparser.ConfigParser):
 		if self['manager'].getboolean('recurse') and not unit.origin.completed \
 				and recurse:
 			# Only do full recursion if requested
-			self.queue_target(data, parent=unit)
+			if isinstance(data, str) or isinstance(data, bytes):
+				self.queue_target(data, parent=unit)
+			elif isinstance(data, list) or isinstance(data, tuple):
+				for item in data:
+					self.queue_target(item, parent=unit)
+			elif isinstance(data, dict):
+				for key,item in data.items():
+					self.queue_target(item, parent=unit)
+			else:
+				self.queue_target(repr(data), parent=unit)
 	
 	def register_flag(self, unit: Unit, flag: str) -> None:
 		""" Register a flag that was found during processing and raise the
@@ -124,6 +133,12 @@ class Manager(configparser.ConfigParser):
 		# Iterate over lists and tuples automatically
 		if isinstance(data, list) or isinstance(data, tuple):
 			for item in data:
+				self.find_flag(unit, item)
+			return
+
+		# Iterate over dictionaries
+		if isinstance(data, dict):
+			for key,item in data.items():
 				self.find_flag(unit, item)
 			return
 

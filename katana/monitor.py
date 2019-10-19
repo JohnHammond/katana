@@ -56,6 +56,7 @@ class Monitor(object):
 		""" Notify the monitor that an exception occurred while processing a
 		given unit. The exception is passed as the `exc` parameter """
 		self.exceptions.append((unit, exc))
+		raise exc
 	
 	def on_completion(self, manager: katana.manager.Manager,
 			timed_out: bool) -> None:
@@ -140,6 +141,8 @@ class JsonMonitor(Monitor):
 			if 'data' not in result:
 				result['data'] = []
 
+			# Remove the annoying quotes and "b" from strings and bytes objects
+			# respectively
 			if isinstance(datum[1], str):
 				datum = repr(datum[1])[1:-1]
 			elif isinstance(datum[1], bytes):
