@@ -240,6 +240,9 @@ class Manager(configparser.ConfigParser):
 		there is a parent unit specified (aka, the target is due to recursion).
 		"""
 
+		# Prepare the results directory
+		self._prepare_results()
+
 		# Validate the configuration items are valid and there will be no
 		# issues moving forward
 		self.validate()
@@ -315,6 +318,9 @@ class Manager(configparser.ConfigParser):
 		# Wait on all threads to complete
 		for thread in self.threads:
 			thread.join()
+
+		# Notify the monitor that we are done
+		self.monitor.on_completion(self, did_timeout)
 
 		return not did_timeout
 

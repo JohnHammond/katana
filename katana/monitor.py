@@ -2,15 +2,10 @@
 from __future__ import annotations
 from typing import BinaryIO, Any
 import logging
+import json
 import os
 
 logger = logging.getLogger(__name__)
-
-def ellipsize(s: str, length=64):
-	s = s.split('\n')[0]
-	if len(s) >= (length-3):
-		s = s[:length-3] + '...'
-	return s
 
 class Monitor(object):
 	""" A monitor object recieves notifications from units whenever data,
@@ -39,7 +34,6 @@ class Monitor(object):
 		given data should be recursed on (or re-evaluated for further unit
 		processing). By default, all data is recursed on """
 		self.data.append((unit, data))
-		return True
 	
 	def on_artifact(self, manager: katana.manager.Manager,
 			unit: katana.unit.Unit, path: str = None) -> bool:
@@ -50,10 +44,7 @@ class Monitor(object):
 		directory of the Manager. The return value indicates whether a new
 		target should be queued for recursion with this artifact as an upstream
 		"""
-
 		self.artifacts.append((unit, path))
-		
-		return True
 	
 	def on_flag(self, manager: katana.manager.Manager,
 			unit: katana.unit.Unit, flag: str) -> None:
@@ -84,8 +75,8 @@ class LoggingMonitor(Monitor):
 		"""
 		super(LoggingMonitor, self).on_flag(manager, unit, flag)
 
-		log_entry = ' new flag found:\n'
-	
+		log_entry = ' new target solution:\n'
+
 		chain = []
 
 		# Build chain in reverse direction
@@ -100,7 +91,7 @@ class LoggingMonitor(Monitor):
 		# Print the chain
 		for n in range(len(chain)):
 			log_entry += '  {0}{1}({2})->\n'.format(' '*n,
-					chain[n], ellipsize(str(chain[n].target)))
+					chain[n], str(chain[n].target))
 		log_entry += '  {0}{1}'.format(' '*len(chain), flag)
 
 		# Log the solution chain
@@ -117,3 +108,81 @@ class LoggingMonitor(Monitor):
 			unit: katana.unit.Unit, exception: Exception) -> None:
 		super(LoggingMonitor, self).on_exception(manager, unit, exception)
 		logger.warning(f' {unit}({unit.target}): exception: {exception}')
+
+class JsonMonitor(Monitor):
+
+	def get_result(self, results, unit):
+		if unit.target.parent:
+			parent_results = self.get_result(results, unit.target.parent)
+		else:
+			parent_results = results
+		if repr(unit.target) not in parent_results['children']:
+			parent_results['children'][repr(unit.target)] = {
+					str(unit): { 'children': { } }
+				}
+		elif str(unit) not in parent_results['children'][repr(unit.target)]:
+			parent_results['children'][repr(unit.target)][str(unit)] = {
+					'children': { }
+				}
+		return parent_results['children'][repr(unit.target)][str(unit)]
+
+	def on_completion(self, manager: katana.manager.Manager,
+			timed_out: bool) -> None:
+		super(JsonMonitor, self).on_completion(manager, timed_out)
+
+		results = { 'children': { } }
+
+		for datum in self.data:
+			# Grab the result hash from the results object
+			result = self.get_result(results, datum[0])
+
+			# Ensure we have a data array
+			if 'data' not in result:
+				result['data'] = []
+
+			if isinstance(datum[1], str):
+				datum = repr(datum[1])[1:-1]
+			elif isinstance(datum[1], bytes):
+				datum = repr(datum[1])[2:-1]
+			else:
+				datum = datum[1]
+
+			# Add the data
+			result['data'].append(datum)
+
+		for artifact in self.artifacts:
+			# Grab the result hash from the results object
+			result = self.get_result(results, artifact[0])
+
+			# Ensure we have an artifact array
+			if 'artifacts' not in result:
+				result['artifacts'] = []
+
+			# Save the artifact name
+			result['artifacts'].append(artifact[1])
+			
+		for flag in self.flags:
+			# Grab the result hash from the results object
+			result = self.get_result(results, flag[0])
+
+			# Ensure we have an artifact array
+			if 'flags' not in result:
+				result['flags'] = []
+
+			# Save the artifact name
+			result['flags'].append(flag[1])
+
+		for exception in self.exceptions:
+			# Grab the result hash from the results object
+			result = self.get_result(results, exception[0])
+
+			# Ensure we have an artifact array
+			if 'exceptions' not in result:
+				result['exceptions'] = []
+
+			# Save the artifact name
+			result['exceptions'].append(exception[1])
+
+		result_path = os.path.join(manager['manager']['outdir'], 'results.json')
+		with open(result_path, 'w') as fh:
+			json.dump(results['children'], fh, indent=' ')

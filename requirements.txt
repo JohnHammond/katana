@@ -19,7 +19,6 @@ matplotlib
 pdftotext
 PyPDF2
 pyopenssl
-primefac @ https://github.com/elliptic-shiho/primefac-fork
 sphinx
 sphinx-rtd-theme
 gmpy

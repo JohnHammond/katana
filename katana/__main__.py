@@ -4,42 +4,15 @@ import logging
 import sys
 
 from katana.manager import Manager
-from katana.monitor import Monitor, LoggingMonitor
+from katana.monitor import LoggingMonitor, JsonMonitor
 from katana.target import Target
 from katana.unit import Unit
 
-class ConsoleMonitor(Monitor):
-
-	logger = logging.getLogger('monitor')
-
-	def __init__(self, *args, **kwargs):
-		super(ConsoleMonitor, self).__init__(*args, **kwargs)
-
-		self.flags = []
-
-	def on_flag(self, manager: Manager, unit: Unit, flag: str) -> None:
-
-		chain = []
-
-		# Build chain in reverse direction
-		link = unit
-		while link is not None:
-			chain.append(link)
-			link = link.target.parent
-
-		# Reverse the chain
-		chain = chain[::-1]
-
-		# Print the chain
-		for n in range(len(chain)):
-			print('{0}{1}({2})->'.format(' '*n, chain[n], ellipsize(str(chain[n].target))))
-		print('{0}{1}'.format(' '*len(chain), flag))
-
-		# Save for in depth display at completion
-		self.flags.append((unit,flag))
-	
-	def on_exception(self, manager: Manager, unit: Unit, e: Exception) -> None:
-		raise e
+class ConsoleMonitor(JsonMonitor, LoggingMonitor):
+	pass
+#	def on_completion(self, manager: Manager, did_timeout: bool):
+#		print('uhhhh')
+#		JsonMonitor.on_completion(self, manager, did_timeout)
 
 def ellipsize(s: str, length=64):
 	s = s.split('\n')[0]
@@ -63,7 +36,7 @@ def main():
 	args, remaining_args = parser.parse_known_args()
 
 	# Build our katana monitor
-	monitor = LoggingMonitor()
+	monitor = ConsoleMonitor()
 
 	# Create our katana manager
 	manager = Manager(monitor=monitor, config_path=args.config)

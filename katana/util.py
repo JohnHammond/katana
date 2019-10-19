@@ -23,3 +23,10 @@ def is_good_magic(magic: str) -> bool:
 		'package', 'binary', 'video', 'executable', 'format',
 		'certificate', 'bytecode']
 	return magic in interesting_types
+
+def ellipsize(data: str, length: int = 64) -> str:
+	""" Ellipsize the string with a max-length of 64 characters """
+	data = data.split('\n')[0]
+	if len(data) > (length-3):
+		data = data[:length-3] + '...'
+	return data

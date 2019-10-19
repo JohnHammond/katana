@@ -15,6 +15,7 @@ import mmap
 import re
 import os
 
+import katana.util
 
 ADDRESS_PATTERN = rb'^((?P<protocol>http|https):\/\/)(?P<host>[a-zA-Z0-9][a-zA-Z0-9\-_.]*)(:(?P<port>[0-9]{1,5}))?(\/(?P<uri>[^?]*))?(\?(?P<query>.*))?$'
 BASE64_PATTERN = rb'^[a-zA-Z0-9+/]+={0,2}$'
@@ -203,10 +204,12 @@ class Target(object):
 	def __repr__(self):
 		""" Create a representation of this object based on it's upstream path
 		"""
-		try:
-			return self.upstream.decode('utf-8')
-		except:
-			return repr(self.upstream)
+		# upstream is always bytes so `repr` puts `b''` around the string.
+		return repr(self.upstream)[2:-1]
+	
+	def __str__(self):
+		""" Create a printable user-readable representation of the target """
+		return katana.util.ellipsize(repr(self), length=64)
 	
 	def __getitem__(self, key):
 		""" Get a slice of the upstream... this seems very inneficient, but it
