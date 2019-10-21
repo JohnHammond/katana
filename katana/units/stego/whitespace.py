@@ -24,6 +24,8 @@ class Unit(FileUnit):
 	
 	# Moderate priority
 	PRIORITY = 75
+	# Groups we're part of
+	GROUPS = ['stego']
 
 	def __init__(self, manager: Manager, target: Target):
 		super(Unit, self).__init__(manager, target)

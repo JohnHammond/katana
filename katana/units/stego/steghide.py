@@ -2,6 +2,7 @@
 import subprocess
 import base64
 import magic
+import logging
 
 from katana.unit import FileUnit, NotApplicable
 from katana.manager import Manager
@@ -13,6 +14,8 @@ class Unit(FileUnit):
 	DEPENDENCIES = ['steghide']
 	# High priority for matching files
 	PRIORITY = 20
+	# Groups we're a member of
+	GROUPS = ['stego', 'image']
 
 	def __init__(self, katana, target):
 		super(Unit, self).__init__(katana, target, keywords=['jpg ', 'jpeg '])
@@ -22,12 +25,12 @@ class Unit(FileUnit):
 		yield b''
 
 		# Check other passwords specified explicitly
-		for p in self.manager[str(self)].get('passwords', '').split(','):
-			yield bytes(p,'utf-8')
+		if self.manager[str(self)].get('passwords') is not None:
+			for p in self.manager[str(self)].get('passwords', '').split(','):
+				yield bytes(p, 'utf-8')
 
 		# Add all the passwords from the dictionary file
 		if self.manager[str(self)].get('dict') is not None:
-			# CALEB: Possible race condition if two units use the 'dict' argument for the same purpose...
 			with open(self.manager[str(self)].get('dict'), 'rb') as fh:
 				for line in fh:
 					yield line.rstrip(b'\n')
@@ -36,8 +39,8 @@ class Unit(FileUnit):
 
 		# Grab the output path for this target and password
 		# CALEB: This is a race condition. Someone could create the file
-		#			before steghide does! We should pass create=True,
-		#			and then force steghide to overwrite
+		# before steghide does! We should pass create=True,
+		# and then force steghide to overwrite
 		if password == b"":
 			output_path, _ = self.generate_artifact("no_password",
 					create=False)
@@ -60,7 +63,7 @@ class Unit(FileUnit):
 
 		# Check if it succeeded
 		if p.returncode != 0:
-			return None
+			return
 
 		# Register the new file with the manager
-		self.manager.register_artifact(self, output_path) 
+		self.manager.register_artifact(self, output_path)

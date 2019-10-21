@@ -48,6 +48,13 @@ def main():
 	parser.add_argument('--timeout', '-t', type=float,
 			help='timeout for all unit evaluations in seconds')
 	parser.add_argument('targets', nargs='+', help='targets to evaluate')
+	parser.add_argument('--auto', '-a', help='shorthand for `-m auto=True`',
+			action='store_true')
+	parser.add_argument('--unit', '-u', help='explicitly run a unit on target',
+			action='append', default=[])
+	parser.add_argument('--exclude', '-e', help='exclude a unit from running',
+			action='append', default=[])
+	parser.add_argument('--flag', '-f', help='set the flag format')
 	
 	# Add options for all the unit specific configurations
 	for unit in manager.finder.units:
@@ -72,6 +79,22 @@ def main():
 		for param in params:
 			name, value = param.split('=')
 			manager['manager'][name] = value
+
+	# Apply auto shorthand
+	if args.auto is not None:
+		manager['manager']['auto'] = 'yes'
+
+	# Apply flag format
+	if args.flag is not None:
+		manager['manager']['flag-format'] = args.flag
+	
+	# Apply requested units
+	units = manager['manager']['units'].split(',') + args.unit
+	manager['manager']['units'] = ','.join(units)
+
+	# Apply excluded units
+	excluded = manager['manager']['exclude'].split(',') + args.exclude
+	manager['manager']['exclude'] = ','.join(excluded)
 	
 	# Apply unit configurations
 	args_dict = vars(args) # We need this because configs have '.'

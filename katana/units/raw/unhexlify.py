@@ -67,7 +67,7 @@ class Unit(BaseUnit):
 			if result:
 				# We want to know about this if it is printable!
 				if katana.util.isprintable(result):
-					manager.register_data(self, result)
+					self.manager.register_data(self, result)
 				else:
 					# if it's not printable, we might only want it if it is a file...
 					magic_info = magic.from_buffer(result)
@@ -79,4 +79,4 @@ class Unit(BaseUnit):
 						with handle:
 							handle.write(result)
 						# Register the artifact (and recurse if requested)
-						manager.register_artifact(self, path)
+						self.manager.register_artifact(self, path)
