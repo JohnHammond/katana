@@ -21,7 +21,7 @@ class Unit(FileUnit):
 	def __init__(self, katana, target):
 		super(Unit, self).__init__(katana, target, keywords=['png'])
 
-	def evaluate(self, katana, case):
+	def evaluate(self, case):
 		for args in permutations:
 
 			p = subprocess.Popen(['zsteg', self.target.path, args],

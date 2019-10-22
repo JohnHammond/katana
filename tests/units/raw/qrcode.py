@@ -1,12 +1,12 @@
 from tests import KatanaTest
 
 
-class TestExiftool(KatanaTest):
+class TestQRCode(KatanaTest):
     """ Test katana.units.raw.strings """
     
-    def test_orchestra(self):
+    def test_qrcode(self):
         self.katana_test(config=r"""
         [manager]
         flag-format=USCGA{.*?}
         auto=yes
-        """, target='./tests/cases/woof64.jpg', correct_flag='USCGA{the_best_base_is_the_base64}')
+        """, target='./tests/cases/qrcode.png', correct_flag='USCGA{is_this_ecoin_from_mr_robot}')

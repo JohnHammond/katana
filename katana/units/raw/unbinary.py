@@ -26,15 +26,25 @@ class Unit(BaseUnit):
 
 	def evaluate(self, case: Any):
 
-		try:
-			# Decode binary
-			raw = ''.join([chr(int(x, 2)) for x in self.matches])
+		# Next, attempt decode with 8-bit integers
+		binary = b''.join(self.matches)
+		raw = []
+		for i in range(0, len(binary), 8):
+			raw.append(chr(int(binary[i:i+8], 2)))
+		raw = ''.join(raw)
 
-			# Register the data
-			self.manager.register_data(self, raw)
-		except:
-			# If the decode failed, we don't care
-			pass
+		# Register the data
+		self.manager.register_data(self, raw)
+		
+		# Next, with 7-bit
+		binary = b''.join(self.matches)
+		raw = []
+		for i in range(0, len(binary), 7):
+			raw.append(chr(int(binary[i:i+7], 2)))
+		raw = ''.join(raw)
+		
+		# Register the data
+		self.manager.register_data(self, raw)
 
 		for result in self.matches:
 			# Decode it!!!!
@@ -46,7 +56,7 @@ class Unit(BaseUnit):
 			except (UnicodeDecodeError, binascii.Error):
 				return
 
-			if utilities.isprintable(result):
+			if katana.util.isprintable(result):
 				# If it's printable save the results
 				self.manager.register_data(self, result)
 			else:
