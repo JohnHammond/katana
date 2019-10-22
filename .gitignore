@@ -1,8 +1,6 @@
 __pycache__/
 results
 domains.txt
-tests/
-tests
 env/
 *.pyc
 test-results

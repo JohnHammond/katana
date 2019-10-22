@@ -257,13 +257,12 @@ class FileUnit(Unit):
                  target: katana.target.Target, keywords=None):
         super(FileUnit, self).__init__(manager, target)
         
-        # No keywords required
-        if keywords is None:
-            keywords = []
-        
         # Ensure the target is a file
         if not self.target.is_file:
             raise NotApplicable("not a file")
+       
+        if keywords is None or keywords == []:
+            return
         
         # Check keywords against magic type
         for k in keywords:
@@ -402,23 +401,22 @@ class Finder(object):
                         if exclude == unit_class.get_name() or \
                                 exclude in unit_class.GROUPS:
                             raise NotApplicable
-                
-                # Check if we are looking for specific units
-                # There are two modes:
-                # - auto: initial units may be specified, but recursion uses
-                # all units no matter what.
-                #    - manual: units are specified, and recursion only uses the
-                #            specified units no matter what.
-                if not self.manager['manager'].getboolean('auto') or \
-                        (self.manager['manager']['units'] != '' and
-                         target.parent is None):
-                    for unit_name in self.manager['manager']['units'].split(','):
-                        if unit_name != unit_class.get_name() and \
-                                unit_name not in unit_class.GROUPS:
-                            raise NotApplicable
             except NotApplicable:
-                # We either didn't request it, or it was excluded
+                # This unit is excluded
                 continue
+
+            # Check if we are looking for specific units
+            # There are two modes:
+            # - auto: initial units may be specified, but recursion uses
+            # all units no matter what.
+            #    - manual: units are specified, and recursion only uses the
+            #            specified units no matter what.
+            if not self.manager['manager'].getboolean('auto') or \
+                    (self.manager['manager']['units'] != '' and
+                     target.parent is None):
+                # We requested specific units, only match those
+                if unit_class.get_name() not in self.manager['manager']['units'].split(','):
+                    continue
             
             # Obey recursion rules
             if target.parent is not None and \
@@ -429,6 +427,6 @@ class Finder(object):
                 # Attempt to create a new unit for this target
                 unit = unit_class(self.manager, target)
             except NotApplicable as e:
-                continue
-            
-            yield unit
+                pass
+            else:
+                yield unit

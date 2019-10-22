@@ -36,7 +36,7 @@ class Unit(FileUnit):
 			with open(self.manager[str(self)].get('dict'), 'wb') as fh:
 				yield line.rstrip(b'\n')
 
-	def evaluate(self, katana, case):
+	def evaluate(self, case):
 
 		# Run stegsnow on the target
 		p = subprocess.Popen(['stegsnow', '-C', '-p', case, self.target.path ],

@@ -91,6 +91,8 @@ class Target(object):
             # directory itself
             if not is_sub_results and not is_sub_target:
                 self.is_file = False
+            else:
+                self.path = upstream
         
         # Download the target of a URL
         if self.is_url:

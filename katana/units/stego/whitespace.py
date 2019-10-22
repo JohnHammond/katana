@@ -9,11 +9,11 @@ import katana.util
 
 def decode_from_whitespace(binary_sequence):
 	decoded = int(binary_sequence, 2)
-	decoded = hex(decoded)[2:].replace(b'L', b'')
+	decoded = hex(decoded)[2:].replace('L', '')
 	try:
 		decoded = binascii.unhexlify(decoded)
 	except binascii.Error:
-		decoded = binascii.unhexlify(b'0' + decoded)
+		decoded = binascii.unhexlify('0' + decoded)
 	except UnicodeDecodeError:
 		return None
 

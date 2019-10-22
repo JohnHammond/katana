@@ -105,16 +105,7 @@ class Manager(configparser.ConfigParser):
         if self['manager'].getboolean('recurse') and not unit.origin.completed \
                 and recurse:
             # Only do full recursion if requested
-            if isinstance(data, str) or isinstance(data, bytes):
-                self.queue_target(data, parent=unit)
-            elif isinstance(data, list) or isinstance(data, tuple):
-                for item in data:
-                    self.queue_target(item, parent=unit)
-            elif isinstance(data, dict):
-                for key, item in data.items():
-                    self.queue_target(item, parent=unit)
-            else:
-                self.queue_target(repr(data), parent=unit)
+            self.queue_target(data, parent=unit)
     
     def register_flag(self, unit: Unit, flag: str) -> None:
         """ Register a flag that was found during processing and raise the
@@ -182,7 +173,18 @@ class Manager(configparser.ConfigParser):
     def queue_target(self, upstream: bytes, parent: Unit = None) -> Target:
         """ Create a target, enumerate units, queue them, and return the target
         object """
-        
+
+        if isinstance(upstream, list) or isinstance(upstream, tuple):
+            for item in upstream:
+                self.queue_target(item, parent=parent)
+            return None
+        elif isinstance(upstream, dict):
+            for key, item in upstream.items():
+                self.queue_target(item, parent=parent)
+            return None
+        elif not isinstance(upstream, str) and not isinstance(upstream, bytes):
+            upstream = repr(upstream)
+
         # That's silly...
         if upstream.strip() == b'' or upstream.strip() == '':
             return None

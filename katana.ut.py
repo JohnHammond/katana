@@ -9,18 +9,18 @@ from katana.monitor import JsonMonitor, LoggingMonitor
 
 
 class TestKatanaUnits(unittest.TestCase):
-
+    
     def setUp(self) -> None:
         warnings.simplefilter('ignore', category=ResourceWarning)
         os.system("rm -rf ./results")
         self.monitor = LoggingMonitor()
         self.manager = Manager(monitor=self.monitor)
         self.manager['manager']['auto'] = 'yes'
-
+    
     def tearDown(self) -> None:
         del self.monitor
         del self.manager
-
+    
     def test_steghide_nopass(self):
         self.manager['manager']['flag-format'] = 'USCGA{.*?}'
         self.manager.start()
@@ -37,6 +37,7 @@ class TestKatanaUnits(unittest.TestCase):
         self.assertTrue(self.manager.join(timeout=45))
         self.assertGreater(len(self.monitor.flags), 0)
         self.assertEqual(self.monitor.flags[0][1], 'USCGA{we_finally_found_the_the_flag}')
+
 
 if __name__ == '__main__':
     with warnings.catch_warnings():
