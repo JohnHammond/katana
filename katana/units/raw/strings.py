@@ -9,25 +9,28 @@ from katana.target import Target
 
 
 class Unit(BaseUnit):
+
     # This unit depends on the `strings` system binary
-    DEPENDENCIES = ['strings']
+    DEPENDENCIES = ["strings"]
     # Moderately high priority due to speed and broadness of applicability
-    PRIORITY = 10
-    
+    PRIORITY = 30
+
     def __init__(self, manager: Manager, target: Target):
         super(Unit, self).__init__(manager, target)
-        
+
         if not self.target.is_file:
             raise NotApplicable("not a file")
-    
+
     def evaluate(self, case: Any):
-        
+
         # Run the process.
-        command = ['strings',
-                   self.target.path,
-                   '-n', self.manager[str(self)].get('length', '4')]
-        p = subprocess.Popen(command, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-        
+        command = [
+            "strings",
+            self.target.path,
+            "-n",
+            self.manager[str(self)].get("length", "4"),
+        ]
+        p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
         for line in p.stdout:
-            self.manager.register_data(self, line.rstrip(b'\n'))
+            self.manager.register_data(self, line.rstrip(b"\n"))

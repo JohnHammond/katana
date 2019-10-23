@@ -78,7 +78,7 @@ class Unit(object):
                 unit = unit.target.parent
 
         # Save target and manager references
-        self.target = target
+        self.target: katana.manager.Target = target
         self.manager = manager
         self.output_dir = None  # We calculate this at runtime when needed
         self.completed = False
@@ -135,6 +135,9 @@ class Unit(object):
 
         return True
 
+    def is_complete(self) -> bool:
+        return self.completed or self.origin.completed
+
     def enumerate(self):
         r""" Yield cases for evaluation given the target and manager
         configuration. This allows units with multiple possible evaluations
@@ -159,11 +162,14 @@ class Unit(object):
             return self.output_dir
 
         if self.target.parent is not None:
-            # We have a parent, we will situate ourself underneath it
-            path = self.target.parent.get_output_dir()
+            # We have a parent, we will situate ourselves underneath it
+            path = os.path.join(self.target.parent.get_output_dir(), "children")
         else:
             # No parent, we go underneath the main output directory
-            path = self.manager["manager"]["outdir"]
+            path = os.path.join(self.manager["manager"]["outdir"])
+
+        # We situate ourselves underneath the target
+        path = os.path.join(path, self.target.hash.hexdigest())
 
         # Build final path, and create if necessary
         path = os.path.join(path, str(self))

@@ -3,7 +3,7 @@
 units against an arbitrary number of Targets of varying types in a
 multithreaded manner and reporting results to a Monitor object """
 from dataclasses import dataclass, field
-from typing import List, Any, Generator
+from typing import List, Any, Generator, Tuple
 import configparser
 import threading
 import queue
@@ -32,7 +32,7 @@ class Manager(configparser.ConfigParser):
         result of `unit.evaluate` and will be called when the first thread
         begins evaluating the unit. """
 
-        priority: int
+        priority: float
         action: str = field(compare=False)
         unit: Unit = field(compare=False)
         generator: Generator[Any, None, None] = field(compare=False)
@@ -101,11 +101,7 @@ class Manager(configparser.ConfigParser):
         # Look for flags
         self.find_flag(unit, data)
 
-        if (
-            self["manager"].getboolean("recurse")
-            and not unit.origin.completed
-            and recurse
-        ):
+        if self["manager"].getboolean("recurse") and not unit.is_complete() and recurse:
             # Only do full recursion if requested
             self.queue_target(data, parent=unit)
 
@@ -172,7 +168,9 @@ class Manager(configparser.ConfigParser):
 
         self.finder.validate()
 
-    def queue_target(self, upstream: bytes, parent: Unit = None) -> Target:
+    def queue_target(
+        self, upstream: bytes, parent: Unit = None, scale: float = 0.5
+    ) -> Target:
         """ Create a target, enumerate units, queue them, and return the target
         object """
 
@@ -206,12 +204,12 @@ class Manager(configparser.ConfigParser):
 
         # Enumerate valid units
         for unit in self.finder.match(target):
-            self.queue(unit)
+            self.queue(unit, scale=scale)
 
         # Return the target object
         return target
 
-    def queue(self, unit: Unit) -> None:
+    def queue(self, unit: Unit, scale: float = 0.5) -> None:
         """ Queue the given unit to be evaluated. This will add the unit to the
         queue given it's prioritization, and the unit will be evaluated once
         the manager is started. If the manager has already been started, the
@@ -219,14 +217,14 @@ class Manager(configparser.ConfigParser):
         free. """
 
         # Check if we are completed
-        if unit.origin.completed:
+        if unit.is_complete():
             return
 
         item = Manager.WorkItem(
-            unit.PRIORITY,  # Unit priority
+            unit.PRIORITY * scale,  # Unit priority
             "init",  # Initialization of work item
             unit,  # The unit itself
-            None,
+            unit.enumerate(),
         )  # The generator to get the next case
 
         # Queue the item for usage
@@ -240,11 +238,11 @@ class Manager(configparser.ConfigParser):
         """ Requeue an item which has more cases left to evaluate """
 
         # Don't requeue completed items
-        if item.unit.origin.completed:
+        if item.unit.is_complete():
             return
 
         # We aren't initializing anymore
-        item.action = "evaluate"
+        # item.action = "evaluate"
 
         # Requeue the item
         self.work.put(item)
@@ -391,14 +389,14 @@ class Manager(configparser.ConfigParser):
                 break
 
             # Ignore the unit if it is already completed
-            if work.unit.origin.completed:
+            if work.unit.is_complete():
                 self.work.task_done()
                 continue
 
-            if work.action == "init":
-                # This is the first time the unit has run, so we need to
-                # initialize the generator for cases
-                work.generator = work.unit.enumerate()
+            # if work.action == "init":
+            # This is the first time the unit has run, so we need to
+            # initialize the generator for cases
+            #    work.generator = work.unit.enumerate()
 
             # We have a unit to process, grab the next case
             try:
@@ -414,7 +412,7 @@ class Manager(configparser.ConfigParser):
 
             # Notify the monitor of thread status (this should be a very short
             # call because it can easily slow down processing!!!)
-            self.monitor.on_work(self, thread, work.unit, case)
+            # self.monitor.on_work(self, thread, work.unit, case)
 
             try:
                 # Evaluate this case
