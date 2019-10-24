@@ -31,7 +31,7 @@ class Monitor(object):
     ):
         """ Keep track of the thread statuses for asynchronous status updates
         """
-        self.thread_status[threadid] = unit
+        self.thread_status[threadid] = (unit, case)
 
     def on_depth_limit(
         self,
@@ -77,7 +77,13 @@ class Monitor(object):
         """ Notify the monitor that an exception occurred while processing a
         given unit. The exception is passed as the `exc` parameter """
         self.exceptions.append((unit, exc))
-        raise exc
+
+    def on_manager_exception(
+        self, manager: katana.manager.Manager, exc: Exception
+    ) -> None:
+        """ Called when the manager catches an exception. By default, we do nothing.
+        This is most likely a KeyboardInterrupt or some other signal that was sent to
+        the main thread. """
 
     def on_completion(self, manager: katana.manager.Manager, timed_out: bool) -> None:
         """ This is called upon completion of evaluation (after manager.join()

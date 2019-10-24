@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
+from types import FrameType
 import argparse
 import logging
+import signal
 import sys
 
 from katana.manager import Manager
 from katana.monitor import LoggingMonitor, JsonMonitor
-from katana.target import Target
-from katana.unit import Unit
+from katana.repl import Repl, ReplMonitor
+import katana.util
 
 
 class ConsoleMonitor(JsonMonitor, LoggingMonitor):
     """ This monitor implements the console logging features of LoggingMonitor
     and uses the JSON output feature from JsonMonitor to create a suitable
     monitor for command line execution. """
-
-    pass
 
 
 def main():
@@ -33,7 +33,7 @@ def main():
     args, remaining_args = parser.parse_known_args()
 
     # Build our katana monitor
-    monitor = ConsoleMonitor()
+    monitor = ReplMonitor()
 
     # Create our katana manager
     manager = Manager(monitor=monitor, config_path=args.config)
@@ -58,7 +58,7 @@ def main():
         type=float,
         help="timeout for all unit evaluations in seconds",
     )
-    parser.add_argument("targets", nargs="+", help="targets to evaluate")
+    parser.add_argument("targets", nargs="*", default=[], help="targets to evaluate")
     parser.add_argument(
         "--auto", "-a", help="shorthand for `-m auto=True`", action="store_true"
     )
@@ -136,14 +136,32 @@ def main():
             name, value = param.split("=")
             manager[unit.get_name()][name] = value
 
-    # Start the manager processing threads
-    logging.info("starting manager threads")
-    manager.start()
-
     # Queue the specified targets
     for target in args.targets:
         logging.info("queuing target {0}".format(target))
         manager.queue_target(target)
+
+    # Build the REPL and execute it
+    sys.argv = sys.argv[:1]
+    repl = Repl(manager)
+    sys.exit(repl.cmdloop())
+
+    # Start the manager processing threads
+    logging.info("starting manager threads")
+    manager.start()
+
+    def status_signal(signum: int, frame: FrameType) -> None:
+        """ Catch the SIGUSR1 or SIGALRM signal and print status information"""
+        for tid, status in monitor.thread_status.items():
+            case = status[1]
+            if case is not None:
+                case = katana.util.ellipsize(case, 20)
+                logging.info(f" thread[{tid}]: {repr(status[0])} -> {case}")
+            else:
+                logging.info(f" thread[{tid}]: {repr(status[0])}")
+
+    # Register a SIGUSR1 handler
+    signal.signal(signal.SIGUSR1, status_signal)
 
     logging.info("waiting for evaluation completion (timeout={0})".format(args.timeout))
     if not manager.join(timeout=args.timeout):

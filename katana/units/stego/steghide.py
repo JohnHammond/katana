@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
-import subprocess
 import base64
-import magic
-import logging
+import subprocess
+import threading
 
-from katana.unit import FileUnit, NotApplicable
-from katana.manager import Manager
-from katana.target import Target
+from katana.unit import FileUnit
 
 
 class Unit(FileUnit):
@@ -21,6 +18,8 @@ class Unit(FileUnit):
     def __init__(self, katana, target):
         super(Unit, self).__init__(katana, target, keywords=["jpg ", "jpeg "])
 
+        # Keep track of how many passwords we find (protected by lock)
+        self.count_lock = threading.Lock()
         self.npasswords = 0
         self.max_passwords = self.manager[str(self)].getint("npasswd", 1)
 
@@ -81,9 +80,10 @@ class Unit(FileUnit):
             return
 
         # Increment the number of found passwords
-        self.npasswords += 1
-        if self.npasswords >= self.max_passwords:
-            self.completed = True
+        with self.count_lock:
+            self.npasswords += 1
+            if self.npasswords >= self.max_passwords:
+                self.completed = True
 
         # Register the new file with the manager
         self.manager.register_artifact(self, output_path)

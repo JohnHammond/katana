@@ -81,6 +81,8 @@ class Manager(configparser.ConfigParser):
         self.flag_pattern = None
         # Save the monitor
         self.monitor = monitor
+        # Have we joined or aborted yet?
+        self.running = False
 
     def register_artifact(self, unit: Unit, path: str, recurse: bool = True) -> None:
         """ Register an artifact result with the manager """
@@ -169,7 +171,7 @@ class Manager(configparser.ConfigParser):
         self.finder.validate()
 
     def queue_target(
-        self, upstream: bytes, parent: Unit = None, scale: float = 0.5
+        self, upstream: bytes, parent: Unit = None, scale: float = None
     ) -> Target:
         """ Create a target, enumerate units, queue them, and return the target
         object """
@@ -199,17 +201,24 @@ class Manager(configparser.ConfigParser):
                 self.monitor.on_depth_limit(self, parent.target, parent)
                 return None
 
+        # Scale linearly with our parent's priority
+        if scale is None and parent is not None:
+            scale = parent.PRIORITY / 100.0
+        elif scale is None:
+            # No scale defined, use 1.0
+            scale = 1.0
+
         # Create the target object
         target = self.target(upstream, parent)
 
         # Enumerate valid units
         for unit in self.finder.match(target):
-            self.queue(unit, scale=scale)
+            self.queue(unit)
 
         # Return the target object
         return target
 
-    def queue(self, unit: Unit, scale: float = 0.5) -> None:
+    def queue(self, unit: Unit) -> None:
         """ Queue the given unit to be evaluated. This will add the unit to the
         queue given it's prioritization, and the unit will be evaluated once
         the manager is started. If the manager has already been started, the
@@ -221,7 +230,7 @@ class Manager(configparser.ConfigParser):
             return
 
         item = Manager.WorkItem(
-            unit.PRIORITY * scale,  # Unit priority
+            unit.PRIORITY,  # Unit priority
             "init",  # Initialization of work item
             unit,  # The unit itself
             unit.enumerate(),
@@ -273,6 +282,7 @@ class Manager(configparser.ConfigParser):
         # Create the barrier object
         self.barrier = threading.Barrier(self["manager"].getint("threads") + 1)
         self.threads = [None] * self["manager"].getint("threads")
+        self.running = True
 
         # Start the threads (will automatically begin processing units)
         for n in range(len(self.threads)):
@@ -289,6 +299,10 @@ class Manager(configparser.ConfigParser):
         return.
 
         """
+
+        # Ensure we are running
+        if not self.running:
+            return True
 
         # Record starting and expected ending time to comply with timeout
         if timeout is not None:
@@ -333,6 +347,9 @@ class Manager(configparser.ConfigParser):
                 self._signal_complete()
                 break
 
+        # Make sure no one calls abort
+        self.running = False
+
         # Release all threads
         self._signal_complete()
         self.barrier.reset()
@@ -345,6 +362,20 @@ class Manager(configparser.ConfigParser):
         self.monitor.on_completion(self, did_timeout)
 
         return not did_timeout
+
+    def abort(self) -> None:
+        """ Signal completion to all threads, then wait for exit """
+
+        # Ensure there is something to do
+        if not self.running:
+            return
+
+        # Signal threads to exit, and then wait for it to happen
+        self._signal_complete()
+        for thread in self.threads:
+            thread.join()
+
+        self.monitor.on_completion(self, True)
 
     def _signal_complete(self) -> None:
         """ Send work items with high priority to signal closing down threads
@@ -412,7 +443,7 @@ class Manager(configparser.ConfigParser):
 
             # Notify the monitor of thread status (this should be a very short
             # call because it can easily slow down processing!!!)
-            # self.monitor.on_work(self, thread, work.unit, case)
+            self.monitor.on_work(self, thread, work.unit, case)
 
             try:
                 # Evaluate this case

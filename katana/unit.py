@@ -42,7 +42,7 @@ class Unit(object):
     """
 
     # Default unit priority
-    PRIORITY: int = 50
+    PRIORITY: float = 50
     # Allow self-recursion
     RECURSE_SELF: bool = False
     # Whether this unit is allowed to recurse into itself
@@ -93,6 +93,9 @@ class Unit(object):
     def __str__(self) -> str:
         """ Default string conversion reports the module name for this unit """
         return self.__class__.get_name()
+
+    def __repr__(self) -> str:
+        return f"{str(self)}({str(self.target)})"
 
     @classmethod
     def get_name(cls) -> str:
@@ -401,7 +404,9 @@ class Finder(object):
         # Keep track of registered units
         self.units.append(unit)
 
-    def match(self, target: katana.target.Target) -> Generator[Unit, None, None]:
+    def match(
+        self, target: katana.target.Target, scale: float = 1.0
+    ) -> Generator[Unit, None, None]:
         """ Match the given target to one or more units that have previously
         been enumerated with the ``Finder.find`` method. This tests that the
         unit itself is applicable to the target in order to find specific
@@ -453,4 +458,5 @@ class Finder(object):
             except NotApplicable as e:
                 pass
             else:
+                unit.PRIORITY *= scale
                 yield unit
