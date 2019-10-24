@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 from typing import Any, Tuple
+from colorama import Fore, Back, Style
+from cmd2 import clipboard
 import argparse
+import queue
 import cmd2
 import re
 
@@ -21,12 +24,41 @@ class ReplMonitor(JsonMonitor):
         self.repl: Repl = None
 
     def on_flag(self, manager: Manager, unit: Unit, flag: str):
+        super(ReplMonitor, self).on_flag(manager, unit, flag)
+
+        log_entry = "Target evaluation complete (flag copied):\n"
+
+        chain = []
+
+        # Build chain in reverse direction
+        link = unit
+        while link is not None:
+            chain.append(link)
+            link = link.target.parent
+
+        # Reverse the chain
+        chain = chain[::-1]
+
+        # Print the chain
+        for n in range(len(chain)):
+            log_entry += f" {' '*n}{repr(chain[n])}->\n"
+        log_entry += (
+            f" {' ' * len(chain)}{Fore.GREEN}{Style.BRIGHT}{flag}{Style.RESET_ALL}"
+        )
+
+        # Put the flag on the clipboard
+        clipboard.write_to_paste_buffer(flag)
+
+        # Notify the user
         with self.repl.terminal_lock:
-            self.repl.async_alert(f"{repr(unit)}: flag: {flag}")
+            self.repl.async_alert(log_entry)
 
     def on_exception(
         self, manager: katana.manager.Manager, unit: katana.unit.Unit, exc: Exception
     ) -> None:
+        super(ReplMonitor, self).on_flag(manager, unit, exc)
+
+        # Notify the user
         with self.repl.terminal_lock:
             self.repl.pexcept(exc)
 
@@ -105,6 +137,32 @@ class Repl(cmd2.Cmd):
         """ Queue a new target for evaluation """
         self.manager.queue_target(bytes(args.target, "utf-8"))
 
+    join_parser = argparse.ArgumentParser(
+        description="Wait for all currently evaluating targets to complete, then exit"
+    )
+    join_parser.add_argument(
+        "--timeout", "-t", type=float, help="Set a maximum timeout for completion"
+    )
+
+    @cmd2.with_argparser(join_parser)
+    def do_join(self, args):
+        """ Wait for all targets to complete evaluation, then exit """
+
+        self.poutput("manager: waiting for thread completion")
+
+        if not self.manager.join():
+            self.poutput("manager: evaluation timed out")
+
+        self.poutput(f"manager: {self.manager.work.qsize()} items left in queue")
+
+        try:
+            while True:
+                self.poutput(f"{self.manager.work.get(False)}")
+        except queue.Empty:
+            pass
+
+        return True
+
     def do_quit(self, args):
         """ Ensure we wait on unit completion before exiting """
 
@@ -122,6 +180,9 @@ class Repl(cmd2.Cmd):
     )
     set_parser.add_argument(
         "--section", "-s", action="store_true", help="Show entire section contents"
+    )
+    set_parser.add_argument(
+        "--reset", "r", action="store_true", help="remove/reset a parameter"
     )
     set_parser.add_argument(
         "parameter", nargs=argparse.OPTIONAL, help="The parameter to modify"
@@ -167,9 +228,13 @@ class Repl(cmd2.Cmd):
                         self.poutput(f"  {name} = {self.manager[section][name]}")
 
         elif args.section is None:
-            # Display a single value within a section
-            self.poutput(f"[{section}]")
-            self.poutput(f"{name} = {self.manager[section][name]}")
+            if args.reset:
+                self.poutput(f"removing {section}[{name}]")
+                self.manager.remove_option(section, name)
+            else:
+                # Display a single value within a section
+                self.poutput(f"[{section}]")
+                self.poutput(f"{name} = {self.manager[section][name]}")
         else:
             # Display an entire section either specifying section[name] or section alone
             if match is None:

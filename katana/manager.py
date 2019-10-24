@@ -38,6 +38,11 @@ class Manager(configparser.ConfigParser):
         generator: Generator[Any, None, None] = field(compare=False)
 
     def __init__(self, monitor: Monitor = None, config_path=None, default_units=True):
+
+        # This needs to exist before the ConfigParser is initialized
+        self.running = False
+
+        # Initialize ConfigParser
         super(Manager, self).__init__()
 
         # Default values for configuration items
@@ -84,6 +89,27 @@ class Manager(configparser.ConfigParser):
         # Have we joined or aborted yet?
         self.running = False
 
+    def set(self, section: str, option: str, value: Any = None) -> None:
+        """ Wrapper around ConfigParser.set. We need to take into account some special
+        configs which require other things to be accounted for (e.g. flag_format for
+        RE compilation). """
+
+        # We only specially handle manager and DEFAULT sections
+        if section != "manager" and section != "DEFAULT":
+            return super(Manager, self).set(section, option, value)
+
+        # Flag Format needs to be compiled
+        if option == "flag-format":
+            self.flag_pattern = re.compile(
+                bytes(value, "utf-8"), re.IGNORECASE | re.MULTILINE | re.DOTALL
+            )
+        elif option == "threads":
+            if self.running:
+                # We cannot modify the thread count after starting the manager
+                return
+
+        return super(Manager, self).set(section, option, value)
+
     def register_artifact(self, unit: Unit, path: str, recurse: bool = True) -> None:
         """ Register an artifact result with the manager """
 
@@ -103,7 +129,7 @@ class Manager(configparser.ConfigParser):
         # Look for flags
         self.find_flag(unit, data)
 
-        if self["manager"].getboolean("recurse") and not unit.is_complete() and recurse:
+        if self["manager"].getboolean("recurse") and recurse:
             # Only do full recursion if requested
             self.queue_target(data, parent=unit)
 
@@ -256,6 +282,9 @@ class Manager(configparser.ConfigParser):
         # Requeue the item
         self.work.put(item)
 
+        if self.barrier is not None:
+            self.barrier.reset()
+
     def start(self) -> None:
         """ Start the needed threads and begin evaluation of units. You can
         still add units to the queue for evaluation after start is called up
@@ -272,12 +301,6 @@ class Manager(configparser.ConfigParser):
         # Validate the configuration items are valid and there will be no
         # issues moving forward
         self.validate()
-
-        # Compile the flag pattern
-        self.flag_pattern = re.compile(
-            bytes(self["manager"]["flag-format"], "utf-8"),
-            re.DOTALL | re.MULTILINE | re.IGNORECASE,
-        )
 
         # Create the barrier object
         self.barrier = threading.Barrier(self["manager"].getint("threads") + 1)
@@ -430,27 +453,38 @@ class Manager(configparser.ConfigParser):
             #    work.generator = work.unit.enumerate()
 
             # We have a unit to process, grab the next case
+            cases = []
+            empty = False
+
             try:
-                case = next(work.generator)
-            except StopIteration:
-                # We are done with this item, continue processing
+                for i in range(10):
+                    try:
+                        case = next(work.generator)
+                    except StopIteration:
+                        empty = True
+                        break
+                    cases.append(case)
+            except Exception as e:
+                self.monitor.on_exception(self, work.unit, e)
                 self.work.task_done()
                 continue
 
             # Before we evaluate, place this case back on the queue in order to
             # allow parallel processing of the cases
-            self.requeue(work)
+            if not empty:
+                self.requeue(work)
 
-            # Notify the monitor of thread status (this should be a very short
-            # call because it can easily slow down processing!!!)
-            self.monitor.on_work(self, thread, work.unit, case)
+            for case in cases:
+                # Notify the monitor of thread status (this should be a very short
+                # call because it can easily slow down processing!!!)
+                self.monitor.on_work(self, thread, work.unit, case)
 
-            try:
-                # Evaluate this case
-                work.unit.evaluate(case)
-            except Exception as e:
-                # We got an exception, notify the monitor and continue
-                self.monitor.on_exception(self, work.unit, e)
+                try:
+                    # Evaluate this case
+                    work.unit.evaluate(case)
+                except Exception as e:
+                    # We got an exception, notify the monitor and continue
+                    self.monitor.on_exception(self, work.unit, e)
 
             self.work.task_done()
 

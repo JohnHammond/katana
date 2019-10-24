@@ -37,7 +37,8 @@ class Unit(FileUnit):
             # Read all of the dict
             with open(self.manager[str(self)].get("dict"), "rb") as fh:
                 for line in fh:
-                    yield line.rstrip(b"\n")
+                    line = line.rstrip(b"\n")
+                    yield line
 
     def evaluate(self, password):
 

@@ -183,6 +183,26 @@ class JsonMonitor(Monitor):
             # Add the data
             result["data"].append(datum)
 
+        for flag in self.flags:
+            # Grab the result hash from the results object
+            result = self.get_result(results, flag[0])
+
+            # Ensure we have a data array
+            if "flags" not in result:
+                result["flags"] = []
+
+            # Remove the annoying quotes and "b" from strings and bytes objects
+            # respectively
+            if isinstance(flag[1], str):
+                flag = repr(flag[1])[1:-1]
+            elif isinstance(flag[1], bytes):
+                flag = repr(flag[1])[2:-1]
+            else:
+                flag = flag[1]
+
+            # Add the data
+            result["flags"].append(flag)
+
         for artifact in self.artifacts:
             # Grab the result hash from the results object
             result = self.get_result(results, artifact[0])
