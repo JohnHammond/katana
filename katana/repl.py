@@ -2,6 +2,7 @@
 from typing import Any, Tuple
 from colorama import Fore, Back, Style
 from cmd2 import clipboard
+import cmd2.plugin
 import argparse
 import queue
 import cmd2
@@ -26,8 +27,6 @@ class ReplMonitor(JsonMonitor):
     def on_flag(self, manager: Manager, unit: Unit, flag: str):
         super(ReplMonitor, self).on_flag(manager, unit, flag)
 
-        log_entry = "Target evaluation complete (flag copied):\n"
-
         chain = []
 
         # Build chain in reverse direction
@@ -39,11 +38,23 @@ class ReplMonitor(JsonMonitor):
         # Reverse the chain
         chain = chain[::-1]
 
+        # First entry is special
+        log_entry = (
+            f"{Fore.MAGENTA}{chain[0]}{Style.RESET_ALL}("
+            f"{Fore.RED}{chain[0].target}{Style.RESET_ALL}) - "
+            f"{Fore.GREEN}completed{Style.RESET_ALL}!\n"
+        )
+
         # Print the chain
-        for n in range(len(chain)):
-            log_entry += f" {' '*n}{repr(chain[n])}->\n"
+        for n in range(1, len(chain)):
+            log_entry += (
+                f" {' '*n}{Fore.MAGENTA}{chain[n]}{Style.RESET_ALL}("
+                f"{Fore.RED}{chain[n].target}{Style.RESET_ALL}) "
+                f"{Fore.YELLOW}➜ {Style.RESET_ALL}\n"
+            )
         log_entry += (
-            f" {' ' * len(chain)}{Fore.GREEN}{Style.BRIGHT}{flag}{Style.RESET_ALL}"
+            f" {' ' * len(chain)}{Fore.GREEN}{Style.BRIGHT}{flag}{Style.RESET_ALL} - "
+            f"(copied)"
         )
 
         # Put the flag on the clipboard
@@ -93,12 +104,39 @@ class Repl(cmd2.Cmd):
         # Display full tracebacks for errors/exceptions
         self.debug = True
 
-        # Default prompt
-        self.prompt = "katana> "
-
-    def preloop(self) -> None:
-        """ Start the manager processing prior to command loop execution """
+        # Register hook to update prompt
+        self.register_cmdfinalization_hook(self.finalization_hook)
+        # Start the manager
         self.manager.start()
+
+        # Update the prompt
+        self.update_prompt()
+
+    def finalization_hook(
+        self, data: cmd2.plugin.CommandFinalizationData
+    ) -> cmd2.plugin.CommandFinalizationData:
+        """ Updated dynamic prompt """
+        # Update the prompt
+        self.update_prompt()
+        self.poutput("")
+        # Maintain exit status
+        return data
+
+    def update_prompt(self):
+        """ Updates the prompt with the current state """
+
+        # build a dynamic state
+        if self.manager.barrier.n_waiting == len(self.manager.threads):
+            state = f"{Fore.YELLOW}waiting{Style.RESET_ALL} - "
+        else:
+            state = f"{Fore.GREEN}running{Style.RESET_ALL} - "
+
+        # update the prompt
+        self.prompt = f"{Fore.CYAN}katana{Style.RESET_ALL} - " + state
+        self.prompt += (
+            f"{Fore.BLUE}{self.manager.work.qsize()} units queued{Style.RESET_ALL} "
+            f"\n{Fore.GREEN}➜ {Style.RESET_ALL}"
+        )
 
     status_parser = argparse.ArgumentParser(
         description="Display status message for all running threads"
@@ -182,7 +220,7 @@ class Repl(cmd2.Cmd):
         "--section", "-s", action="store_true", help="Show entire section contents"
     )
     set_parser.add_argument(
-        "--reset", "r", action="store_true", help="remove/reset a parameter"
+        "--reset", "-r", action="store_true", help="remove/reset a parameter"
     )
     set_parser.add_argument(
         "parameter", nargs=argparse.OPTIONAL, help="The parameter to modify"

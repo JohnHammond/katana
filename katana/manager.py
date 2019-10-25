@@ -79,7 +79,7 @@ class Manager(configparser.ConfigParser):
         self.work = queue.PriorityQueue()
         # This is the barrier which signals wait on and signals completion of
         # evaluation. It is initialized in the `start` method
-        self.barrier = None
+        self.barrier: threading.Barrier = None
         # Array of threads (also initialized in `start`)
         self.threads = []
         # Flag pattern will be compiled upon running `start`
