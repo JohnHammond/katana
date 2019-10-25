@@ -30,6 +30,7 @@ dependencies = [
     "sphinx-rtd-theme",
     "gmpy",
     "cmd2",
+    "watchdog",
 ]
 dependency_links = [
     "git+https://github.com/elliptic-shiho/primefac-fork#egg=primefac-1.0.0"

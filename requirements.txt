@@ -24,3 +24,4 @@ sphinx-rtd-theme
 gmpy
 git+https://github.com/elliptic-shiho/primefac-fork#egg=primefac-1.0.0
 cmd2
+watchdog

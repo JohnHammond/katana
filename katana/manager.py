@@ -88,6 +88,8 @@ class Manager(configparser.ConfigParser):
         self.monitor = monitor
         # Have we joined or aborted yet?
         self.running = False
+        # List of root targets that have been queued
+        self.targets: List[Target] = []
 
     def set(self, section: str, option: str, value: Any = None) -> None:
         """ Wrapper around ConfigParser.set. We need to take into account some special
@@ -236,6 +238,10 @@ class Manager(configparser.ConfigParser):
 
         # Create the target object
         target = self.target(upstream, parent)
+
+        # Track the root targets
+        if parent is None:
+            self.targets.append(target)
 
         # Enumerate valid units
         for unit in self.finder.match(target):
