@@ -3,7 +3,7 @@ from watchdog.events import FileSystemEventHandler, FileSystemEvent, FileCreated
 from watchdog.observers.api import ObservedWatch
 from watchdog.observers import Observer
 from colorama import Fore, Back, Style
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 from cmd2 import clipboard
 import cmd2.plugin
 import argparse
@@ -168,13 +168,13 @@ class Repl(cmd2.Cmd):
 
         # build a dynamic state
         if self.manager.barrier.n_waiting == len(self.manager.threads):
-            state = f"{Fore.YELLOW}waiting{Style.RESET_ALL} - "
+            state = f"{Fore.YELLOW}waiting{Style.RESET_ALL}"
         else:
-            state = f"{Fore.GREEN}running{Style.RESET_ALL} - "
+            state = f"{Fore.GREEN}running{Style.RESET_ALL}"
 
         # update the prompt
-        self.prompt = f"{Fore.CYAN}katana{Style.RESET_ALL} - " + state
-        self.prompt += (
+        self.prompt = (
+            f"{Fore.CYAN}katana{Style.RESET_ALL} - {state} - "
             f"{Fore.BLUE}{self.manager.work.qsize()} units queued{Style.RESET_ALL} "
             f"\n{Fore.GREEN}➜ {Style.RESET_ALL}"
         )
@@ -216,31 +216,52 @@ class Repl(cmd2.Cmd):
         """ Queue a new target for evaluation """
         self.manager.queue_target(bytes(args.target, "utf-8"))
 
-    join_parser = argparse.ArgumentParser(
-        description="Wait for all currently evaluating targets to complete, then exit"
+    exit_parser = argparse.ArgumentParser(
+        description="Cleanup currently running evaluation and exit"
     )
-    join_parser.add_argument(
-        "--timeout", "-t", type=float, help="Set a maximum timeout for completion"
+    exit_parser.add_argument(
+        "--timeout",
+        "-t",
+        type=float,
+        help="Timeout for waiting in outstanding evaluations",
+    )
+    exit_parser.add_argument(
+        "--force",
+        "-f",
+        action="store_true",
+        help="Force exit prior to evaluation completion",
     )
 
-    @cmd2.with_argparser(join_parser)
-    def do_join(self, args):
-        """ Wait for all targets to complete evaluation, then exit """
+    @cmd2.with_argparser(exit_parser)
+    def do_exit(self, args: argparse.Namespace) -> bool:
+        """
+        Exit the katana REPL. Optionally, force current evaluation to complete immediately.
+        
+        :param args: argparse Namespace containing parameters
+        :return: whether to exit or not (always True)
+        """
 
-        self.poutput("manager: waiting for thread completion")
+        if args.force is not None and args.force:
+            self.poutput(f"[{Fore.YELLOW}!{Style.RESET_ALL}] forcing thread exit")
+            self.manager.abort()
+        else:
+            self.poutput(
+                f"[{Fore.BLUE}-{Style.RESET_ALL}] waiting for thread completion (timeout={args.timeout})"
+            )
+            self.terminal_lock.release()
+            result = self.manager.join(args.timeout)
+            self.terminal_lock.acquire()
+            if not result:
+                self.poutput(f"[{Fore.YELLOW}!{Style.RESET_ALL}] evaluation timeout")
 
-        if not self.manager.join():
-            self.poutput("manager: evaluation timed out")
-
-        self.poutput(f"manager: {self.manager.work.qsize()} items left in queue")
-
-        try:
-            while True:
-                self.poutput(f"{self.manager.work.get(False)}")
-        except queue.Empty:
-            pass
+        self.poutput(f"[{Fore.GREEN}+{Style.RESET_ALL}] manager exited cleanly")
 
         return True
+
+    @cmd2.with_argparser(exit_parser)
+    def do_quit(self, args: argparse.Namespace) -> bool:
+        """ Same as do_exit """
+        return self.do_exit(args)
 
     # The main argument parser
     monitor_parser = argparse.ArgumentParser(
@@ -411,6 +432,21 @@ class Repl(cmd2.Cmd):
     )
     target_list_parser.set_defaults(action="list")
 
+    # View target solutions (chain of units producing flags)
+    target_solution_parser: argparse.ArgumentParser = target_subparsers.add_parser(
+        "solution", aliases=["flags"], help="List solution chains for all found flags"
+    )
+    target_solution_parser.add_argument(
+        "--raw",
+        "-r",
+        action="store_true",
+        help="Match the specified target by the target upstream string vice the hash",
+    )
+    target_solution_parser.add_argument(
+        "target", help="The target hash or upstream (if --raw is specified)"
+    )
+    target_solution_parser.set_defaults(action="solution")
+
     @cmd2.with_argparser(target_parser)
     def do_target(self, args: argparse.Namespace) -> bool:
         """ Add/stop/list queued targets """
@@ -418,6 +454,7 @@ class Repl(cmd2.Cmd):
             "add": self._target_add,
             "stop": self._target_stop,
             "list": self._target_list,
+            "solution": self._target_solution,
         }
         actions[args.action](args)
         return False
@@ -456,11 +493,16 @@ class Repl(cmd2.Cmd):
         targets: List[Target] = []
 
         if args.which is None or args.which == "all":
-            targets = self.manager.targets
+            # In this context, we mean root targets only
+            targets = [t for t in self.manager.targets if t.parent is None]
         elif args.which == "completed":
-            targets = [t for t in self.manager.targets if t.completed]
+            targets = [
+                t for t in self.manager.targets if t.completed and t.parent is None
+            ]
         elif args.which == "running":
-            targets = [t for t in self.manager.targets if not t.completed]
+            targets = [
+                t for t in self.manager.targets if not t.completed and t.parent is None
+            ]
         elif args.which == "flags":
             targets = [f[0].origin for f in self.manager.monitor.flags]
 
@@ -491,14 +533,75 @@ class Repl(cmd2.Cmd):
         if len(output) > 0:
             self.poutput(output)
 
-    def do_quit(self, args):
-        """ Ensure we wait on unit completion before exiting """
+    def _target_solution(self, args: argparse.Namespace) -> None:
+        """
+        Display all found solutions for this target.
+        
+        :param args: argparse Namespace object with parsed parameters
+        :return:
+        """
 
-        # Wait for threads to exit
-        self.poutput("manager: waiting for thread completion... ")
-        self.manager.abort()
+        if args.raw is not None:
+            # Match based on target upstream
+            flags = [
+                f
+                for f in self.manager.monitor.flags
+                if f[0].origin.upstream.startswith(bytes(args.target, "utf-8"))
+            ]
+        else:
+            # Match based on target hash
+            flags = [
+                f
+                for f in self.manager.monitor.flags
+                if f[0].origin.hash.hexdigest() == bytes(args.target, "utf-8")
+            ]
 
-        return True
+        # Ensure we found at least one target
+        if len(flags) == 0:
+            self.perror(f"[{Fore.RED}-{Style.RESET_ALL}] {args.target}: no flags found")
+            return
+        elif len(flags) > 1:
+            # We found more than one, assume the first matching
+            self.poutput(
+                f"[{Fore.YELLOW}!{Style.RESET_ALL}] {args.target}: selecting "
+                f"{Fore.RED}{flags[0][0].origin}{Style.RESET_ALL}"
+            )
+
+        # Either the first or only flag
+        flag: Tuple[Unit, str] = flags[0]
+
+        # The chain of units upward
+        chain = []
+
+        # Build chain in reverse direction
+        link = flag[0]
+        while link is not None:
+            chain.append(link)
+            link = link.target.parent
+
+        # Reverse the chain
+        chain = chain[::-1]
+
+        # First entry is special
+        log_entry = (
+            f"{Fore.MAGENTA}{chain[0]}{Style.RESET_ALL}("
+            f"{Fore.RED}{chain[0].target}{Style.RESET_ALL})\n"
+        )
+
+        # Print the chain
+        for n in range(1, len(chain)):
+            log_entry += (
+                f" {' '*n}{Fore.MAGENTA}{chain[n]}{Style.RESET_ALL}("
+                f"{Fore.RED}{chain[n].target}{Style.RESET_ALL}) "
+                f"{Fore.YELLOW}➜ {Style.RESET_ALL}\n"
+            )
+        log_entry += (
+            f" {' ' * len(chain)}{Fore.GREEN}{Style.BRIGHT}{flag[1]}{Style.RESET_ALL} - "
+            f"(copied)"
+        )
+
+        # Print the entry
+        self.poutput(log_entry)
 
     set_parser = argparse.ArgumentParser(
         description=r"""Set or retreive a katana runtime parameter. Parameters may be specified as """

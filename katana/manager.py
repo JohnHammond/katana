@@ -240,8 +240,8 @@ class Manager(configparser.ConfigParser):
         target = self.target(upstream, parent)
 
         # Track the root targets
-        if parent is None:
-            self.targets.append(target)
+        # if parent is None:
+        self.targets.append(target)
 
         # Enumerate valid units
         for unit in self.finder.match(target):
