@@ -170,6 +170,10 @@ class Repl(cmd2.Cmd):
         # Display full tracebacks for errors/exceptions
         self.debug = True
 
+        # We assume there is no CTFd session (setup in katana.repl.ctfd)
+        self.ctfd_session = None
+        self.ctfd_challenges = None
+
         # Create a filesystem monitor
         self.fseventhandler = MonitoringEventHandler(self)
         self.observer = Observer()
@@ -762,6 +766,9 @@ class Repl(cmd2.Cmd):
     ctfd_list_parser: argparse.ArgumentParser = ctfd_subparsers.add_parser(
         "list", help="List all challenges on the CTFd server"
     )
+    ctfd_list_parser.add_argument(
+        "--force", "-f", action="store_true", help="Force challenge cache refresh"
+    )
     ctfd_list_parser.set_defaults(action="list")
 
     # `ctfd queue` parser
@@ -808,7 +815,7 @@ class Repl(cmd2.Cmd):
         :return: None
         """
 
-        challenges = ctfd.get_challenges(self)
+        challenges = ctfd.get_challenges(self, force=args.force)
         output = [f"{'ID':<8}{'Title':<40}Points"]
 
         for c in challenges:

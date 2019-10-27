@@ -13,6 +13,10 @@ def get_login_token(repl: "katana.repl.Repl") -> requests.Session:
     :return: CTFd Auth Token
     """
 
+    # Speed up processing in the future by caching the session
+    if repl.ctfd_session is not None:
+        return repl.ctfd_session
+
     # We need CTFd configuration
     if "ctfd" not in repl.manager:
         repl.poutput(f"[{Fore.RED}-{Style.RESET_ALL}] ctfd: no configuration provided")
@@ -35,6 +39,7 @@ def get_login_token(repl: "katana.repl.Repl") -> requests.Session:
     if "session" in repl.manager["ctfd"]:
         s = requests.Session()
         s.cookies["session"] = repl.manager["ctfd"]["session"]
+        repl.ctfd_session = s
         return s
 
     # I'm not sure if there is a /api endpoint for this, so I'm using the regular
@@ -70,16 +75,25 @@ def get_login_token(repl: "katana.repl.Repl") -> requests.Session:
         repl.poutput(f"[{Fore.RED}-{Style.RESET_ALL}] ctfd: authentication failed")
         return None
 
+    repl.ctfd_session = s
+
     return s
 
 
-def get_challenges(repl: "katana.repl.Repl") -> List[Dict[str, Any]]:
+def get_challenges(
+    repl: "katana.repl.Repl", force: bool = False
+) -> List[Dict[str, Any]]:
     """
     Returns a list of all challenges on the CTFd server.
     
     :param repl: A katana Repl instance
+    :param force: Force a refetch of challenges
     :return: List of challenge dictionaries
     """
+
+    # Cache the challenge list. It shouldn't change, and it makes tab-completions faster.
+    if repl.ctfd_challenges is not None and not force:
+        return repl.ctfd_challenges
 
     # Check if we have a CTFd login token already
     session = get_login_token(repl)
@@ -106,6 +120,9 @@ def get_challenges(repl: "katana.repl.Repl") -> List[Dict[str, Any]]:
     if not data["success"]:
         repl.poutput(f"[{Fore.RED}-{Style.RESET_ALL} ctfd: failed to get challenges")
         return []
+
+    # Cache challenge list
+    repl.ctfd_challenges = data["data"]
 
     return data["data"]
 
