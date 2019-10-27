@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
-from watchdog.events import FileSystemEventHandler, FileSystemEvent, FileCreatedEvent
-from watchdog.observers.api import ObservedWatch
-from watchdog.observers import Observer
-from colorama import Fore, Back, Style
-from typing import Any, Dict, List, Tuple
-from cmd2 import clipboard
-import cmd2.plugin
-import argparse
-import queue
-import cmd2
-import re
+import functools
 import os
+import re
+from typing import Any, Dict, List, Tuple
 
-from katana.monitor import JsonMonitor, LoggingMonitor
-from katana.unit import Unit
-from katana.manager import Manager
-from katana.target import Target
+import argparse
+import cmd2.plugin
+from cmd2 import clipboard
+from cmd2.argparse_custom import Cmd2ArgumentParser, CompletionItem
+from colorama import Fore, Style
+from watchdog.events import FileSystemEventHandler, FileSystemEvent, FileCreatedEvent
+from watchdog.observers import Observer
+from watchdog.observers.api import ObservedWatch
+
 import katana.util
+from katana.manager import Manager
+from katana.monitor import JsonMonitor
+from katana.target import Target
+from katana.unit import Unit
+from katana.repl import ctfd
 
 
 class MonitoringEventHandler(FileSystemEventHandler):
@@ -106,6 +108,38 @@ class ReplMonitor(JsonMonitor):
             self.repl.pexcept(exc)
 
 
+def get_target_choices(repl, uncomplete=False) -> List[CompletionItem]:
+    """
+    Get available targets for command completion
+
+    :param repl: The Repl object
+    :return: List of completion object referring to queued targets
+    """
+    repl: Repl
+
+    # Grab root targets
+    targets = [t for t in repl.manager.targets if t.parent is None]
+
+    # Filter by uncompleted units
+    if uncomplete:
+        targets = [t for t in targets if not t.completed]
+
+    result = [CompletionItem(t.hash.hexdigest(), repr(t)) for t in targets]
+
+    return result
+
+
+def get_monitor_choices(repl: "katana.repl.Repl") -> List[CompletionItem]:
+    """
+    Get available monitors for command completion
+    
+    :param repl: The Repl object
+    :return: List of completion objects referring to monitored directories
+    """
+
+    return [d for d in repl.directories]
+
+
 class Repl(cmd2.Cmd):
     """ A simple Katana REPL implemented using the cmd2 module.
     
@@ -147,6 +181,8 @@ class Repl(cmd2.Cmd):
         # Register hook to update prompt
         self.register_cmdfinalization_hook(self.finalization_hook)
 
+        # Setup argparse completers for commands
+
         # Start the manager
         self.manager.start()
 
@@ -179,7 +215,7 @@ class Repl(cmd2.Cmd):
             f"\n{Fore.GREEN}➜ {Style.RESET_ALL}"
         )
 
-    status_parser = argparse.ArgumentParser(
+    status_parser = Cmd2ArgumentParser(
         description="Display status message for all running threads"
     )
     status_parser.add_argument(
@@ -206,17 +242,7 @@ class Repl(cmd2.Cmd):
             for unit, flag in self.manager.monitor.flags:
                 self.poutput(f"{repr(unit)}: {flag}")
 
-    evaluate_parser = argparse.ArgumentParser(
-        description="Queue a new target for evaluation"
-    )
-    evaluate_parser.add_argument("target", type=str, help="the target to evaluate")
-
-    @cmd2.with_argparser(evaluate_parser)
-    def do_evaluate(self, args):
-        """ Queue a new target for evaluation """
-        self.manager.queue_target(bytes(args.target, "utf-8"))
-
-    exit_parser = argparse.ArgumentParser(
+    exit_parser = Cmd2ArgumentParser(
         description="Cleanup currently running evaluation and exit"
     )
     exit_parser.add_argument(
@@ -264,7 +290,7 @@ class Repl(cmd2.Cmd):
         return self.do_exit(args)
 
     # The main argument parser
-    monitor_parser = argparse.ArgumentParser(
+    monitor_parser = Cmd2ArgumentParser(
         description=r"""Begin monitoring the given directory and automatically queue new targets """
         """as they are created."""
     )
@@ -274,7 +300,7 @@ class Repl(cmd2.Cmd):
     )
 
     # `list` parser
-    monitor_list_parser: argparse.ArgumentParser = monitor_subparsers.add_parser(
+    monitor_list_parser: Cmd2ArgumentParser = monitor_subparsers.add_parser(
         "list",
         aliases=["ls", "l"],
         help="list currently monitored directories",
@@ -283,19 +309,22 @@ class Repl(cmd2.Cmd):
     monitor_list_parser.set_defaults(action="list")
 
     # `remove` parser
-    monitor_remove_parser: argparse.ArgumentParser = monitor_subparsers.add_parser(
+    monitor_remove_parser: Cmd2ArgumentParser = monitor_subparsers.add_parser(
         "remove",
         aliases=["rm", "r"],
         help="remove a monitored directory",
         prog="monitor remove",
     )
     monitor_remove_parser.add_argument(
-        "directory", nargs="+", help="The directories to stop monitoring"
+        "directory",
+        nargs="+",
+        help="The directories to stop monitoring",
+        choices_method=get_monitor_choices,
     )
     monitor_remove_parser.set_defaults(action="remove")
 
     # `add` parser
-    monitor_add_parser: argparse.ArgumentParser = monitor_subparsers.add_parser(
+    monitor_add_parser: Cmd2ArgumentParser = monitor_subparsers.add_parser(
         "add",
         aliases=["a"],
         help="begin monitoring a new directory",
@@ -309,7 +338,12 @@ class Repl(cmd2.Cmd):
         help="Monitor the directory recursively",
     )
     monitor_add_parser.add_argument(
-        "directory", nargs="+", help="The directories to monitor"
+        "directory",
+        nargs="+",
+        help="The directories to monitor",
+        completer_method=functools.partial(
+            cmd2.Cmd.path_complete, path_filter=lambda path: os.path.isdir(path)
+        ),
     )
     monitor_add_parser.set_defaults(action="add")
 
@@ -371,7 +405,7 @@ class Repl(cmd2.Cmd):
         return False
 
     # Main target argument parser
-    target_parser = argparse.ArgumentParser(
+    target_parser = Cmd2ArgumentParser(
         description="Add, remove, and view queued targets"
     )
     target_subparsers: argparse._SubParsersAction = target_parser.add_subparsers(
@@ -379,23 +413,31 @@ class Repl(cmd2.Cmd):
     )
 
     # Add a new target
-    target_add_parser: argparse.ArgumentParser = target_subparsers.add_parser(
+    target_add_parser: Cmd2ArgumentParser = target_subparsers.add_parser(
         "add", aliases=["a"], help="Add a new target for processing"
     )
-    target_add_parser.add_argument("target", nargs="+", help="the target to evaluate")
+    target_add_parser.add_argument(
+        "target",
+        nargs="+",
+        help="the target to evaluate",
+        completer_method=cmd2.Cmd.path_complete,
+    )
     target_add_parser.set_defaults(action="add")
 
     # Stop a running target
-    target_stop_parser: argparse.ArgumentParser = target_subparsers.add_parser(
+    target_stop_parser: Cmd2ArgumentParser = target_subparsers.add_parser(
         "stop", aliases=["s", "cancel", "c"], help="Stop evaluation of a queued target"
     )
     target_stop_parser.add_argument(
-        "targetid", nargs="+", help="the target id (hash) to stop"
+        "target",
+        nargs="+",
+        help="the target id (hash) to stop",
+        choices_method=functools.partial(get_target_choices, uncomplete=True),
     )
     target_stop_parser.set_defaults(action="stop")
 
     # List queued targets
-    target_list_parser: argparse.ArgumentParser = target_subparsers.add_parser(
+    target_list_parser: Cmd2ArgumentParser = target_subparsers.add_parser(
         "list", aliases=["ls", "l", "show"], help="List all queued targets"
     )
     target_list_parser.add_argument(
@@ -433,7 +475,7 @@ class Repl(cmd2.Cmd):
     target_list_parser.set_defaults(action="list")
 
     # View target solutions (chain of units producing flags)
-    target_solution_parser: argparse.ArgumentParser = target_subparsers.add_parser(
+    target_solution_parser: Cmd2ArgumentParser = target_subparsers.add_parser(
         "solution", aliases=["flags"], help="List solution chains for all found flags"
     )
     target_solution_parser.add_argument(
@@ -443,7 +485,9 @@ class Repl(cmd2.Cmd):
         help="Match the specified target by the target upstream string vice the hash",
     )
     target_solution_parser.add_argument(
-        "target", help="The target hash or upstream (if --raw is specified)"
+        "target",
+        help="The target hash or upstream (if --raw is specified)",
+        choices_method=get_target_choices,
     )
     target_solution_parser.set_defaults(action="solution")
 
@@ -470,7 +514,7 @@ class Repl(cmd2.Cmd):
         """ Stop processing the given target """
 
         # Stop each target
-        for target in args.targetid:
+        for target in args.target:
             # Look for a matching hash
             for other in self.manager.targets:
                 if other.hash.hexdigest() == target:
@@ -603,7 +647,7 @@ class Repl(cmd2.Cmd):
         # Print the entry
         self.poutput(log_entry)
 
-    set_parser = argparse.ArgumentParser(
+    set_parser = Cmd2ArgumentParser(
         description=r"""Set or retreive a katana runtime parameter. Parameters may be specified as """
         r"""SECTION[NAME] or simply NAME. If no section is specified, 'DEFAULT' is assumed. """
         r"""If no value is specified, the value will be printed. If no parameter or value is """
@@ -637,7 +681,7 @@ class Repl(cmd2.Cmd):
                 name = args.parameter
 
             # Ensure the section exists
-            if section not in self.manager:
+            if section not in self.manager and not args.value:
                 self.perror(f"{section}: no such configuration section")
                 return False
 
@@ -682,3 +726,79 @@ class Repl(cmd2.Cmd):
 
         # All done! Don't exit.
         return False
+
+    # ctfd command parser
+    ctfd_parser = Cmd2ArgumentParser(
+        description="Interact with a CTFd instance to easily queue targets"
+    )
+    ctfd_subparsers: argparse._SubParsersAction = ctfd_parser.add_subparsers(
+        help="Actions", required=True, dest="_action"
+    )
+
+    # `ctfd list` parser
+    ctfd_list_parser: argparse.ArgumentParser = ctfd_subparsers.add_parser(
+        "list", help="List all challenges on the CTFd server"
+    )
+    ctfd_list_parser.set_defaults(action="list")
+
+    # `ctfd queue` parser
+    ctfd_queue_parser: argparse.ArgumentParser = ctfd_subparsers.add_parser(
+        "queue", help="Queue a challenge for evaluation"
+    )
+    ctfd_queue_parser.add_argument(
+        "--files",
+        "-f",
+        action="store_true",
+        help="Only queue attached files for evaluation",
+    )
+    ctfd_queue_parser.add_argument(
+        "challenge_id",
+        type=int,
+        help="Challenge ID to queue",
+        choices_method=ctfd.get_challenge_choices,
+    )
+    ctfd_queue_parser.set_defaults(action="queue")
+
+    @cmd2.with_argparser(ctfd_parser)
+    def do_ctfd(self, args: argparse.Namespace) -> bool:
+        """
+        Interact with a CTFd instance.
+        
+        :param args: argparse Namespace object containing parameters
+        :return: True
+        """
+
+        # Actions table
+        actions = {"list": self._ctfd_list, "queue": self._ctfd_queue}
+
+        # Execute specified action
+        actions[args.action](args)
+
+        # Do not exit
+        return False
+
+    def _ctfd_list(self, args: argparse.Namespace) -> None:
+        """
+        List all avaiable challenge IDs
+        
+        :param args: argparse Namespace object with parameters
+        :return: None
+        """
+
+        challenges = ctfd.get_challenges(self)
+        output = [f"{'ID':<8}{'Title':<40}Points"]
+
+        for c in challenges:
+            output.append(f"{c['id']:<8}{c['name']:<40}{c['value']}")
+
+        self.poutput("\n".join(output))
+
+    def _ctfd_queue(self, args: argparse.Namespace) -> None:
+        """
+        Queue a challenge for evaluation
+        
+        :param args:
+        :return:
+        """
+
+        self.poutput("Not implemented")

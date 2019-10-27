@@ -1,0 +1,50 @@
+from tests import KatanaTest
+from PIL import Image, ImageFont, ImageDraw
+import tempfile
+
+
+class TestSpectrogram(KatanaTest):
+    """ Test katana.units.stego.spectrogram """
+
+    FLAG = "FLAG{spectrogram}"
+
+    def setUp(self) -> None:
+        """
+        Create the spectrogram file to analyze
+        
+        :return: None
+        """
+        super(TestSpectrogram, self).setUp()
+
+        # Create the WAV file
+        self.file = tempfile.TemporaryFile(mode="w+b", suffix="wav")
+
+        # Render the text to a surface using PIL
+
+        # Create initial image
+        image = Image.new("RGB", (1000, 1000))
+        # Create a drawing context
+        draw = ImageDraw.Draw(image)
+        # Load the font
+        font = ImageFont.load_default()
+        # Calculate text size
+        (width, height) = draw.textsize(self.FLAG, font=font)
+        # Draw text
+        draw.text((0, 0), self.FLAG, fill=(255, 255, 255))
+        # Crop to text
+        image = image.crop((0, 0, width, height))
+
+        # We now need to encode this image into the audio spectrogram
+        # of a wave file. This requires FFT magic, I think, and I don't
+        # want to write it... :(
+
+    def test_spectrogram(self):
+        self.katana_test(
+            config=r"""
+        [manager]
+        flag-format=FLAG{.*?}
+        auto=yes
+        """,
+            target=b85encode(b"FLAG{base85}"),
+            correct_flag="FLAG{base85}",
+        )

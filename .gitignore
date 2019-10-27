@@ -11,3 +11,4 @@ katana.egg-info
 .requirements.txt.swp
 docs/build
 *.swp
+monitor/
