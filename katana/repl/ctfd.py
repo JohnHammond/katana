@@ -5,14 +5,72 @@ import requests
 from colorama import Fore, Style
 
 
-def get_login_token(repl: "katana.repl.Repl") -> str:
+def get_login_token(repl: "katana.repl.Repl") -> requests.Session:
     """
     Utilizes the ctfd configuration in repl.manager to login to CTFd and return the auth token
     
     :param repl: A Katana Repl instance
     :return: CTFd Auth Token
     """
-    return {"session": "e0f3ef60-1790-4f7a-9c6e-50cd6bdf2612"}
+
+    # We need CTFd configuration
+    if "ctfd" not in repl.manager:
+        repl.poutput(f"[{Fore.RED}-{Style.RESET_ALL}] ctfd: no configuration provided")
+        return None
+
+    # We also need the URL
+    if "url" not in repl.manager["ctfd"]:
+        repl.poutput(f"[{Fore.RED}-{Style.RESET_ALL}] ctfd: no url provided")
+        return None
+
+    # We also either need a username and password or an auth token
+    if (
+        not ("username" in repl.manager["ctfd"] and "password" in repl.manager["ctfd"])
+        and "session" not in repl.manager["ctfd"]
+    ):
+        repl.poutput(f"[{Fore.RED}-{Style.RESET_ALL}] ctfd: no authentication provided")
+        return None
+
+    # The user specified a session cookie. Just use that (DON'T LOGOUT PLZ)
+    if "session" in repl.manager["ctfd"]:
+        s = requests.Session()
+        s.cookies["session"] = repl.manager["ctfd"]["session"]
+        return s
+
+    # I'm not sure if there is a /api endpoint for this, so I'm using the regular
+    # login submission form... :(
+
+    s = requests.Session()
+
+    # Grab the nonce
+    r = s.get(f"{repl.manager['ctfd']['url'].rstrip('/')}/login")
+
+    # Bad URL?
+    if r.status_code != 200:
+        repl.poutput(
+            f"[{Fore.RED}-{Style.RESET_ALL}] ctfd: unable to get nonce. bad url?"
+        )
+        return None
+
+    # Parse nonce from HTML response
+    nonce = r.text.split('name="nonce" value="')[1].split('"')[0]
+
+    # Perform authentication
+    r = s.post(
+        f"{repl.manager['ctfd']['url'].rstrip('/')}/login",
+        data={
+            "name": repl.manager["ctfd"]["username"],
+            "password": repl.manager["ctfd"]["password"],
+            "nonce": nonce,
+        },
+    )
+
+    # Bad credentials?
+    if r.status_code != 200:
+        repl.poutput(f"[{Fore.RED}-{Style.RESET_ALL}] ctfd: authentication failed")
+        return None
+
+    return s
 
 
 def get_challenges(repl: "katana.repl.Repl") -> List[Dict[str, Any]]:
@@ -24,16 +82,15 @@ def get_challenges(repl: "katana.repl.Repl") -> List[Dict[str, Any]]:
     """
 
     # Check if we have a CTFd login token already
-    token = get_login_token(repl)
-    if token is None:
-        repl.poutput(f"[{Fore.RED}-{Style.RESET_ALL}] ctfd: authentication failed")
+    session = get_login_token(repl)
+    if session is None:
         return []
 
     # URL
     ctfd = repl.manager["ctfd"]["url"].rstrip("/")
 
     # Perform the request for list of challenges
-    r = requests.get(f"{ctfd}/challenges", cookies=token)
+    r = session.get(f"{ctfd}/api/v1/challenges")
 
     # Ensure everything is okay
     if r.status_code != 200:

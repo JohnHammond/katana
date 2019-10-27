@@ -727,6 +727,29 @@ class Repl(cmd2.Cmd):
         # All done! Don't exit.
         return False
 
+    config_parser = Cmd2ArgumentParser(
+        description="Load supplemental configuration from a file"
+    )
+    config_parser.add_argument(
+        "file",
+        help="Configuration file",
+        nargs="+",
+        completer_method=cmd2.Cmd.path_complete,
+    )
+
+    @cmd2.with_argparser(config_parser)
+    def do_config(self, args: argparse.Namespace) -> bool:
+        """
+        Load a supplemental configuration file
+        
+        :param args: argparse Namespace with parameters
+        :return: False
+        """
+
+        self.manager.read(args.file)
+
+        return False
+
     # ctfd command parser
     ctfd_parser = Cmd2ArgumentParser(
         description="Interact with a CTFd instance to easily queue targets"
