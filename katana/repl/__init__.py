@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Tuple
 
 import argparse
 import cmd2.plugin
+import textwrap
 from cmd2 import clipboard
 from cmd2.argparse_custom import Cmd2ArgumentParser, CompletionItem
 from colorama import Fore, Style
@@ -16,9 +17,9 @@ from watchdog.observers.api import ObservedWatch
 import katana.util
 from katana.manager import Manager
 from katana.monitor import JsonMonitor
+from katana.repl import ctfd
 from katana.target import Target
 from katana.unit import Unit
-from katana.repl import ctfd
 
 
 class MonitoringEventHandler(FileSystemEventHandler):
@@ -90,6 +91,26 @@ class ReplMonitor(JsonMonitor):
             f" {' ' * len(chain)}{Fore.GREEN}{Style.BRIGHT}{flag}{Style.RESET_ALL} - "
             f"(copied)"
         )
+
+        if (
+            "ctfd" in self.repl.manager
+            and "auto-submit" in self.repl.manager["ctfd"]
+            and self.repl.manager["ctfd"]["auto-submit"]
+            and unit.origin.upstream in self.repl.ctfd_targets
+        ):
+            u = unit.origin.upstream
+            with self.repl.terminal_lock:
+                result = ctfd.submit_flag(self.repl, self.repl.ctfd_targets[u][0], flag)
+                if result is not None and result["status"] != "incorrect":
+                    log_entry += (
+                        f"\n\n[{Fore.GREEN}+{Style.RESET_ALL}] ctfd: "
+                        f"{Fore.GREEN}correct{Style.RESET_ALL} flag for challenge {self.repl.ctfd_targets[u][0]}\n"
+                    )
+                else:
+                    log_entry += (
+                        f"\n\n[{Fore.RED}-{Style.RESET_ALL}] ctfd: "
+                        f"{Fore.RED}incorrect{Style.RESET_ALL} flag for challenge {self.repl.ctfd_targets[u][0]}\n"
+                    )
 
         # Put the flag on the clipboard
         clipboard.write_to_paste_buffer(flag)
@@ -173,6 +194,8 @@ class Repl(cmd2.Cmd):
         # We assume there is no CTFd session (setup in katana.repl.ctfd)
         self.ctfd_session = None
         self.ctfd_challenges = None
+        self.ctfd_solves = None
+        self.ctfd_targets = {}
 
         # Create a filesystem monitor
         self.fseventhandler = MonitoringEventHandler(self)
@@ -618,6 +641,14 @@ class Repl(cmd2.Cmd):
         # Either the first or only flag
         flag: Tuple[Unit, str] = flags[0]
 
+        # Generate the solution output
+        log_entry = self.generate_solution(flag)
+
+        # Print the entry
+        self.poutput(log_entry)
+
+    def generate_solution(self, flag):
+
         # The chain of units upward
         chain = []
 
@@ -648,8 +679,7 @@ class Repl(cmd2.Cmd):
             f"(copied)"
         )
 
-        # Print the entry
-        self.poutput(log_entry)
+        return log_entry
 
     set_parser = Cmd2ArgumentParser(
         description=r"""Set or retreive a katana runtime parameter. Parameters may be specified as """
@@ -776,10 +806,16 @@ class Repl(cmd2.Cmd):
         "queue", help="Queue a challenge for evaluation"
     )
     ctfd_queue_parser.add_argument(
-        "--files",
+        "--description",
+        "-d",
+        action="store_true",
+        help="Queue description for analysis as well as challenge files",
+    )
+    ctfd_queue_parser.add_argument(
+        "--force",
         "-f",
         action="store_true",
-        help="Only queue attached files for evaluation",
+        help="Queue challenge even if it is already solved.",
     )
     ctfd_queue_parser.add_argument(
         "challenge_id",
@@ -788,6 +824,24 @@ class Repl(cmd2.Cmd):
         choices_method=ctfd.get_challenge_choices,
     )
     ctfd_queue_parser.set_defaults(action="queue")
+
+    # `ctfd show`
+    ctfd_show_parser: argparse.ArgumentParser = ctfd_subparsers.add_parser(
+        "show", aliases=["details", "info"], help="Show challenge details"
+    )
+    ctfd_show_parser.add_argument(
+        "--urls",
+        "-u",
+        action="store_true",
+        help="Show full file URLs vice their file names",
+    )
+    ctfd_show_parser.add_argument(
+        "challenge_id",
+        type=int,
+        help="Challenge to view",
+        choices_method=ctfd.get_challenge_choices,
+    )
+    ctfd_show_parser.set_defaults(action="show")
 
     @cmd2.with_argparser(ctfd_parser)
     def do_ctfd(self, args: argparse.Namespace) -> bool:
@@ -799,7 +853,11 @@ class Repl(cmd2.Cmd):
         """
 
         # Actions table
-        actions = {"list": self._ctfd_list, "queue": self._ctfd_queue}
+        actions = {
+            "list": self._ctfd_list,
+            "queue": self._ctfd_queue,
+            "show": self._ctfd_show,
+        }
 
         # Execute specified action
         actions[args.action](args)
@@ -815,11 +873,44 @@ class Repl(cmd2.Cmd):
         :return: None
         """
 
-        challenges = ctfd.get_challenges(self, force=args.force)
-        output = [f"{'ID':<8}{'Title':<40}Points"]
+        challenges = ctfd.get_challenges(self, force=True)
+        if challenges is None:
+            return
 
-        for c in challenges:
-            output.append(f"{c['id']:<8}{c['name']:<40}{c['value']}")
+        # Sane display parameters based on results
+        max_points = max([int(c["value"]) for c in challenges])
+        longest_id = max([len(str(c["id"])) for c in challenges]) + 2
+        longest_title = max([len(c["name"]) for c in challenges]) + 2
+        longest_points = max([len(str(c["value"])) for c in challenges]) + 2
+
+        # Header line
+        output = [
+            f"{Style.BRIGHT}{'ID':<{longest_id}}"
+            f"{'Title':<{longest_title}}"
+            f"Points{Style.RESET_ALL}"
+        ]
+
+        for c in sorted(challenges, key=lambda c: c["solved"]):
+
+            # Calculate point color based on percent of max points
+            point_percent = int(c["value"]) / max_points
+            if point_percent > 0.66:
+                percent_color = Fore.RED
+            elif point_percent > 0.33:
+                percent_color = Fore.YELLOW
+            else:
+                percent_color = Fore.GREEN
+
+            # Calculate name style based on challenge completion
+            name_style = ""
+            if c["solved"]:
+                name_style = f"\x1b[9m{Style.DIM}"
+
+            output.append(
+                f"{Fore.CYAN}{c['id']:<{longest_id}}{Style.RESET_ALL}"
+                f"{name_style}{c['name']+Style.RESET_ALL:<{longest_title+4}}"
+                f"{percent_color}{c['value']}{Style.RESET_ALL}"
+            )
 
         self.poutput("\n".join(output))
 
@@ -828,7 +919,141 @@ class Repl(cmd2.Cmd):
         Queue a challenge for evaluation
         
         :param args:
+        :return: None
+        """
+
+        # Grab the challenge
+        challenge = ctfd.get_challenge(self, args.challenge_id)
+        if challenge is None:
+            return
+
+        # Don't queue solved challenges
+        if challenge["solved"] and not args.force:
+            self.poutput(
+                f"[{Fore.GREEN}+{Style.RESET_ALL}] ctfd: challenge already solved"
+            )
+            return
+
+        # Grab CTFd URL
+        url = self.manager["ctfd"]["url"].rstrip("/")
+
+        # Queue attached files
+        for file in challenge["files"]:
+            self.poutput(f"[{Fore.GREEN}+{Style.RESET_ALL}] ctfd: queuing {url}{file}")
+            upstream = bytes(f"{url}{file}", "utf-8")
+            self.ctfd_targets[upstream] = [args.challenge_id, None]
+            self.ctfd_targets[upstream][1] = self.manager.queue_target(upstream)
+
+        # Queue description
+        if args.description:
+            self.poutput(
+                f"[{Fore.GREEN}+{Style.RESET_ALL}] ctfd: queueing challenge {args.challenge_id} description"
+            )
+            upstream = bytes(challenge["description"], "utf-8")
+            self.ctfd_targets[upstream] = [args.challenge_id, None]
+            self.ctfd_targets[upstream][1] = self.manager.queue_target(upstream)
+
+        return
+
+    def _ctfd_show(self, args: argparse.Namespace) -> None:
+        """
+        Queue a challenge for evaluation
+        
+        :param args:
         :return:
         """
 
-        self.poutput("Not implemented")
+        # Grab the challenge
+        challenge = ctfd.get_challenge(self, args.challenge_id)
+        if challenge is None:
+            return
+
+        # Grab all challenges
+        challenges = ctfd.get_challenges(self)
+
+        # Get the maximum value for challenges
+        max_points = max([c["value"] for c in challenges])
+
+        description = " " + "\n ".join(
+            textwrap.wrap(challenge["description"], 79, break_long_words=False)
+        )
+
+        # Dynamic colors for points based on percent of max challenge value
+        points_percent = challenge["value"] / max_points
+        if points_percent > 0.66:
+            points_color = Fore.RED
+        elif points_percent > 0.33:
+            points_color = Fore.YELLOW
+        else:
+            points_color = Fore.GREEN
+
+        output = (
+            f"{Fore.MAGENTA}{challenge['name']}{Style.RESET_ALL} - "
+            f"{points_color}{challenge['value']} points{Style.RESET_ALL} - "
+            f"{Fore.RED+'not ' if not challenge['solved'] else Fore.GREEN}solved{Style.RESET_ALL}\n"
+            f"\n"
+            f"{description}"
+        )
+
+        flags = []
+
+        # Check if the description was queued. Include flags if found
+        upstream = bytes(challenge["description"], "utf-8")
+        if (
+            upstream in self.ctfd_targets
+            and self.ctfd_targets[upstream][1] is not None
+            and self.ctfd_targets[upstream][1].hash.hexdigest()
+            in self.manager.monitor.flags
+        ):
+            flags.append(
+                self.manager.monitor.flags[
+                    self.ctfd_targets[upstream][1].hash.hexdigest()
+                ]
+            )
+
+        # Add files as well
+        if "files" in challenge and len(challenge["files"]) > 0:
+            # Array of file names/URLs/paths
+            files = []
+
+            # Build file array
+            for f in challenge["files"]:
+                if not args.urls:
+                    matches = re.match(r"/([0-9a-zA-Z]+/)*([a-zA-Z0-9\.]+)(\?.*)?", f)
+                    if matches is not None:
+                        filename = matches[2]
+                    else:
+                        filename = f
+                else:
+                    filename = f"{self.manager['ctfd']['url'].rstrip('/')}{f}"
+                files.append(f"  - {filename}")
+
+                # Grab the upstream file that would be the target
+                upstream = bytes(
+                    f"{self.manager['ctfd']['url'].rstrip('/')}{f}", "utf-8"
+                )
+
+                # Check if it's queued
+                if (
+                    upstream in self.ctfd_targets
+                    and self.ctfd_targets[upstream][1] is not None
+                    and self.ctfd_targets[upstream][1].hash.hexdigest()
+                    in self.manager.monitor.flags
+                ):
+                    # Save the flag
+                    flags.append(
+                        self.manager.monitor.flags[
+                            self.ctfd_targets[upstream][1].hash.hexdigest()
+                        ]
+                    )
+
+            # Append output string
+            output += f"\n\n {Fore.CYAN}Files:\n"
+            output += "\n".join(files)
+
+        if len(flags) > 0:
+            output += "\n\n" + "\n".join(self.generate_solution(f) for f in flags)
+
+        output += "\n"
+
+        self.poutput(output)

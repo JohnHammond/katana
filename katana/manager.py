@@ -172,7 +172,11 @@ class Manager(configparser.ConfigParser):
             self.find_flag(unit, no_xml)
 
         # Search the data for flags
-        match = self.flag_pattern.search(data)
+        match = re.search(
+            bytes(self["manager"]["flag-format"], "utf-8"),
+            data,
+            re.DOTALL | re.MULTILINE | re.IGNORECASE,
+        )
         if match:
             # Flags should be printable
             found = match.group().decode("utf-8")
@@ -199,7 +203,11 @@ class Manager(configparser.ConfigParser):
         self.finder.validate()
 
     def queue_target(
-        self, upstream: bytes, parent: Unit = None, scale: float = None
+        self,
+        upstream: bytes,
+        parent: Unit = None,
+        scale: float = None,
+        source: str = None,
     ) -> Target:
         """ Create a target, enumerate units, queue them, and return the target
         object """

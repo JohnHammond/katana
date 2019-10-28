@@ -6,6 +6,7 @@ interface for units.
 from __future__ import annotations
 from typing import Any, List, BinaryIO
 from io import StringIO, BytesIO
+import tempfile
 import requests
 import hashlib
 import enchant
@@ -19,7 +20,7 @@ import katana.util
 
 ADDRESS_PATTERN = (
     rb"^((?P<protocol>http|https):\/\/)(?P<host>[a-zA-Z0-9][a-zA-Z0-9\-_.]*)(:(?P<port>[0-9]{1,"
-    rb"5}))?(\/(?P<uri>[^?]*))?(\?(?P<query>.*))?$ "
+    rb"5}))?(\/(?P<uri>[^?]*))?(\?(?P<query>.*))?$"
 )
 BASE64_PATTERN = rb"^[a-zA-Z0-9+/]+={0,2}$"
 LETTER_PATTERN = rb"[A-Za-z]+"
@@ -114,15 +115,11 @@ class Target(object):
                     self.content = self.upstream
                 else:
                     self.content = self.request.content
-                    self.path, filp = katana.create_artifact(
-                        parent,
-                        hashlib.md5(upstream).hexdigest(),
-                        mode="wb",
-                        create=True,
-                    )
+                    fileid, self.path = tempfile.mkstemp()
                     # JOHN: This used to happen in web.request but it was silly
-                    katana.locate_flags(parent, self.content)
-                    with filp:
+                    # katana.locate_flags(parent, self.content)
+                    os.close(fileid)
+                    with open(self.path, "wb") as filp:
                         filp.write(self.content)
                     self.is_file = True
                 # Carve out the root of the URL

@@ -28,9 +28,15 @@ class Unit(BaseUnit):
             "strings",
             self.target.path,
             "-n",
-            self.manager[str(self)].get("length", "4"),
+            self.manager[str(self)].get("length", "10"),
         ]
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # Queuing recursion and registering data can be slow. Look for flags first
+        lines = []
+        for line in p.stdout:
+            self.manager.find_flag(self, line)
+            lines.append(line)
 
         for line in p.stdout:
             self.manager.register_data(self, line.rstrip(b"\n"))

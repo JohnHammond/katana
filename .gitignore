@@ -13,3 +13,4 @@ docs/build
 *.swp
 monitor/
 domaintoolsctf.ini
+ctfd.ini
