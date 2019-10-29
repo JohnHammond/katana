@@ -1,7 +1,5 @@
-:mod:`katana.target` --- Given CTF Target
-=====================================================
+Target - Abstract Challenge Data
+================================
 
 .. automodule:: katana.target
-   :members:
-   :undoc-members:
-   :noindex:
+    :members: Target

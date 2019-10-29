@@ -792,57 +792,6 @@ class Repl(cmd2.Cmd):
         help="Actions", required=True, dest="_action"
     )
 
-    # `ctfd list` parser
-    ctfd_list_parser: argparse.ArgumentParser = ctfd_subparsers.add_parser(
-        "list", help="List all challenges on the CTFd server"
-    )
-    ctfd_list_parser.add_argument(
-        "--force", "-f", action="store_true", help="Force challenge cache refresh"
-    )
-    ctfd_list_parser.set_defaults(action="list")
-
-    # `ctfd queue` parser
-    ctfd_queue_parser: argparse.ArgumentParser = ctfd_subparsers.add_parser(
-        "queue", help="Queue a challenge for evaluation"
-    )
-    ctfd_queue_parser.add_argument(
-        "--description",
-        "-d",
-        action="store_true",
-        help="Queue description for analysis as well as challenge files",
-    )
-    ctfd_queue_parser.add_argument(
-        "--force",
-        "-f",
-        action="store_true",
-        help="Queue challenge even if it is already solved.",
-    )
-    ctfd_queue_parser.add_argument(
-        "challenge_id",
-        type=int,
-        help="Challenge ID to queue",
-        choices_method=ctfd.get_challenge_choices,
-    )
-    ctfd_queue_parser.set_defaults(action="queue")
-
-    # `ctfd show`
-    ctfd_show_parser: argparse.ArgumentParser = ctfd_subparsers.add_parser(
-        "show", aliases=["details", "info"], help="Show challenge details"
-    )
-    ctfd_show_parser.add_argument(
-        "--urls",
-        "-u",
-        action="store_true",
-        help="Show full file URLs vice their file names",
-    )
-    ctfd_show_parser.add_argument(
-        "challenge_id",
-        type=int,
-        help="Challenge to view",
-        choices_method=ctfd.get_challenge_choices,
-    )
-    ctfd_show_parser.set_defaults(action="show")
-
     @cmd2.with_argparser(ctfd_parser)
     def do_ctfd(self, args: argparse.Namespace) -> bool:
         """
@@ -857,6 +806,7 @@ class Repl(cmd2.Cmd):
             "list": self._ctfd_list,
             "queue": self._ctfd_queue,
             "show": self._ctfd_show,
+            "scoreboard": self._ctfd_scoreboard,
         }
 
         # Execute specified action
@@ -864,6 +814,15 @@ class Repl(cmd2.Cmd):
 
         # Do not exit
         return False
+
+    # `ctfd list` parser
+    ctfd_list_parser: argparse.ArgumentParser = ctfd_subparsers.add_parser(
+        "list", help="List all challenges on the CTFd server"
+    )
+    ctfd_list_parser.add_argument(
+        "--force", "-f", action="store_true", help="Force challenge cache refresh"
+    )
+    ctfd_list_parser.set_defaults(action="list")
 
     def _ctfd_list(self, args: argparse.Namespace) -> None:
         """
@@ -914,6 +873,30 @@ class Repl(cmd2.Cmd):
 
         self.poutput("\n".join(output))
 
+    # `ctfd queue` parser
+    ctfd_queue_parser: argparse.ArgumentParser = ctfd_subparsers.add_parser(
+        "queue", help="Queue a challenge for evaluation"
+    )
+    ctfd_queue_parser.add_argument(
+        "--description",
+        "-d",
+        action="store_true",
+        help="Queue description for analysis as well as challenge files",
+    )
+    ctfd_queue_parser.add_argument(
+        "--force",
+        "-f",
+        action="store_true",
+        help="Queue challenge even if it is already solved.",
+    )
+    ctfd_queue_parser.add_argument(
+        "challenge_id",
+        type=int,
+        help="Challenge ID to queue",
+        choices_method=ctfd.get_challenge_choices,
+    )
+    ctfd_queue_parser.set_defaults(action="queue")
+
     def _ctfd_queue(self, args: argparse.Namespace) -> None:
         """
         Queue a challenge for evaluation
@@ -954,6 +937,107 @@ class Repl(cmd2.Cmd):
             self.ctfd_targets[upstream][1] = self.manager.queue_target(upstream)
 
         return
+
+    # `ctfd scoreboard`
+    ctfd_scoreboard_parser: argparse.ArgumentParser = ctfd_subparsers.add_parser(
+        "scoreboard", aliases=["board", "scores"], help="Show the scoreboard"
+    )
+    ctfd_scoreboard_parser.add_argument(
+        "--count", "-c", type=int, default=10, help="How many users to show"
+    )
+    ctfd_scoreboard_parser.add_argument(
+        "--all", "-a", action="store_true", help="Display the entire scoreboard"
+    )
+    ctfd_scoreboard_parser.add_argument(
+        "--top",
+        "-t",
+        action="store_true",
+        help="Display only the top users on the scoreboard",
+    )
+    ctfd_scoreboard_parser.set_defaults(action="scoreboard")
+
+    def _ctfd_scoreboard(self, args: argparse.Namespace) -> None:
+        """
+        Show the top N users on the scoreboard.
+        
+        :param args: argparse Namespace holding parameters
+        :return: None
+        """
+
+        # Grab the scoreboard
+        scoreboard = ctfd.get_scoreboard(self)
+        if scoreboard is None or len(scoreboard) == 0:
+            return
+
+        if not args.all and args.top:
+            scoreboard = scoreboard[: args.count]
+        elif not args.all:
+            for u in scoreboard:
+                if u["name"] == self.manager["ctfd"]["username"]:
+                    idx = u["pos"] - 1
+                    break
+            else:
+                self.pwarning(
+                    f"[{Fore.YELLOW}!{Style.RESET_ALL}] ctfd: you aren't on the scoreboard..."
+                )
+                idx = 0
+
+            # Calculate start and end ranges
+            start = int(idx - (args.count / 2))
+            end = int(idx + (args.count / 2))
+
+            # Adjust for past end/before beginning
+            if start < 0:
+                end -= start
+                start = 0
+            if end > len(scoreboard):
+                start -= end - len(scoreboard)
+                end = len(scoreboard)
+                if start < 0:
+                    start = 0
+
+            # Splice it
+            scoreboard = scoreboard[start:end]
+
+        # Get width of user column
+        longest_user = max([len(x["name"]) for x in scoreboard]) + 2
+        longest_pos = max([len(str(x["pos"])) + 1 for x in scoreboard]) + 2
+
+        # Build the table
+        output = [
+            f"{Style.BRIGHT}{' '*longest_pos}{'Name':<{longest_user}}Score{Style.RESET_ALL}"
+        ]
+        for x in scoreboard:
+            output.append(
+                f"{str(x['pos'])+'.':<{longest_pos}}"
+                f"{Fore.MAGENTA if x['name'] == self.manager['ctfd']['username'] else Style.DIM}"
+                f"{x['name']:<{longest_user}}{Style.RESET_ALL}{x['score']}"
+            )
+        output = "\n".join(output)
+
+        # Print it
+        if not args.all:
+            self.poutput(output)
+        else:
+            self.ppaged(output)
+
+    # `ctfd show`
+    ctfd_show_parser: argparse.ArgumentParser = ctfd_subparsers.add_parser(
+        "show", aliases=["details", "info"], help="Show challenge details"
+    )
+    ctfd_show_parser.add_argument(
+        "--urls",
+        "-u",
+        action="store_true",
+        help="Show full file URLs vice their file names",
+    )
+    ctfd_show_parser.add_argument(
+        "challenge_id",
+        type=int,
+        help="Challenge to view",
+        choices_method=ctfd.get_challenge_choices,
+    )
+    ctfd_show_parser.set_defaults(action="show")
 
     def _ctfd_show(self, args: argparse.Namespace) -> None:
         """

@@ -306,3 +306,31 @@ def submit_flag(
         return None
 
     return response["data"]
+
+
+def get_scoreboard(repl: "katana.repl.Repl") -> List[Dict[str, Any]]:
+    """
+   Retrieve a list of the entire scoreboard of users in ranking order.
+   
+   :param repl: A katana Repl instance
+   :return: List of scoreboard entries
+   """
+
+    # Login and instantiate session
+    session = get_login_token(repl)
+    if session is None:
+        return []
+
+    url = repl.manager["ctfd"]["url"].rstrip("/")
+
+    # Grab the scoreboard
+    r = session.get(f"{url}/api/v1/scoreboard")
+    if r.status_code != 200 or not r.json()["success"]:
+        repl.perror(
+            f"[{Fore.RED}-{Style.RESET_ALL}] ctfd: failed to retrieve scoreboard"
+        )
+        return []
+
+    scoreboard = r.json()["data"]
+
+    return scoreboard

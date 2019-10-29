@@ -1,8 +1,5 @@
-:mod:`katana.unit` --- Base Structure for Units
-=====================================================
+Unit - Abstract Challenge Solution
+==================================
 
-.. automodule:: katana.units
-   :members:
-   :undoc-members:
-   :noindex:
-   
+.. automodule:: katana.unit
+    :members: Unit, Finder
