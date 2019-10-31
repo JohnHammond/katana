@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from typing import Generator, List, Dict, Any, Tuple
 from dataclasses import dataclass, field
+import importlib
 
 
 @dataclass
@@ -12,7 +13,7 @@ class Challenge:
     ident: int
     provider: "CTFProvider"
     description: str = None
-    files: List[str] = field(default_factory=list)
+    files: Dict[str, str] = field(default_factory=dict)
     tags: List[str] = field(default_factory=list)
     solved: bool = False
 
@@ -23,7 +24,7 @@ class User:
 
     name: str
     score: int
-    ident: int
+    ident: str
     team: str = None
     solves: List[Challenge] = field(default_factory=list)
 
@@ -68,7 +69,7 @@ class CTFProvider(object):
         """ Returns a user representing the currently logged in user """
         return None
 
-    def get_challenge(self, ident: int) -> Challenge:
+    def get_challenge(self, ident: str) -> Challenge:
         """
         Query the entire challenge by identifier
         
@@ -113,12 +114,12 @@ def get_provider(provider: str, url: str, username: str, password: str) -> CTFPr
     """
 
     # Ensure this is an allowed provider
-    known_providers = ["ctfd"]
+    known_providers = ["ctfd", "pico"]
     if provider not in known_providers:
         raise ValueError(f"{provider}: not in known providers: {repr(known_providers)}")
 
     # Import the provider module
-    module = __import__(f"katana.repl.{provider}")
+    module = importlib.import_module(f"katana.repl.{provider}")
 
     # Create the provider object
     provider: CTFProvider = module.Provider(url, username, password)
