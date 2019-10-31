@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from typing import Generator, Tuple, List, Any
+from typing import Generator, Tuple, List, Any, Dict
 import requests
 
 from katana.repl.ctf import CTFProvider, Challenge, User, AuthenticationError
@@ -49,7 +49,7 @@ class Provider(CTFProvider):
         user: User = User(
             name=data["name"],
             score=data["score"],
-            ident=data["id"],
+            ident=str(data["id"]),
             team=data["team"] if "team" in data else None,
             solves=[],
         )
@@ -66,7 +66,7 @@ class Provider(CTFProvider):
                 Challenge(
                     title=solve["challenge"]["name"],
                     value=solve["challenge"]["value"],
-                    ident=solve["challenge_id"],
+                    ident=str(solve["challenge_id"]),
                     provider=self,
                     tags=[solve["challenge"]["category"]],
                     solved=True,
@@ -94,7 +94,7 @@ class Provider(CTFProvider):
             challenge = Challenge(
                 title=c["name"],
                 value=c["value"],
-                ident=c["id"],
+                ident=str(c["id"]),
                 provider=self,
                 tags=[c["category"]] + c["tags"],
             )
@@ -126,6 +126,49 @@ class Provider(CTFProvider):
 
         return
 
+    def scoreboard(self, localize: str = None, count=10) -> Dict[int, User]:
+
+        # Request the scoreboard, which lists all users
+        r = self.session.get(f"{self.url}/api/v1/scoreboard")
+        if r.status_code != 200:
+            raise RuntimeError("failed to get scoreboard")
+
+        # Extract data
+        data = r.json()["data"]
+
+        # Assume we are starting at the top
+        start = 0
+
+        if localize is not None:
+            for pos, u in enumerate(data):
+                if u["name"] == localize:
+                    start = pos
+                    break
+
+        # Ideal world, grab this section of the scoreboard
+        start -= int(count / 2)
+        end = start + count
+
+        # Account for under or overflow
+        if start < 0:
+            end -= start
+            start = 0
+        if end >= len(data):
+            start -= end - len(data)
+            end = len(data)
+        if start < 0:
+            start = 0
+
+        return {
+            (pos + start): User(
+                name=u["name"],
+                score=u["score"],
+                ident=str(u["account_id"]),
+                team=u["team"] if "team" in u else None,
+            )
+            for pos, u in enumerate(data[start:end])
+        }
+
     def get_challenge(self, ident: int) -> Challenge:
 
         # Request challenge details
@@ -140,7 +183,7 @@ class Provider(CTFProvider):
         challenge = Challenge(
             title=data["name"],
             value=data["value"],
-            ident=data["id"],
+            ident=str(data["id"]),
             provider=self,
             description=data["description"],
             files={

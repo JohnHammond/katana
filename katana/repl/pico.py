@@ -14,7 +14,12 @@ class Provider(CTFProvider):
         super(Provider, self).__init__(*args, **kwargs)
 
     def _api(
-        self, endpoint: str, args: Dict[str, Any] = {}, method="GET", recurse=True
+        self,
+        endpoint: str,
+        args: Dict[str, Any] = {},
+        params: Dict[str, str] = {},
+        method="GET",
+        recurse=True,
     ) -> Tuple[bool, Dict[str, Any], requests.Response]:
         """
         Perform an API request to the specified endpoint
@@ -39,6 +44,7 @@ class Provider(CTFProvider):
         r = methods[method](
             f"{self.url}/api/v1/{endpoint}",
             json=args,
+            params=params,
             headers={"X-CSRF-Token": self.token},
         )
 

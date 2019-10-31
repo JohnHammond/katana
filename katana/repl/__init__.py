@@ -858,6 +858,7 @@ class Repl(cmd2.Cmd):
             "queue": self._ctf_queue,
             "scoreboard": self._ctf_scoreboard,
             "submit": self._ctf_submit,
+            "status": self._ctf_status,
         }
         actions[args.action](args)
 
@@ -1223,3 +1224,38 @@ class Repl(cmd2.Cmd):
         output += "\n"
 
         self.poutput(output)
+
+    ctf_status_parser: argparse.ArgumentParser = ctf_subparsers.add_parser(
+        "status", help="Show current user/team status"
+    )
+    ctf_status_parser.set_defaults(action="status")
+
+    def _ctf_status(self, args: argparse.Namespace) -> None:
+        """
+        Display the current user, team, and score/position
+        
+        :param args: argparse Namespace with arguments
+        :return: None
+        """
+
+        me: User = self.ctf_provider.me
+
+        output = (
+            f"{Fore.MAGENTA}{me.name}{Style.RESET_ALL} - "
+            f"{Fore.CYAN}{me.team if me.team is not None else 'No Team'}{Style.RESET_ALL} - "
+            f"{Fore.GREEN}{me.score} points{Style.RESET_ALL}\n"
+        )
+
+        # Grab the scoreboard
+        scoreboard = self.ctf_provider.scoreboard(localize=me.name, count=10)
+        if len(scoreboard):
+            output += f"\n" f"{'':<5}{Style.BRIGHT}{'Name':<20}{Style.RESET_ALL}\n"
+            board_output = []
+            for pos, user in scoreboard.items():
+                board_output.append(
+                    f"{str(pos)+'.':<5}{Fore.MAGENTA if user.name == me.name else ''}{user.name:<20}"
+                    f"{Style.RESET_ALL}"
+                )
+            output += "\n".join(board_output) + "\n"
+
+        self.ppaged(output)

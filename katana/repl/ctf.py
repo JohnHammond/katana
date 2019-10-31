@@ -69,6 +69,27 @@ class CTFProvider(object):
         """ Returns a user representing the currently logged in user """
         return None
 
+    def scoreboard(self, localize: str = None, count=10) -> Dict[int, User]:
+        """
+        Returns a list of users referring to the current scoreboard
+        :param localize: Name of a user to localize results around (or None)
+        :param count: Number of results to return
+        :return: Dictionary of mapping scoreboard position to user
+        """
+
+        # NOTES: PicoCTF supports multiple scoreboards/brackets. I'm not sure how to support this.
+        # We can return the "default" scoreboard here, but that may not be right. Really, the
+        # CTFProvider class should support a "bracket" or "scoreboard" option, which would be
+        # "DEFAULT" or something for things like CTFd, but used for PicoCTF. After that, we can
+        # search for the team name, and return results relevant to the team we specify under the
+        # specified bracket. This requires a way to list brackets as well, which is also not
+        # supported at the moment. These are all abstractions that need to be implemented for Pico
+        # that would hold default/stub methods for simpler platforms like CTFd. I need to think about
+        # the interface more before committing to an implementation. For now, the scoreboard will
+        # simply be empty for PicoCTF, which doesn't break anything but is disappointing. :(
+
+        return {}
+
     def get_challenge(self, ident: str) -> Challenge:
         """
         Query the entire challenge by identifier
@@ -76,6 +97,7 @@ class CTFProvider(object):
         :param ident: An integer identifier (likely retrieved from self.challenges)
         :return: Challenge object with all details filled
         """
+
         return None
 
     def submit(self, challenge: Challenge, flag: str) -> Tuple[bool, int]:
