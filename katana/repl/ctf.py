@@ -10,7 +10,7 @@ class Challenge:
 
     title: str
     value: int
-    ident: int
+    ident: str
     provider: "CTFProvider"
     description: str = None
     files: Dict[str, str] = field(default_factory=dict)
@@ -27,6 +27,16 @@ class User:
     ident: str
     team: str = None
     solves: List[Challenge] = field(default_factory=list)
+    bracket: "Bracket" = None
+
+
+@dataclass
+class Bracket:
+    """ A bracket is a specific group of users you play against. PicoCTF calls them
+    "scoreboards". Most CTFs don't implement this, though. """
+
+    name: str
+    ident: str
 
 
 class AuthenticationError(Exception):
@@ -45,6 +55,7 @@ class CTFProvider(object):
         self.url = url
         self.username = username
         self.password = password
+        self.me: User = None
 
         # Authenticate and retrieve self user
         self._authenticate(username, password)
@@ -65,13 +76,17 @@ class CTFProvider(object):
         return
 
     @property
-    def me(self) -> User:
-        """ Returns a user representing the currently logged in user """
-        return None
+    def brackets(self) -> List[Bracket]:
+        """ Return a list of brackets for this CTF. If a provider doesn't use brackets
+         this function will simply return a single "DEFAULT" bracket """
+        return [Bracket(name="default", ident="default")]
 
-    def scoreboard(self, localize: str = None, count=10) -> Dict[int, User]:
+    def scoreboard(
+        self, localize: User = None, count=10, bracket: Bracket = None
+    ) -> Dict[int, User]:
         """
         Returns a list of users referring to the current scoreboard
+        :param bracket: which bracket to query
         :param localize: Name of a user to localize results around (or None)
         :param count: Number of results to return
         :return: Dictionary of mapping scoreboard position to user

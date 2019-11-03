@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import functools
 import hashlib
+import json
 import os
 import re
 from typing import Any, Dict, List, Tuple
@@ -14,6 +15,7 @@ from colorama import Fore, Style
 from watchdog.events import FileSystemEventHandler, FileSystemEvent, FileCreatedEvent
 from watchdog.observers import Observer
 from watchdog.observers.api import ObservedWatch
+from pygments import highlight, lexers, formatters
 
 import katana.util
 from katana.manager import Manager
@@ -130,7 +132,7 @@ class ReplMonitor(JsonMonitor):
     def on_exception(
         self, manager: katana.manager.Manager, unit: katana.unit.Unit, exc: Exception
     ) -> None:
-        super(ReplMonitor, self).on_flag(manager, unit, exc)
+        super(ReplMonitor, self).on_exception(manager, unit, exc)
 
         # Notify the user
         with self.repl.terminal_lock:
@@ -459,6 +461,59 @@ class Repl(cmd2.Cmd):
         help="Actions", required=True, dest="_action"
     )
 
+    @cmd2.with_argparser(target_parser)
+    def do_target(self, args: argparse.Namespace) -> bool:
+        """ Add/stop/list queued targets """
+        actions = {
+            "add": self._target_add,
+            "stop": self._target_stop,
+            "list": self._target_list,
+            "solution": self._target_solution,
+            "view": self._target_view,
+        }
+        actions[args.action](args)
+        return False
+
+    # View target results
+    target_view_parser: Cmd2ArgumentParser = target_subparsers.add_parser(
+        "view", help="View results from the given target"
+    )
+    target_view_parser.add_argument(
+        "target",
+        help="The target to view",
+        choices_method=functools.partial(get_target_choices, uncomplete=False),
+    )
+    target_view_parser.set_defaults(action="view")
+
+    def _target_view(self, args: argparse.Namespace) -> None:
+        """ View a target results """
+
+        target = None
+        for t in self.manager.targets:
+            if t.hash.hexdigest() == args.target:
+                target = t
+                break
+        else:
+            self.perror(
+                f"[{Fore.RED}-{Style.RESET_ALL}] {args.target}: target does not exist"
+            )
+            return
+
+        results = self.manager.monitor.build_results(target=target)
+        if len(results) == 0:
+            self.poutput(
+                f"[{Fore.YELLOW}!{Style.RESET_ALL}] {args.target}: no results found"
+            )
+            return
+
+        pretty_json = json.dumps(
+            results, sort_keys=True, indent=4, separators=(",", ": ")
+        )
+
+        self.ppaged(
+            highlight(pretty_json, lexers.JsonLexer(), formatters.TerminalFormatter())
+        )
+
     # Add a new target
     target_add_parser: Cmd2ArgumentParser = target_subparsers.add_parser(
         "add", aliases=["a"], help="Add a new target for processing"
@@ -471,6 +526,13 @@ class Repl(cmd2.Cmd):
     )
     target_add_parser.set_defaults(action="add")
 
+    def _target_add(self, args: argparse.Namespace) -> None:
+        """ Add a new target for evaluation """
+
+        for target in args.target:
+            self.poutput(f"[{Fore.GREEN}+{Style.RESET_ALL}] {target}: queuing target")
+            self.manager.queue_target(target)
+
     # Stop a running target
     target_stop_parser: Cmd2ArgumentParser = target_subparsers.add_parser(
         "stop", aliases=["s", "cancel", "c"], help="Stop evaluation of a queued target"
@@ -482,6 +544,22 @@ class Repl(cmd2.Cmd):
         choices_method=functools.partial(get_target_choices, uncomplete=True),
     )
     target_stop_parser.set_defaults(action="stop")
+
+    def _target_stop(self, args: argparse.Namespace) -> None:
+        """ Stop processing the given target """
+
+        # Stop each target
+        for target in args.target:
+            # Look for a matching hash
+            for other in self.manager.targets:
+                if other.hash.hexdigest() == target:
+                    # Notify the user if it's already completed
+                    if other.completed:
+                        self.poutput(
+                            f"[{Fore.YELLOW}!{Style.RESET_ALL}] {target}: already completed"
+                        )
+                    else:
+                        other.completed = True
 
     # List queued targets
     target_list_parser: Cmd2ArgumentParser = target_subparsers.add_parser(
@@ -520,58 +598,6 @@ class Repl(cmd2.Cmd):
         help="Display only targets with flags",
     )
     target_list_parser.set_defaults(action="list")
-
-    # View target solutions (chain of units producing flags)
-    target_solution_parser: Cmd2ArgumentParser = target_subparsers.add_parser(
-        "solution", aliases=["flags"], help="List solution chains for all found flags"
-    )
-    target_solution_parser.add_argument(
-        "--raw",
-        "-r",
-        action="store_true",
-        help="Match the specified target by the target upstream string vice the hash",
-    )
-    target_solution_parser.add_argument(
-        "target",
-        help="The target hash or upstream (if --raw is specified)",
-        choices_method=get_target_choices,
-    )
-    target_solution_parser.set_defaults(action="solution")
-
-    @cmd2.with_argparser(target_parser)
-    def do_target(self, args: argparse.Namespace) -> bool:
-        """ Add/stop/list queued targets """
-        actions = {
-            "add": self._target_add,
-            "stop": self._target_stop,
-            "list": self._target_list,
-            "solution": self._target_solution,
-        }
-        actions[args.action](args)
-        return False
-
-    def _target_add(self, args: argparse.Namespace) -> None:
-        """ Add a new target for evaluation """
-
-        for target in args.target:
-            self.poutput(f"[{Fore.GREEN}+{Style.RESET_ALL}] {target}: queuing target")
-            self.manager.queue_target(target)
-
-    def _target_stop(self, args: argparse.Namespace) -> None:
-        """ Stop processing the given target """
-
-        # Stop each target
-        for target in args.target:
-            # Look for a matching hash
-            for other in self.manager.targets:
-                if other.hash.hexdigest() == target:
-                    # Notify the user if it's already completed
-                    if other.completed:
-                        self.poutput(
-                            f"[{Fore.YELLOW}!{Style.RESET_ALL}] {target}: already completed"
-                        )
-                    else:
-                        other.completed = True
 
     def _target_list(self, args: argparse.Namespace) -> None:
         """
@@ -624,6 +650,23 @@ class Repl(cmd2.Cmd):
         if len(output) > 0:
             self.poutput(output)
 
+    # View target solutions (chain of units producing flags)
+    target_solution_parser: Cmd2ArgumentParser = target_subparsers.add_parser(
+        "solution", aliases=["flags"], help="List solution chains for all found flags"
+    )
+    target_solution_parser.add_argument(
+        "--raw",
+        "-r",
+        action="store_true",
+        help="Match the specified target by the target upstream string vice the hash",
+    )
+    target_solution_parser.add_argument(
+        "target",
+        help="The target hash or upstream (if --raw is specified)",
+        choices_method=get_target_choices,
+    )
+    target_solution_parser.set_defaults(action="solution")
+
     def _target_solution(self, args: argparse.Namespace) -> None:
         """
         Display all found solutions for this target.
@@ -632,20 +675,12 @@ class Repl(cmd2.Cmd):
         :return:
         """
 
-        if args.raw is not None:
-            # Match based on target upstream
-            flags = [
-                f
-                for f in self.manager.monitor.flags
-                if f[0].origin.upstream.startswith(bytes(args.target, "utf-8"))
-            ]
-        else:
-            # Match based on target hash
-            flags = [
-                f
-                for f in self.manager.monitor.flags
-                if f[0].origin.hash.hexdigest() == bytes(args.target, "utf-8")
-            ]
+        # Match based on target hash
+        flags = [
+            f
+            for f in self.manager.monitor.flags
+            if f[0].origin.hash.hexdigest() == args.target
+        ]
 
         # Ensure we found at least one target
         if len(flags) == 0:
@@ -859,6 +894,7 @@ class Repl(cmd2.Cmd):
             "scoreboard": self._ctf_scoreboard,
             "submit": self._ctf_submit,
             "status": self._ctf_status,
+            "bracket": self._ctf_bracket,
         }
         actions[args.action](args)
 
@@ -902,7 +938,7 @@ class Repl(cmd2.Cmd):
             )
             return
 
-        if self.ctf_provider.submit(challenge, args.flag):
+        if self.ctf_provider.submit(challenge, args.flag)[0]:
             self.poutput(
                 f"[{Fore.GREEN}+{Style.RESET_ALL}] ctf: "
                 f"{Fore.GREEN}correct{Style.RESET_ALL} flag for {challenge.title}"
@@ -1035,6 +1071,31 @@ class Repl(cmd2.Cmd):
 
         return
 
+    # Get a list of brackets
+    ctf_bracket_parser: argparse.ArgumentParser = ctf_subparsers.add_parser(
+        "bracket", help="Display the scoreboard brackets"
+    )
+    ctf_bracket_parser.set_defaults(action="bracket")
+
+    def _ctf_bracket(self, args: argparse.Namespace) -> None:
+        """
+        Show all scoreboard brackets
+        :param args: argparse Namespace holding parameters
+        :return: None
+        """
+        brackets = self.ctf_provider.brackets
+
+        if len(brackets) == 0:
+            return
+
+        bracket_width = max([len(bracket.name) for bracket in brackets]) + 2
+
+        output = [f" {Style.BRIGHT}{'Bracket':<{bracket_width}}ID{Style.RESET_ALL}"]
+        for bracket in brackets:
+            output.append(f" {bracket.name:<{bracket_width}}{bracket.ident}")
+
+        self.ppaged("\n".join(output))
+
     # `ctf scoreboard`
     ctf_scoreboard_parser: argparse.ArgumentParser = ctf_subparsers.add_parser(
         "scoreboard", aliases=["board", "scores"], help="Show the scoreboard"
@@ -1043,7 +1104,7 @@ class Repl(cmd2.Cmd):
         "--count", "-c", type=int, default=10, help="How many users to show"
     )
     ctf_scoreboard_parser.add_argument(
-        "--all", "-a", action="store_true", help="Display the entire scoreboard"
+        "--bracket", "-b", default=None, help="Scoreboard bracket to show"
     )
     ctf_scoreboard_parser.add_argument(
         "--top",
@@ -1061,61 +1122,49 @@ class Repl(cmd2.Cmd):
         :return: None
         """
 
-        # Grab the users
-        try:
-            users: List[User] = list(self.ctf_provider.users)
-        except RuntimeError as e:
-            self.perror(f"[{Fore.RED}-{Style.RESET_ALL}] ctf: unable to get users")
+        me = self.ctf_provider.me
+
+        if args.top:
+            if args.bracket is None:
+                bracket = None
+            else:
+                bracket = [
+                    b for b in self.ctf_provider.brackets if b.name == args.bracket
+                ]
+                if len(bracket) == 0:
+                    self.perror(
+                        f"[{Fore.RED}-{Style.RESET_ALL} ctf: invalid bracket: {args.bracket}"
+                    )
+                    return
+                bracket = bracket[0]
+
+            scoreboard = self.ctf_provider.scoreboard(count=args.count, bracket=bracket)
+        else:
+            scoreboard = self.ctf_provider.scoreboard(localize=me, count=args.count)
+
+        if len(scoreboard) == 0:
+            self.poutput(
+                f"[{Fore.YELLOW}!{Style.RESET_ALL}] ctf: no scoreboard available"
+            )
             return
 
-        # Starting index is zero for all or top
-        idx = 0
-
-        if not args.all and args.top:
-            scoreboard = users[: args.count]
-        elif not args.all:
-            for pos, u in enumerate(users):
-                if u.name == self.manager["ctf"]["username"]:
-                    idx = pos
-                    break
-            else:
-                self.pwarning(
-                    f"[{Fore.YELLOW}!{Style.RESET_ALL}] ctf: you aren't on the scoreboard..."
-                )
-                idx = 0
-
-            # Calculate start and end ranges
-            start = int(idx - (args.count / 2))
-            end = int(idx + (args.count / 2))
-
-            # Adjust for past end/before beginning
-            if start < 0:
-                end -= start
-                start = 0
-            if end > len(users):
-                start -= end - len(users)
-                end = len(users)
-                if start < 0:
-                    start = 0
-
-            # Splice it
-            scoreboard = users[start:end]
-        else:
-            scoreboard = users
-
         # Get width of user column
-        user_width = max([len(x.name) for x in scoreboard]) + 2
-        pos_width = max([len(str(idx + i)) + 1 for i, x in enumerate(scoreboard)]) + 2
+        user_width = max([len(x.team) for p, x in scoreboard.items()]) + 2
+        pos_width = max([len(str(i)) for i in scoreboard]) + 2
 
         # Build the table
         output = [
             f"{Style.BRIGHT}{' '*pos_width}{'Name':<{user_width}}Score{Style.RESET_ALL}"
         ]
-        for pos, user in enumerate(scoreboard):
+        for pos, user in scoreboard.items():
+            if user.name == me.name or (me.team is not None and user.team == me.team):
+                color = Fore.MAGENTA
+            else:
+                color = Style.DIM
             output.append(
-                f"{str(pos+idx)+'.':<{pos_width}}"
-                f"{Fore.MAGENTA if user.name == self.manager['ctf']['username'] else Style.DIM}"
-                f"{user.name:<{user_width}}{Style.RESET_ALL}{user.score}"
+                f"{str(pos)+'.':<{pos_width}}"
+                f"{color}{user.name:<{user_width}}{Style.RESET_ALL}"
+                f"{user.score}"
             )
         output = "\n".join(output)
 
@@ -1247,14 +1296,19 @@ class Repl(cmd2.Cmd):
         )
 
         # Grab the scoreboard
-        scoreboard = self.ctf_provider.scoreboard(localize=me.name, count=10)
+        scoreboard = self.ctf_provider.scoreboard(localize=me, count=10)
         if len(scoreboard):
             output += f"\n" f"{'':<5}{Style.BRIGHT}{'Name':<20}{Style.RESET_ALL}\n"
             board_output = []
             for pos, user in scoreboard.items():
+                if (user.name is not None and user.name == me.name) or (
+                    user.name is None and user.team == me.team
+                ):
+                    color = Fore.MAGENTA
+                else:
+                    color = ""
                 board_output.append(
-                    f"{str(pos)+'.':<5}{Fore.MAGENTA if user.name == me.name else ''}{user.name:<20}"
-                    f"{Style.RESET_ALL}"
+                    f"{str(pos)+'.':<5}{color}{user.name:<20}{Style.RESET_ALL}"
                 )
             output += "\n".join(board_output) + "\n"
 

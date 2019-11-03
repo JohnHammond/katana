@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
-""" Classes pertaining to defining custom unit implementations and locating
-units for evaluation """
+"""
+
+Units are the part of Katana which actually performs the evaluation on a given target. They are defined as
+subclasses of the ``katana.unit.Unit`` class, and must implement three methods at a minimum to begin functioning.
+
+Units are automatically loaded from the `katana/units` directory, and optionally other directories specified at
+runtime by the `Finder` object below. This object is created by the Manager, and will search a directory for valid
+unit objects.
+
+You can also register unit classes manually with the Finder if needed.
+
+"""
 from __future__ import annotations
 from typing import Any, List, Type, Tuple, IO, Generator
 import subprocess
@@ -39,6 +49,41 @@ class Unit(object):
     data which could either contain a flag or another challenge. If the data
     contains a flag, evaluation will be halted. If it doesn't, the data may be
     used to bootstrap further Unit scanning.
+    
+    When implementing a new unit, keep in mind that any serious processing should not
+    occur until the ``Unit.evaluate`` method. This method is executed within the
+    context of a thread. Executing intensive checks in other methods could indadvertedly
+    slow down Katana.
+    
+    :property PRIORITY: This is a priority from 0 ( highest priority) to 100 (lowest priority). Priorities are also
+                        scaled proportionally to parents in order to ensure children have higher priorities.
+    :property RECURSE_SELF: Specifies whether this unit can recurse into itself.
+    :property NO_RECURSE: Indicates if recursion is allowed at all for this unit
+    :property DEPENDENCIES: A list of system binary dependencies we rely on (e.g. ``["steghide"]``)
+    :property STRICT_FLAGS: If specified, a flag must match the entire data string (not some sub-string within it).
+    :property GROUPS: a list of groups this unit belongs to. This is useful for queuing or excluding only certain
+                        groups. By convention, this normally at least contains the package name (e.g. "crypto"
+                        or "stego"). However, it can theoretically contain any name you would like.
+    :property BLOCKED_GROUPS: a list of groups or unit names which this unit cannot recurse into.
+
+    Here's an example of a very basic unit class::
+
+        class Unit(katana.unit.Unit):
+            
+            # Higher priority than normal
+            PRIORITY = 25
+            # Groups we belong to
+            GROUPS = ["web", "bruteforce"]
+        
+            def __init__(manager: katana.manager.Manager, target: katana.target.Target):
+                super(Unit, self).__init__(manager, target)
+                if not target.is_url:
+                    raise NotApplicable("not a url")
+            
+            def evaluate(self, case):
+                # Do something with this URL
+                return
+
     """
 
     # Default unit priority
@@ -61,6 +106,14 @@ class Unit(object):
     BLOCKED_GROUPS = []
 
     def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
+        """
+        Setup the unit. The constructor should evaluate the target and make sure it makes sense to run.
+        If the provided target does not make sense (e.g. target.is_url is False for a web unit), raise the
+        NotApplicable exception to cancel the creation of this unit.
+        
+        :param manager: The Katana Manager instance
+        :param target: The target to evaluate
+        """
         super(Unit, self).__init__()
 
         # Enforce recursion restrictions for this unit
@@ -95,10 +148,13 @@ class Unit(object):
         return self.__class__.get_name()
 
     def __repr__(self) -> str:
+        """ String representation will provide the unit name plus the target upstream """
         return f"{str(self)}({str(self.target)})"
 
     @classmethod
     def get_name(cls) -> str:
+        """ By default, we assume the unit name is the same as the containing module. This can
+        be overridden, but should not conflict with other units. """
         return cls.__module__.split(".")[-1]
 
     @classmethod
@@ -121,7 +177,10 @@ class Unit(object):
         to a given recursion target from this unit.
 
         Direct indicates whether this is the direct child or an ancestor of
-        self. """
+        self.
+        
+        :param unit_class: The child we are thinking recursing into
+        :param direct: I don't remember, honestly, and it's not used... """
 
         # Can we recurse into ourselves?
         if unit_class is self.__class__ and not self.RECURSE_SELF:
@@ -139,6 +198,7 @@ class Unit(object):
         return True
 
     def is_complete(self) -> bool:
+        """ Returns true if either this unit or the origin target has completed """
         return self.completed or self.origin.completed
 
     def enumerate(self):
@@ -147,7 +207,8 @@ class Unit(object):
         (such as password guesser's) to take advantage of the parallelism of
         Katana without further coding. By default, this method yields a single
         `None` value which will be passed as `case` in the `Unit.evaluate`
-        method below. """
+        method below. You must yield at least one value before returning, or ``evaluate``
+        will never run. """
 
         yield None
 
@@ -158,7 +219,8 @@ class Unit(object):
         raise RuntimeError("{0}: malformed unit: no evaluate".format(self))
 
     def get_output_dir(self):
-        """ Find the output directory for this unit """
+        """ Find the output directory for this unit. This will return the directory where
+         artifacts are expected to be stored in this context and also ensure it exists """
 
         # No need to do this more than once
         if self.output_dir is not None:
@@ -195,7 +257,7 @@ class Unit(object):
         """ Generate a new artifact, and return the path and open file handle.
         The artifact is not automatically registered with the manager, since it
         is initially empty. You should register any artifacts which contain
-        useful data based on your unit (using `self.manager.register_artifact`)
+        useful data based on your unit (using ``self.manager.register_artifact``)
         """
 
         # Generate a random file name
@@ -244,7 +306,8 @@ class Unit(object):
     def check_deps(cls):
         """ The default dependency check will make sure that every item in
         self.DEPENDENCIES exists as an external executable in the current
-        environment, and raise a NotApplicable exception otherwise. """
+        environment, and raise a NotApplicable exception otherwise. You
+         likely won't need to override this, but you can if you'd like. """
 
         # Check that all the given binary dependencies exist
         try:

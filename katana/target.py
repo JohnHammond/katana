@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 """
-Classes and methods wrapping arbitrary files and data into a common Target
-interface for units.
+
+The :class:`Target` class abstracts away interactions with raw target data by first evaluating
+what kind target the data is, and providing convenience methods for accessing raw data, files,
+or URLs from the data.
+
 """
 from __future__ import annotations
 from typing import Any, List, BinaryIO
@@ -34,6 +37,40 @@ BASE64_BYTES = bytes(string.ascii_letters + string.digits + "=", "utf-8")
 
 
 class Target(object):
+    """
+    A Target has two main parts:
+    
+    - Upstream
+    - Raw Data
+    
+    The Upstream is what was passed to the target constructor. In the case of raw data, ``upstream`` and ``raw`` will
+    be identical objects. If a URL was passed to the constructor, ``raw`` will take the form of the content of the web
+    page. Katana will automatically attempt to fetch the page. In a similar fashion, ``raw`` will return the content of
+    a file, if the upstream was a path.
+    
+    If you don't rely on external tools, you should mostly deal with ``raw`` or ``stream``. ``raw`` will either be a
+    bytes object, or a memory mapped file (which acts like a bytes object in most situations). ``stream`` will either
+    be an open file handle for file upstreams, or a BytesIO object which will act like a file. This allows you to
+    reference the data in an abstract way no matter what the upstream target was. Other useful properties are also
+    available which describe the data and are listed below.
+    
+    :property upstream: A bytes object holding the original target data.
+    :property parent: A Unit object describing how this target was created (or None for root targets).
+    :property is_printable: Whether the data is mostly printable text
+    :property is_english: Whether the data appears to be mostly english
+    :property is_image: Whether the data is an image
+    :property is_base64: Whether the data looks like base64
+    :property path: The path to a file-backed target (URLs are also file-backed by an artifact)
+    :property completed: Whether we are done processing this target
+    :property url_pieces: A regex Match object containing the URL pieces, if this is a URL.
+    :property is_url: True if this appears to be a valid URL
+    :property is_file: True if this appears to be a valid file path. This is also true, if ``manager[download]`` is
+                        True, and we were able to download the file as an artifact.
+    :property magic: libmagic result for the data
+    :property hash: A hashlib.md5 object representing the hash of the data
+    
+    """
+
     def __init__(
         self,
         manager: katana.manager.Manager,

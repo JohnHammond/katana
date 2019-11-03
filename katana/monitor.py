@@ -158,6 +158,110 @@ class JsonMonitor(Monitor):
             parent_results["children"][repr(unit.target)][str(unit)] = {"children": {}}
         return parent_results["children"][repr(unit.target)][str(unit)]
 
+    def build_results(self, target=None) -> Dict[str, Any]:
+
+        results = {"children": {}}
+
+        for datum in self.data:
+            # Only look at units with the given root target
+            if target is not None and datum[0].origin is not target:
+                continue
+
+            # Grab the result hash from the results object
+            result = self.get_result(results, datum[0])
+
+            # Ensure we have a data array
+            if "data" not in result:
+                result["data"] = []
+
+            # Remove the annoying quotes and "b" from strings and bytes objects
+            # respectively
+            if isinstance(datum[1], str):
+                datum = repr(datum[1])[1:-1]
+            elif isinstance(datum[1], bytes):
+                datum = repr(datum[1])[2:-1]
+            else:
+                datum = datum[1]
+
+            # Add the data
+            result["data"].append(datum)
+
+        for flag in self.flags:
+
+            # Only look at units with the given root target
+            if target is not None and flag[0].origin is not target:
+                continue
+
+            # Grab the result hash from the results object
+            result = self.get_result(results, flag[0])
+
+            # Ensure we have a data array
+            if "flags" not in result:
+                result["flags"] = []
+
+            # Remove the annoying quotes and "b" from strings and bytes objects
+            # respectively
+            if isinstance(flag[1], str):
+                flag = repr(flag[1])[1:-1]
+            elif isinstance(flag[1], bytes):
+                flag = repr(flag[1])[2:-1]
+            else:
+                flag = flag[1]
+
+            # Add the data
+            result["flags"].append(flag)
+
+        for artifact in self.artifacts:
+
+            # Only look at units with the given root target
+            if target is not None and artifact[0].origin is not target:
+                continue
+
+            # Grab the result hash from the results object
+            result = self.get_result(results, artifact[0])
+
+            # Ensure we have an artifact array
+            if "artifacts" not in result:
+                result["artifacts"] = []
+
+            # Save the artifact name
+            result["artifacts"].append(artifact[1])
+
+            for flag in self.flags:
+                # Grab the result hash from the results object
+                result = self.get_result(results, flag[0])
+
+                # Ensure we have an artifact array
+                if "flags" not in result:
+                    result["flags"] = []
+
+                # Save the artifact name
+                result["flags"].append(flag[1])
+
+        for exception in self.exceptions:
+
+            # Only look at units with the given root target
+            if target is not None and exception[0].origin is not target:
+                continue
+
+            # Grab the result hash from the results object
+            result = self.get_result(results, exception[0])
+
+            # Ensure we have an artifact array
+            if "exceptions" not in result:
+                result["exceptions"] = []
+
+            # Save the artifact name
+            result["exceptions"].append(exception[1])
+
+        if target is not None:
+            if repr(target) not in results["children"]:
+                return {}
+            else:
+                return results["children"][repr(target)]
+        else:
+            return results["children"]
+
     def on_completion(self, manager: katana.manager.Manager, timed_out: bool) -> None:
         super(JsonMonitor, self).on_completion(manager, timed_out)
 

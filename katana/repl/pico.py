@@ -3,7 +3,7 @@ from typing import Generator, Tuple, Dict, Any, List
 import requests
 import re
 
-from katana.repl.ctf import CTFProvider, Challenge, User, AuthenticationError
+from katana.repl.ctf import CTFProvider, Challenge, User, AuthenticationError, Bracket
 
 
 class Provider(CTFProvider):
@@ -54,7 +54,7 @@ class Provider(CTFProvider):
             # Attempt re-auth
             self._authenticate(self.username, self.password)
             # Retry API call
-            return self._api(endpoint, args, method, recurse=False)
+            return self._api(endpoint, args, params, method, recurse=False)
 
         # Ensure we are good to go
         if r.status_code != 200:
@@ -82,6 +82,44 @@ class Provider(CTFProvider):
         # Save CSRF token
         self.token = resp.cookies["token"]
 
+        # Request the user profile
+        success, result, _ = self._api("/user")
+        if not success:
+            return None
+
+        self.me = User(result["username"], result["score"], result["tid"])
+
+        # Grab the team information
+        success, team, _ = self._api("/team")
+        if not success:
+            return
+
+        # Grab brackets
+        brackets = self.brackets
+
+        for b in brackets:
+            if b.ident == team["eligibilities"][0]:
+                self.me.bracket = b
+
+        # Save team name
+        self.me.team = team["team_name"]
+
+    @property
+    def brackets(self) -> List[Bracket]:
+
+        # Request a list of scoreboards (brackets)
+        success, result, resp = self._api("/scoreboards")
+        if not success:
+            return []
+
+        # We want brackets with higher priority first
+        result.sort(key=lambda b: b["priority"], reverse=True)
+
+        # Build bracket list
+        brackets: List[Bracket] = [Bracket(b["name"], b["sid"]) for b in result]
+
+        return brackets
+
     @property
     def challenges(self) -> Generator[Challenge, None, None]:
 
@@ -98,19 +136,63 @@ class Provider(CTFProvider):
         return
 
     @property
-    def me(self) -> User:
-
-        # Request the user profile
-        success, result, _ = self._api("/user")
-        if not success:
-            return None
-
-        return User(result["username"], result["score"], result["tid"])
-
-    @property
     def users(self) -> Generator[User, None, None]:
         """ This is difficult for picoCTF. We are not going to implement it right now... """
         return
+
+    def scoreboard(
+        self, localize: User = None, count=10, bracket: Bracket = None
+    ) -> Dict[int, User]:
+
+        # Pico lists the scoreboard around your user by default
+        if localize is not None:
+            params = {}
+        else:
+            params = {"page": 1}
+
+        if bracket is None and localize is not None:
+            # Use this user's bracket
+            bracket = localize.bracket
+        elif bracket is None:
+            # Default to the highest priority bracket
+            bracket = self.brackets[0]
+
+        # Grab the scoreboard
+        success, board, _ = self._api(
+            f"/scoreboards/{bracket.ident}/scoreboard", params=params
+        )
+        if not success:
+            return []
+
+        # Calculate start based on localize
+        if localize is not None:
+            pos = 0
+            for n, team in enumerate(board["scoreboard"]):
+                if team["name"] == localize.team:
+                    pos = n
+            start = pos - int(count / 2)
+        else:
+            start = 0
+
+        # Calculate end from start and count
+        end = start + count
+
+        # Bound start and end within the results
+        if start < 0:
+            end -= start
+            start = 0
+        if end > len(board["scoreboard"]):
+            start -= end - len(board["scoreboard"])
+            end = len(board["scoreboard"])
+        if start < 0:
+            start = 0
+
+        return {
+            ((board["current_page"] - 1) * 50 + n + 1): User(
+                t["name"], t["score"], None, t["name"], [], bracket
+            )
+            for n, t in enumerate(board["scoreboard"][start:end])
+        }
 
     def get_challenge(self, ident: str) -> Challenge:
 

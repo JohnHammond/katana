@@ -12,6 +12,7 @@ Katana - Automatic CTF Challenge Evaluator
 
    installation.rst
    getting-started.rst
+   converting-units.rst
    modules.rst
 
 Indices and tables

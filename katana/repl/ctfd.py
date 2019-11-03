@@ -37,43 +37,19 @@ class Provider(CTFProvider):
         # Save requests session
         self.session = s
 
-    @property
-    def me(self) -> User:
-
         # Get user profile
         r = self.session.get(f"{self.url}/api/v1/users/me")
         if r.status_code != 200:
             raise RuntimeError(f"failed to retrieve profile")
 
         data = r.json()["data"]
-        user: User = User(
+        self.me = User(
             name=data["name"],
             score=data["score"],
             ident=str(data["id"]),
             team=data["team"] if "team" in data else None,
             solves=[],
         )
-
-        # Get user solves
-        r = self.session.get(f"{self.url}/api/v1/users/me/solves")
-        if r.status_code != 200:
-            raise RuntimeError("failed to retrieve solves")
-
-        # Extract solve data
-        data = r.json()["data"]
-        for solve in data:
-            user.solves.append(
-                Challenge(
-                    title=solve["challenge"]["name"],
-                    value=solve["challenge"]["value"],
-                    ident=str(solve["challenge_id"]),
-                    provider=self,
-                    tags=[solve["challenge"]["category"]],
-                    solved=True,
-                )
-            )
-
-        return user
 
     @property
     def challenges(self) -> Generator[Challenge, None, None]:
@@ -88,6 +64,8 @@ class Provider(CTFProvider):
 
         # Grab self
         me = self.me
+        # Grab solves
+        solves = self._get_solves()
 
         # Iterate over challenges
         for c in data:
@@ -98,7 +76,7 @@ class Provider(CTFProvider):
                 provider=self,
                 tags=[c["category"]] + c["tags"],
             )
-            if challenge.ident in [solve.ident for solve in me.solves]:
+            if challenge.ident in [solve.ident for solve in solves]:
                 challenge.solved = True
             yield challenge
 
@@ -125,6 +103,34 @@ class Provider(CTFProvider):
             )
 
         return
+
+    def _get_solves(self) -> List[Challenge]:
+        """
+        Get the list of solves for this user
+        :return: List of challenges we have solved
+        """
+
+        # Get user solves
+        r = self.session.get(f"{self.url}/api/v1/users/me/solves")
+        if r.status_code != 200:
+            raise RuntimeError("failed to retrieve solves")
+
+        # Extract solve data
+        data = r.json()["data"]
+        solves = []
+        for solve in data:
+            solves.append(
+                Challenge(
+                    title=solve["challenge"]["name"],
+                    value=solve["challenge"]["value"],
+                    ident=str(solve["challenge_id"]),
+                    provider=self,
+                    tags=[solve["challenge"]["category"]],
+                    solved=True,
+                )
+            )
+
+        return solves
 
     def scoreboard(self, localize: str = None, count=10) -> Dict[int, User]:
 
@@ -164,7 +170,7 @@ class Provider(CTFProvider):
                 name=u["name"],
                 score=u["score"],
                 ident=str(u["account_id"]),
-                team=u["team"] if "team" in u else None,
+                team=u["team"] if "team" in u else u["name"],
             )
             for pos, u in enumerate(data[start:end])
         }
