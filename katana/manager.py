@@ -3,7 +3,7 @@
 units against an arbitrary number of Targets of varying types in a
 multithreaded manner and reporting results to a Monitor object """
 from dataclasses import dataclass, field
-from typing import List, Any, Generator, Tuple
+from typing import List, Any, Generator, Dict
 import configparser
 import threading
 import queue
@@ -90,6 +90,7 @@ class Manager(configparser.ConfigParser):
         self.running = False
         # List of root targets that have been queued
         self.targets: List[Target] = []
+        self.target_hash: Dict[str, Target] = {}
 
     def set(self, section: str, option: str, value: Any = None) -> None:
         """ Wrapper around ConfigParser.set. We need to take into account some special
@@ -124,6 +125,12 @@ class Manager(configparser.ConfigParser):
 
     def register_data(self, unit: Unit, data: Any, recurse: bool = True) -> None:
         """ Register arbitrary data results with the manager """
+
+        # Sometimes units do weird things
+        if isinstance(data, str) and data == "":
+            return
+        elif isinstance(data, bytes) and data == b"":
+            return
 
         # Notify the monitor of the data
         self.monitor.on_data(self, unit, data)
@@ -247,12 +254,18 @@ class Manager(configparser.ConfigParser):
         # Create the target object
         target = self.target(upstream, parent)
 
+        # Don't requeue targets with the same hash
+        if target.hash.hexdigest() in self.target_hash:
+            return self.target_hash[target.hash.hexdigest()]
+        else:
+            self.target_hash[target.hash.hexdigest()] = target
+
         # Track the root targets
         # if parent is None:
         self.targets.append(target)
 
         # Enumerate valid units
-        for unit in self.finder.match(target):
+        for unit in self.finder.match(target, scale=scale):
             self.queue(unit)
 
         # Return the target object

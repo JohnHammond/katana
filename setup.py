@@ -31,6 +31,7 @@ dependencies = [
     "gmpy",
     "cmd2",
     "watchdog",
+    "pygments",
 ]
 dependency_links = [
     "git+https://github.com/elliptic-shiho/primefac-fork#egg=primefac-1.0.0"

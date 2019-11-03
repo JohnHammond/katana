@@ -8,12 +8,21 @@ from katana.unit import NotApplicable, PrintableDataUnit
 from katana.manager import Manager
 from katana.target import Target
 import katana.util
+import re
+
+URL_DATA = re.compile(rb"%[0-9A-Fa-f]{1,2}", re.IGNORECASE | re.MULTILINE | re.DOTALL)
 
 
 class Unit(PrintableDataUnit):
 
     # Moderate priority
     PRIORITY = 25
+
+    def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
+        super(Unit, self).__init__(manager, target)
+
+        if URL_DATA.search(target.raw) is None:
+            raise NotApplicable("No URL encoded parts")
 
     def evaluate(self, case):
 

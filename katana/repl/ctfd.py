@@ -2,7 +2,7 @@
 from typing import Generator, Tuple, List, Any, Dict
 import requests
 
-from katana.repl.ctf import CTFProvider, Challenge, User, AuthenticationError
+from katana.repl.ctf import CTFProvider, Challenge, User, AuthenticationError, Bracket
 
 
 class Provider(CTFProvider):
@@ -50,6 +50,15 @@ class Provider(CTFProvider):
             team=data["team"] if "team" in data else None,
             solves=[],
         )
+
+        # Get the team
+        r = self.session.get(f"{self.url}/api/v1/teams/me")
+        if r.status_code != 200:
+            raise RuntimeError(f"failed to retrieve team information")
+
+        # Grab team name
+        data = r.json()["data"]
+        self.me.team = data["name"]
 
     @property
     def challenges(self) -> Generator[Challenge, None, None]:
@@ -132,7 +141,9 @@ class Provider(CTFProvider):
 
         return solves
 
-    def scoreboard(self, localize: str = None, count=10) -> Dict[int, User]:
+    def scoreboard(
+        self, localize: User = None, count=10, bracket: Bracket = None
+    ) -> Dict[int, User]:
 
         # Request the scoreboard, which lists all users
         r = self.session.get(f"{self.url}/api/v1/scoreboard")
@@ -147,7 +158,9 @@ class Provider(CTFProvider):
 
         if localize is not None:
             for pos, u in enumerate(data):
-                if u["name"] == localize:
+                if (u["account_type"] == "team" and u["name"] == localize.team) or (
+                    u["account_type"] != "team" and u["name"] == localize.name
+                ):
                     start = pos
                     break
 
@@ -166,7 +179,7 @@ class Provider(CTFProvider):
             start = 0
 
         return {
-            (pos + start): User(
+            (pos + start + 1): User(
                 name=u["name"],
                 score=u["score"],
                 ident=str(u["account_id"]),

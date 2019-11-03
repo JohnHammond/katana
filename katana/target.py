@@ -191,8 +191,8 @@ class Target(object):
         # JOHN: Add a test to determine if this is in fact an image
         if "image" in self.magic.lower():
             # CALEB: Not sure how I want to handle this in the new version...
-            # 			if self.path:
-            # 				katana.add_image(os.path.abspath(self.path))
+            #             if self.path:
+            #                 katana.add_image(os.path.abspath(self.path))
             self.is_image = True
 
         # CALEB: if we do this, do we need strings?
@@ -221,7 +221,7 @@ class Target(object):
 
                 # Check if this chunk is printabale
                 for c in chunk:
-                    if not c in PRINTABLE_BYTES:
+                    if c not in PRINTABLE_BYTES:
                         self.is_printable = False
                         self.is_base64 = False
                         self.is_english = False
@@ -265,7 +265,7 @@ class Target(object):
 
     def __repr__(self):
         """ Create a representation of this object based on it's upstream path
-		"""
+        """
         # upstream is always bytes so `repr` puts `b''` around the string.
         return repr(self.upstream)[2:-1]
 
@@ -275,7 +275,7 @@ class Target(object):
 
     def __getitem__(self, key):
         """ Get a slice of the upstream... this seems very inneficient, but it
-		was in the old version, and I don't want to break too much... """
+        was in the old version, and I don't want to break too much... """
 
         if isinstance(key, slice):
             try:
@@ -298,13 +298,13 @@ class Target(object):
                 )
 
     @property
-    def raw(self) -> str:
+    def raw(self) -> bytes:
         """ Return a bytes-like object for any given target type:
 
-			- Files/content already in memory: return self.content
-			- Files already written to disk: return a mmap object
-			- For all other unknown data: return self.upstream directly
-		"""
+            - Files/content already in memory: return self.content
+            - Files already written to disk: return a mmap object
+            - For all other unknown data: return self.upstream directly
+        """
         if self.content is not None:
             return self.content
         elif self.path is not None:
@@ -320,10 +320,10 @@ class Target(object):
     def stream(self) -> BinaryIO:
         """ Return a file-like object for any given target type:
 
-			- Files/content already in memory: return a BytesIO object
-			- Files already written to disk: return an binary file handle
-			- For all other unknown data: return a BytesIO object of upstream
-		"""
+            - Files/content already in memory: return a BytesIO object
+            - Files already written to disk: return an binary file handle
+            - For all other unknown data: return a BytesIO object of upstream
+        """
         if self.content is not None:
             return BytesIO(self.content)
         elif self.is_file:

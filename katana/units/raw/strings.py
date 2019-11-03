@@ -32,11 +32,11 @@ class Unit(BaseUnit):
         ]
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        # Queuing recursion and registering data can be slow. Look for flags first
+        # Queuing recursion and registering data can be slow on large files. Look for flags first
         lines = []
         for line in p.stdout:
             self.manager.find_flag(self, line)
             lines.append(line)
 
-        for line in p.stdout:
+        for line in lines:
             self.manager.register_data(self, line.rstrip(b"\n"))

@@ -64,6 +64,11 @@ class ReplMonitor(JsonMonitor):
         self.repl: Repl = None
 
     def on_flag(self, manager: Manager, unit: Unit, flag: str):
+
+        # Ignore duplicate flags
+        if len([f for f in self.flags if f[1] == flag]) > 0:
+            return
+
         super(ReplMonitor, self).on_flag(manager, unit, flag)
 
         chain = []
@@ -155,7 +160,10 @@ def get_target_choices(repl, uncomplete=False) -> List[CompletionItem]:
     if uncomplete:
         targets = [t for t in targets if not t.completed]
 
-    result = [CompletionItem(t.hash.hexdigest(), repr(t)) for t in targets]
+    result = [
+        CompletionItem(t.hash.hexdigest(), katana.util.ellipsize(repr(t), 40))
+        for t in targets
+    ]
 
     return result
 
