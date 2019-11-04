@@ -302,6 +302,24 @@ class Unit(object):
             yield parent
             parent = parent.target.parent
 
+    def get(self, name: str, default: str = None) -> str:
+        """
+        Get a configuration value with a default. If a value was specified under the `DEFAULT` section,
+        it will be returned before the default value specified here.
+        :param name: name of the parameter
+        :param default: default value
+        :return: the value or the default value
+        """
+        return self.manager.get(str(self), name, fallback=default)
+
+    def getb(self, name: str, default: bool = None) -> bool:
+        """ same as get, but returns a boolean value """
+        return self.manager.getboolean(str(self), name, fallback=default)
+
+    def geti(self, name: str, default: int = None) -> int:
+        """ same as get but returns an integer value """
+        return self.manager.getint(str(self), name, fallback=default)
+
     @classmethod
     def check_deps(cls):
         """ The default dependency check will make sure that every item in
