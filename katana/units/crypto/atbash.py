@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
-from typing import Generator, Any
-import string
 import io
+import string
+from typing import Any
 
-from katana.manager import Manager
-from katana.target import Target
-from katana.unit import Unit as BaseUnit
-from katana.unit import NotApplicable, NotEnglishAndPrintableUnit
+from katana.unit import NotEnglishAndPrintableUnit
 
 
 class Unit(NotEnglishAndPrintableUnit):

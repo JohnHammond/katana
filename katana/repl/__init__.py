@@ -246,6 +246,9 @@ class Repl(cmd2.Cmd):
         # Update the prompt
         self.update_prompt()
 
+        # Alias for quit
+        self.do_exit = self.do_quit
+
     def finalization_hook(
         self, data: cmd2.plugin.CommandFinalizationData
     ) -> cmd2.plugin.CommandFinalizationData:
@@ -316,10 +319,10 @@ class Repl(cmd2.Cmd):
     )
 
     @cmd2.with_argparser(exit_parser)
-    def do_exit(self, args: argparse.Namespace) -> bool:
+    def do_quit(self, args: argparse.Namespace) -> bool:
         """
         Exit the katana REPL. Optionally, force current evaluation to complete immediately.
-        
+
         :param args: argparse Namespace containing parameters
         :return: whether to exit or not (always True)
         """
@@ -340,11 +343,6 @@ class Repl(cmd2.Cmd):
         self.poutput(f"[{Fore.GREEN}+{Style.RESET_ALL}] manager exited cleanly")
 
         return True
-
-    @cmd2.with_argparser(exit_parser)
-    def do_quit(self, args: argparse.Namespace) -> bool:
-        """ Same as do_exit """
-        return self.do_exit(args)
 
     # The main argument parser
     monitor_parser = Cmd2ArgumentParser(

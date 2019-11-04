@@ -11,12 +11,6 @@ from katana.repl import Repl, ReplMonitor
 import katana.util
 
 
-class ConsoleMonitor(JsonMonitor, LoggingMonitor):
-    """ This monitor implements the console logging features of LoggingMonitor
-    and uses the JSON output feature from JsonMonitor to create a suitable
-    monitor for command line execution. """
-
-
 def main():
     # Setup basic logging
     logging.basicConfig(level=logging.INFO)
@@ -145,27 +139,6 @@ def main():
     sys.argv = sys.argv[:1]
     repl = Repl(manager)
     sys.exit(repl.cmdloop())
-
-    # Start the manager processing threads
-    logging.info("starting manager threads")
-    manager.start()
-
-    def status_signal(signum: int, frame: FrameType) -> None:
-        """ Catch the SIGUSR1 or SIGALRM signal and print status information"""
-        for tid, status in monitor.thread_status.items():
-            case = status[1]
-            if case is not None:
-                case = katana.util.ellipsize(case, 20)
-                logging.info(f" thread[{tid}]: {repr(status[0])} -> {case}")
-            else:
-                logging.info(f" thread[{tid}]: {repr(status[0])}")
-
-    # Register a SIGUSR1 handler
-    signal.signal(signal.SIGUSR1, status_signal)
-
-    logging.info("waiting for evaluation completion (timeout={0})".format(args.timeout))
-    if not manager.join(timeout=args.timeout):
-        logging.warning("evaluation timed out prior to completion!")
 
 
 if __name__ == "__main__":
