@@ -8,7 +8,7 @@ from katana.unit import NotApplicable, PrintableDataUnit
 from katana.manager import Manager
 from katana.target import Target
 import katana.util
-import re
+import regex as re
 
 URL_DATA = re.compile(rb"%[0-9A-Fa-f]{1,2}", re.IGNORECASE | re.MULTILINE | re.DOTALL)
 

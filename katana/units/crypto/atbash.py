@@ -9,6 +9,7 @@ from katana.unit import NotEnglishAndPrintableUnit
 class Unit(NotEnglishAndPrintableUnit):
     # Fill in your groups
     GROUPS = ["crypto"]
+    BLOCKED_GROUPS = ["crypto"]
     # Default priority is 50
     PRIORITY = 60
     # Do not recurse into self

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from typing import Generator, Any
 import hashlib
-import re
+import regex as re
 
 from katana.manager import Manager
 from katana.target import Target

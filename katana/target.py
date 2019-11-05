@@ -10,14 +10,15 @@ from __future__ import annotations
 from typing import Any, List, BinaryIO
 from io import StringIO, BytesIO
 import tempfile
-import requests
+import regex as requests
 import hashlib
 import enchant
 import string
 import magic
 import mmap
-import re
+import regex as re
 import os
+import time
 
 import katana.util
 
@@ -68,6 +69,9 @@ class Target(object):
                         True, and we were able to download the file as an artifact.
     :property magic: libmagic result for the data
     :property hash: A hashlib.md5 object representing the hash of the data
+    :property start_time: The time in seconds that this target was started
+    :property end_time: When this target completed
+    :property units_evaluated: The total number of units evaluated under this target (only root targets)
     
     """
 
@@ -90,7 +94,10 @@ class Target(object):
         self.is_image = False
         self.is_base64 = False
         self.path = False
-        self.completed = False
+        self._completed = False
+        self.start_time = time.time()
+        self.end_time = -1
+        self.units_evaluated = 0
 
         # Parse out URL pieces (also decide if this is a URL)
         self.url_pieces = ADDRESS_REGEX.match(self.upstream)
@@ -262,6 +269,17 @@ class Target(object):
         #       we didn't....
         if self.path and self.path.startswith("./"):
             self.path = os.path.abspath(self.path)
+
+    @property
+    def completed(self) -> bool:
+        return self._completed
+
+    @completed.setter
+    def completed(self, value: bool) -> None:
+        if not value:
+            return
+        self._completed = True
+        self.end_time = time.time()
 
     def __repr__(self):
         """ Create a representation of this object based on it's upstream path

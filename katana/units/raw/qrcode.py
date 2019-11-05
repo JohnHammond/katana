@@ -10,32 +10,29 @@ from katana.target import Target
 
 warnings.simplefilter("ignore", UserWarning)
 
+
 class Unit(FileUnit):
 
-	# Moderate priority
-	PRIORITY = 25
+    # Moderate priority
+    PRIORITY = 25
 
-	def __init__(self, manager: Manager, target: Target):
-		super(Unit, self).__init__(manager, target, keywords='image')
+    def __init__(self, manager: Manager, target: Target):
+        super(Unit, self).__init__(manager, target, keywords="image")
 
-		try:
-			# Attempt to open the image with PIL
-			self.image = Image.open(self.target.path)
-		except OSError:
-			raise NotApplicable("not an image")
+        try:
+            # Attempt to open the image with PIL
+            self.image = Image.open(self.target.path)
+        except OSError:
+            raise NotApplicable("not an image")
 
-	def evaluate(self, case: Any):
+    def evaluate(self, case: Any):
 
-		# Use pyzbar to decode he qrcode
-		decoded = pyzbar.decode(self.image)
-		for each_decoded_item in decoded:
-			decoded_data = each_decoded_item.data
+        # Use pyzbar to decode he qrcode
+        decoded = pyzbar.decode(self.image)
+        for each_decoded_item in decoded:
+            decoded_data = each_decoded_item.data
 
-			# CALEB: Need better data registration...
-			result = {
-				'type': each_decoded_item.type,
-				'data': decoded_data
-			}
+            # CALEB: Need better data registration...
+            result = {"type": each_decoded_item.type, "data": decoded_data}
 
-			self.manager.register_data(self, decoded_data)
-
+            self.manager.register_data(self, decoded_data)

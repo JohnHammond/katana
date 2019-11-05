@@ -12,7 +12,7 @@ class Unit(FileUnit):
     # Fill in your groups
     GROUPS = ["apk"]
     # Default priority is 50
-    PRIORITY = 25
+    PRIORITY = 40
     # We depend on `apktool`
     DEPENDENCIES = ["apktool"]
 

@@ -20,7 +20,7 @@ import pkgutil
 import hashlib
 import base64
 import uuid
-import re
+import regex as re
 import os
 
 import katana
@@ -403,8 +403,36 @@ class NotEnglishAndPrintableUnit(Unit):
     def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
         super(NotEnglishAndPrintableUnit, self).__init__(manager, target)
 
-        if self.target.is_english and not self.target.is_printable:
-            raise NotApplicable("not english and not printable")
+        if self.target.is_english or not self.target.is_printable:
+            raise NotApplicable("not english or not printable")
+
+
+class RegexUnit(Unit):
+    """ Utilizes a regular expression pattern to locate matching sections of the
+    input data. The Unit will raise NotApplicable if the target has no matches. """
+
+    # The pattern used for matching (pre-compiled)
+    PATTERN: re.Pattern
+
+    def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
+        super(RegexUnit, self).__init__(manager, target)
+
+        self.match_iter = self.PATTERN.finditer(target.raw)
+
+        try:
+            self.first_match = next(self.match_iter)
+        except StopIteration:
+            raise NotApplicable("No matches found")
+
+    def enumerate(self):
+        """ Yield's all the match objects """
+
+        # Yield the first match we found in the constructor
+        yield self.first_match
+
+        # Yield all the other matches
+        for match in self.match_iter:
+            yield match
 
 
 class Finder(object):
@@ -523,6 +551,9 @@ class Finder(object):
                     for unit in self.manager["manager"]["units"].split(","):
                         if unit == unit_class.get_name() or unit in unit_class.GROUPS:
                             raise Applicable
+                    else:
+                        # No applicable units found
+                        continue
             except NotApplicable:
                 # This unit is excluded
                 continue
@@ -539,5 +570,5 @@ class Finder(object):
             except NotApplicable as e:
                 pass
             else:
-                unit.PRIORITY *= scale
+                # unit.PRIORITY *= scale
                 yield unit

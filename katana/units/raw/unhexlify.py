@@ -3,7 +3,7 @@ from typing import Any
 import binascii
 import magic
 import mmap
-import re
+import regex as re
 
 from katana.unit import Unit as BaseUnit
 from katana.unit import NotApplicable

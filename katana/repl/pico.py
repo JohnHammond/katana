@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from typing import Generator, Tuple, Dict, Any, List
-import requests
-import re
+import regex as requests
+import regex as re
 
 from katana.repl.ctf import CTFProvider, Challenge, User, AuthenticationError, Bracket
 

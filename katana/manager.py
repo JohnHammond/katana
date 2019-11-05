@@ -9,7 +9,7 @@ import threading
 import queue
 import time
 import os
-import re
+import regex as re
 
 # katana imports
 from katana.target import Target
@@ -91,6 +91,8 @@ class Manager(configparser.ConfigParser):
         # List of root targets that have been queued
         self.targets: List[Target] = []
         self.target_hash: Dict[str, Target] = {}
+        # Number of cases completed (for stats)
+        self.cases_completed = 0
 
     def set(self, section: str, option: str, value: Any = None) -> None:
         """ Wrapper around ConfigParser.set. We need to take into account some special
@@ -512,6 +514,12 @@ class Manager(configparser.ConfigParser):
                 except Exception as e:
                     # We got an exception, notify the monitor and continue
                     self.monitor.on_exception(self, work.unit, e)
+
+                # Statistics
+                work.unit.origin.units_evaluated += 1
+                if work.unit.target is not work.unit.origin:
+                    work.unit.target.units_evaluated += 1
+                self.cases_completed += 1
 
             self.work.task_done()
 

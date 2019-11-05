@@ -6,7 +6,7 @@ from Crypto.Util.number import inverse
 
 from katana.manager import Manager
 from katana.target import Target
-from katana.unit import NotApplicable, NotEnglishUnit
+from katana.unit import NotApplicable, NotEnglishAndPrintableUnit
 
 
 def affine(c: int, a: int, b: int, alphabet: bytes):
@@ -18,9 +18,10 @@ def affine(c: int, a: int, b: int, alphabet: bytes):
         return c
 
 
-class Unit(NotEnglishUnit):
+class Unit(NotEnglishAndPrintableUnit):
     # Fill in your groups
     GROUPS = ["crypto"]
+    BLOCKED_GROUPS = ["crypto"]
     # Default priority is 50
     PRIORITY = 65
     # Prevent recursion into itself

@@ -13,7 +13,7 @@ class Unit(FileUnit):
     # We depend on the system tool `exiftool`
     DEPENDENCIES = ["exiftool"]
     # Moderate-to-high priority
-    PRIORITY = 25
+    PRIORITY = 40
     # Groups we belong to
     GROUPS = ["raw", "file"]
 

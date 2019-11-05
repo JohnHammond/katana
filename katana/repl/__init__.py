@@ -3,7 +3,7 @@ import functools
 import hashlib
 import json
 import os
-import re
+import regex as re
 from typing import Any, Dict, List, Tuple
 
 import argparse
@@ -279,28 +279,58 @@ class Repl(cmd2.Cmd):
         description="Display status message for all running threads"
     )
     status_parser.add_argument(
-        "--flags",
-        "-f",
+        "--verbose",
+        "-v",
         action="store_true",
-        help="Show all flags as well as thread status",
+        help="Show detailed status for each thread",
     )
 
     @cmd2.with_argparser(status_parser)
     def do_status(self, args):
+
+        # Figure out the basic status
+        basic_status = f"{Fore.YELLOW}waiting{Style.RESET_ALL}"
+        if self.manager.work.qsize() > 0:
+            basic_status = f"{Fore.GREEN}running{Style.RESET_ALL}"
+
+        # Find the number of items queued
+        items_queued = (
+            f"{Fore.BLUE}{self.manager.work.qsize()} units queued{Style.RESET_ALL}"
+        )
+
+        # Find total number of unit cases evaluated
+        cases_completed = f"{Fore.CYAN}{self.manager.cases_completed} cases evaluated{Style.RESET_ALL}"
+
+        output = [f"{basic_status} - {items_queued} - {cases_completed}", ""]
+        threads = [""] * self.manager["manager"].getint("threads")
+
         for tid, status in self.manager.monitor.thread_status.items():
             unit: Unit = status[0]
             case: Any = status[1]
-            if case is not None:
-                self.poutput(
-                    f"thread[{tid}]: {repr(unit)} -> {katana.util.ellipsize(case, 20)}"
-                )
-            else:
-                self.poutput(f"thread[{tid}]: {repr(unit)}")
+            threads[tid] = (
+                f"{Fore.MAGENTA}{str(unit)}{Style.RESET_ALL}",
+                f"{Fore.RED}{katana.util.ellipsize(repr(unit.target), 20)}{Style.RESET_ALL})",
+                f"{Fore.CYAN}{katana.util.ellipsize(repr(case), 20)}",
+            )
 
-        if args.flags is not None:
-            self.poutput("Flags found so far: ")
-            for unit, flag in self.manager.monitor.flags:
-                self.poutput(f"{repr(unit)}: {flag}")
+        tid_width = max([len("TID"), len(str(len(threads)))]) + 2
+        unit_width = max([len("Unit")] + [len(t[0]) for t in threads]) + 2
+        target_width = max([len("Target")] + [len(t[1]) for t in threads]) + 2
+        case_width = max([len("Case")] + [len(t[2]) for t in threads]) + 2
+
+        output.append(
+            f"{Style.BRIGHT}{'TID':<{tid_width}}{'Unit':<{unit_width}}{'Target':<{target_width}}Case"
+        )
+        output += [
+            (
+                f"{i:<{tid_width}}{Fore.MAGENTA}{t[0]:<{unit_width}}"
+                f"{Fore.RED}{t[1]:<{target_width}}{Fore.CYAN}{t[2]:<{case_width}}"
+                f"{Style.RESET_ALL}"
+            )
+            for i, t in enumerate(threads)
+        ]
+
+        self.poutput("\n".join(output))
 
     exit_parser = Cmd2ArgumentParser(
         description="Cleanup currently running evaluation and exit"
