@@ -93,6 +93,8 @@ class Manager(configparser.ConfigParser):
         self.target_hash: Dict[str, Target] = {}
         # Number of cases completed (for stats)
         self.cases_completed = 0
+        # This might be a bad idea
+        self.lock: threading.Lock = threading.Lock()
 
     def set(self, section: str, option: str, value: Any = None) -> None:
         """ Wrapper around ConfigParser.set. We need to take into account some special
@@ -485,23 +487,28 @@ class Manager(configparser.ConfigParser):
             cases = []
             empty = False
 
-            try:
-                for i in range(10):
-                    try:
-                        case = next(work.generator)
-                    except StopIteration:
-                        empty = True
-                        break
-                    cases.append(case)
-            except Exception as e:
-                self.monitor.on_exception(self, work.unit, e)
-                self.work.task_done()
-                continue
+            # This is a weird thing to do, since the queue is already protected by a lock...
+            # However, this ensures when we pull items off the queue and re-insert them that
+            # the priority will be maintained (otherwise another thread may grab a lower
+            # unit off the queue while this one is gone)
+            with self.lock:
+                try:
+                    for i in range(10):
+                        try:
+                            case = next(work.generator)
+                        except StopIteration:
+                            empty = True
+                            break
+                        cases.append(case)
+                except Exception as e:
+                    self.monitor.on_exception(self, work.unit, e)
+                    self.work.task_done()
+                    continue
 
-            # Before we evaluate, place this case back on the queue in order to
-            # allow parallel processing of the cases
-            if not empty:
-                self.requeue(work)
+                # Before we evaluate, place this case back on the queue in order to
+                # allow parallel processing of the cases
+                if not empty:
+                    self.requeue(work)
 
             for case in cases:
                 # Notify the monitor of thread status (this should be a very short

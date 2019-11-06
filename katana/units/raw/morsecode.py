@@ -15,7 +15,7 @@ class Unit(RegexUnit):
     # This matches international or traditional morse code strings of at least 4 characters
     PATTERN = re.compile(
         rb"((((dit|dah|di)-?)+)|([.\-]+))( ((((dit|dah|di)-?)+)|([.\-]+))){3,}",
-        re.DOTALL | re.MULTILINE
+        re.DOTALL | re.MULTILINE,
     )
 
     def evaluate(self, match):
@@ -137,13 +137,13 @@ class Unit(RegexUnit):
         morse = match.group()
         result = []
 
-        for letter in morse.split(b' '):
+        for letter in morse.split(b" "):
             if letter in international_morse_code_mapping:
                 result.append(international_morse_code_mapping[letter])
             elif letter in morse_alphabet:
                 result.append(morse_alphabet[letter])
 
-        result = ''.join(result).strip()
+        result = "".join(result).strip()
 
         if len(result):
             self.manager.register_data(self, result)
