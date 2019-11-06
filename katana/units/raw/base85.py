@@ -5,29 +5,29 @@ import base64
 import magic
 import regex as re
 
-from katana.unit import Unit as BaseUnit
+from katana.unit import RegexUnit
 from katana.unit import NotApplicable
 from katana.manager import Manager
 from katana.target import Target
 import katana.util
 
 
-class Unit(BaseUnit):
+class Unit(RegexUnit):
 
     # Low priority, uncommon
     PRIORITY = 60
+    # Groups
+    GROUPS = ["raw", "decode"]
+    # REGEX matching base58
+    PATTERN = re.compile(rb"[\x21-\x75]{4,}", re.DOTALL | re.MULTILINE)
 
     def __init__(self, manager: Manager, target: Target):
         super(Unit, self).__init__(manager, target)
 
-        # Ensure it is printable
-        if not self.target.is_printable:
-            raise NotApplicable("not printable data")
-
-    def evaluate(self, case):
+    def evaluate(self, match):
         try:
             # Attempt decode
-            result = base64.b85decode(self.target.raw)
+            result = base64.b85decode(match.group())
 
             # Keep it if it is printable
             if katana.util.isprintable(result):

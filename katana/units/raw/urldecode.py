@@ -17,6 +17,8 @@ class Unit(PrintableDataUnit):
 
     # Moderate priority
     PRIORITY = 25
+    # Groups
+    GROUPS = ["raw", "decode"]
 
     def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
         super(Unit, self).__init__(manager, target)

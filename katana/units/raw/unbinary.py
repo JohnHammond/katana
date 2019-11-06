@@ -1,74 +1,34 @@
 #!/usr/bin/env python3
-from typing import Any, List
-import binascii
-import magic
+from typing import List
 import regex as re
 
-from katana.unit import Unit as BaseUnit
-from katana.unit import NotApplicable
-from katana.manager import Manager
-from katana.target import Target
-import katana.util
-
-BINARY_PATTERN = rb"[01]{8,}"
-BINARY_REGEX = re.compile(BINARY_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
+from katana.unit import RegexUnit
 
 
-class Unit(BaseUnit):
+class Unit(RegexUnit):
+
+    # Unit priority
     PRIORITY = 25
+    # Groups we belong to
+    GROUPS = ["raw", "decode"]
+    # The pattern we are searching for
+    PATTERN = re.compile(rb"(([01]{7,8}( ([01]{7,8})){3,}|[01]{32,}))")
 
-    def __init__(self, manager: Manager, target: Target):
-        super(Unit, self).__init__(manager, target)
+    def evaluate(self, match):
 
-        self.matches: List[Any] = BINARY_REGEX.findall(self.target.raw)
+        match: List[bytes] = match.group().split(b' ')
+        result = b''
 
-        if self.matches is None and len(self.matches) == 0:
-            raise NotApplicable("no binary data found")
+        # Convert all the bits into bytes (little endian)
+        for m in match:
+            result += int(m, 2).to_bytes((len(m)+7)//8, byteorder='little')
 
-    def evaluate(self, case: Any):
+        # Register data
+        self.manager.register_data(self, result)
 
-        # Next, attempt decode with 8-bit integers
-        binary = b"".join(self.matches)
-        raw = []
-        for i in range(0, len(binary), 8):
-            raw.append(chr(int(binary[i : i + 8], 2)))
-        raw = "".join(raw)
+        result = b''
+        for m in match:
+            result += int(m,2).to_bytes((len(m)+7)//8, byteorder='big')
 
-        # Register the data
-        self.manager.register_data(self, raw)
-
-        # Next, with 7-bit
-        binary = b"".join(self.matches)
-        raw = []
-        for i in range(0, len(binary), 7):
-            raw.append(chr(int(binary[i : i + 7], 2)))
-        raw = "".join(raw)
-
-        # Register the data
-        self.manager.register_data(self, raw)
-
-        for result in self.matches:
-            # Decode it!!!!
-            decimal = int(result, 2)
-            try:
-                # Get a binary representation of the data
-                result = binascii.unhexlify(hex(decimal)[2:])
-            # If this fails, it's probably not binary we can deal with...
-            except (UnicodeDecodeError, binascii.Error):
-                return
-
-            if katana.util.isprintable(result):
-                # If it's printable save the results
-                self.manager.register_data(self, result)
-            else:
-                # if it's not printable, we might only want it if it is a file...
-                magic_info = magic.from_buffer(result)
-                if katana.util.is_good_magic(magic_info):
-                    # Generate a new artifact
-                    filename, handle = self.generate_artifact(
-                        "decoded", mode="wb", create=True
-                    )
-                    handle.write(result)
-                    handle.close()
-                    # Register the artifact
-                    self.manager.register_artifact(self, filename)
+        # Register data
+        self.manager.register_data(self, result)

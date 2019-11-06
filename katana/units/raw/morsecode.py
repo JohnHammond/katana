@@ -1,198 +1,149 @@
 #!/usr/bin/env python3
-from collections import Counter
-from io import StringIO
-from typing import Any
-import subprocess
-import argparse
 import string
-import sys
+from typing import Any
 
-from katana.unit import NotApplicable, PrintableDataUnit
-from katana.unit import Unit as BaseUnit
+import regex as re
+
+from katana.unit import RegexUnit
 
 
-class Unit(PrintableDataUnit):
+class Unit(RegexUnit):
     # Moderate priority
     PRIORITY = 30
+    # Unit groups
+    GROUPS = ["raw", "decode"]
+    # This matches international or traditional morse code strings of at least 4 characters
+    PATTERN = re.compile(
+        rb"((((dit|dah|di)-?)+)|([.\-]+))( ((((dit|dah|di)-?)+)|([.\-]+))){3,}",
+        re.DOTALL | re.MULTILINE
+    )
 
-    def evaluate(self, case: Any):
+    def evaluate(self, match):
 
         international_morse_code_mapping = {
-            "di-dah": "A",
-            "dah-di-di-dit": "B",
-            "dah-di-dah-dit": "C",
-            "dah-di-dit": "D",
-            "dit": "E",
-            "di-di-dah-dit": "F",
-            "dah-dah-dit": "G",
-            "di-di-di-dit": "H",
-            "di-dit": "I",
-            "di-dah-dah-dah": "J",
-            "dah-di-dah": "K",
-            "di-dah-di-dit": "L",
-            "dah-dah": "M",
-            "dah-dit": "N",
-            "dah-dah-dah": "O",
-            "di-dah-dah-dit": "P",
-            "dah-dah-di-dah": "Q",
-            "di-dah-dit": "R",
-            "di-di-dit": "S",
-            "dah": "T",
-            "di-di-dah": "U",
-            "di-di-di-dah": "V",
-            "di-dah-dah": "W",
-            "dah-di-di-dah": "X",
-            "dah-di-dah-dah": "Y",
-            "dah-dah-di-dit": "Z",
-            "dah-dah-dah-dah-dah": "0",
-            "di-dah-dah-dah-dah": "1",
-            "di-di-dah-dah-dah": "2",
-            "di-di-di-dah-dah": "3",
-            "di-di-di-di-dah": "4",
-            "di-di-di-di-dit": "5",
-            "dah-di-di-di-dit": "6",
-            "dah-dah-di-di-dit": "7",
-            "dah-dah-dah-di-dit": "8",
-            "dah-dah-dah-dah-dit": "9",
-            "di-dah-di-dah": "ä",
-            "di-dah-dah-di-dah": "á",
-            "di-dah-dah-di-dah": "å",
-            "dah-dah-dah-dah": "Ch",
-            "di-di-dah-di-dit": "é",
-            "dah-dah-di-dah-dah": "ñ",
-            "dah-dah-dah-dit": "ö",
-            "di-di-dah-dah": "ü",
-            "di-dah-di-di-dit": "&",
-            "di-dah-dah-dah-dah-dit": "'",
-            "di-dah-dah-di-dah-dit": "@",
-            "dah-di-dah-dah-di-dah": ")",
-            "dah-di-dah-dah-dit": "(",
-            "dah-dah-dah-di-di-dit": ":",
-            "dah-dah-di-di-dah-dah": ",",
-            "dah-di-di-di-dah": "=",
-            "dah-di-dah-di-dah-dah": "!",
-            "di-dah-di-dah-di-dah": ".",
-            "dah-di-di-di-di-dah": "-",
-            "di-dah-di-dah-dit": "+",
-            "di-dah-di-di-dah-dit": '"',
-            "di-di-dah-dah-di-dit": "?",
-            "dah-di-di-dah-dit": "/",
+            b"di-dah": "A",
+            b"dah-di-di-dit": "B",
+            b"dah-di-dah-dit": "C",
+            b"dah-di-dit": "D",
+            b"dit": "E",
+            b"di-di-dah-dit": "F",
+            b"dah-dah-dit": "G",
+            b"di-di-di-dit": "H",
+            b"di-dit": "I",
+            b"di-dah-dah-dah": "J",
+            b"dah-di-dah": "K",
+            b"di-dah-di-dit": "L",
+            b"dah-dah": "M",
+            b"dah-dit": "N",
+            b"dah-dah-dah": "O",
+            b"di-dah-dah-dit": "P",
+            b"dah-dah-di-dah": "Q",
+            b"di-dah-dit": "R",
+            b"di-di-dit": "S",
+            b"dah": "T",
+            b"di-di-dah": "U",
+            b"di-di-di-dah": "V",
+            b"di-dah-dah": "W",
+            b"dah-di-di-dah": "X",
+            b"dah-di-dah-dah": "Y",
+            b"dah-dah-di-dit": "Z",
+            b"dah-dah-dah-dah-dah": "0",
+            b"di-dah-dah-dah-dah": "1",
+            b"di-di-dah-dah-dah": "2",
+            b"di-di-di-dah-dah": "3",
+            b"di-di-di-di-dah": "4",
+            b"di-di-di-di-dit": "5",
+            b"dah-di-di-di-dit": "6",
+            b"dah-dah-di-di-dit": "7",
+            b"dah-dah-dah-di-dit": "8",
+            b"dah-dah-dah-dah-dit": "9",
+            b"di-dah-di-dah": "ä",
+            b"di-dah-dah-di-dah": "á",
+            b"dah-dah-dah-dah": "Ch",
+            b"di-di-dah-di-dit": "é",
+            b"dah-dah-di-dah-dah": "ñ",
+            b"dah-dah-dah-dit": "ö",
+            b"di-di-dah-dah": "ü",
+            b"di-dah-di-di-dit": "&",
+            b"di-dah-dah-dah-dah-dit": "'",
+            b"di-dah-dah-di-dah-dit": "@",
+            b"dah-di-dah-dah-di-dah": ")",
+            b"dah-di-dah-dah-dit": "(",
+            b"dah-dah-dah-di-di-dit": ":",
+            b"dah-dah-di-di-dah-dah": ",",
+            b"dah-di-di-di-dah": "=",
+            b"dah-di-dah-di-dah-dah": "!",
+            b"di-dah-di-dah-di-dah": ".",
+            b"dah-di-di-di-di-dah": "-",
+            b"di-dah-di-dah-dit": "+",
+            b"di-dah-di-di-dah-dit": '"',
+            b"di-di-dah-dah-di-dit": "?",
+            b"dah-di-di-dah-dit": "/",
         }
 
         morse_alphabet = {
-            "A": ".-",
-            "a": ".-",
-            "B": "-...",
-            "b": "-...",
-            "C": "-.-.",
-            "c": "-.-.",
-            "D": "-..",
-            "d": "-..",
-            "E": ".",
-            "e": ".",
-            "F": "..-.",
-            "f": "..-.",
-            "G": "--.",
-            "g": "--.",
-            "H": "....",
-            "h": "....",
-            "I": "..",
-            "i": "..",
-            "J": ".---",
-            "j": ".---",
-            "K": "-.-",
-            "k": "-.-",
-            "L": ".-..",
-            "l": ".-..",
-            "M": "--",
-            "m": "--",
-            "N": "-.",
-            "n": "-.",
-            "O": "---",
-            "o": "---",
-            "P": ".--.",
-            "p": ".--.",
-            "Q": "--.-",
-            "q": "--.-",
-            "R": ".-.",
-            "r": ".-.",
-            "S": "...",
-            "s": "...",
-            "T": "-",
-            "t": "-",
-            "U": "..-",
-            "u": "..-",
-            "V": "...-",
-            "v": "...-",
-            "W": ".--",
-            "w": ".--",
-            "X": "-..-",
-            "x": "-..-",
-            "Y": "-.--",
-            "y": "-.--",
-            "Z": "--..",
-            "z": "--..",
-            "0": "-----",
-            ",": "--..--",
-            "1": ".----",
-            ".": ".-.-.-",
-            "2": "..---",
-            "?": "..--..",
-            "3": "...--",
-            ";": "-.-.-.",
-            "4": "....-",
-            ":": "---...",
-            "5": ".....",
-            "'": ".----.",
-            "6": "-....",
-            "-": "-....-",
-            "7": "--...",
-            "/": "-..-.",
-            "8": "---..",
-            "(": "-.--.-",
-            "9": "----.",
-            ")": "-.--.-",
-            " ": "/",
-            "_": "..--.-",
-            "/": " ",
-            "=": "-...-",
+            b".-": "A",
+            b"-...": "B",
+            b"-.-.": "C",
+            b"-..": "D",
+            b".": "E",
+            b"..-.": "F",
+            b"--.": "G",
+            b"....": "H",
+            b"..": "I",
+            b".---": "J",
+            b"-.-": "K",
+            b".-..": "L",
+            b"--": "M",
+            b"-.": "N",
+            b"---": "O",
+            b".--.": "P",
+            b"--.-": "Q",
+            b".-.": "R",
+            b"...": "S",
+            b"-": "T",
+            b"..-": "U",
+            b"...-": "V",
+            b".--": "W",
+            b"-..-": "X",
+            b"-.--": "Y",
+            b"--..": "Z",
+            b"-----": "0",
+            b"--..--": ",",
+            b".----": "1",
+            b".-.-.-": ".",
+            b"..---": "2",
+            b"..--..": "?",
+            b"...--": "3",
+            b"-.-.-.": ";",
+            b"....-": "4",
+            b"---...": ":",
+            b".....": "5",
+            b".----.": "'",
+            b"-....": "6",
+            b"-....-": "-",
+            b"--...": "7",
+            b"-..-.": "/",
+            b"---..": "8",
+            b"-.--.": "(",
+            b"----.": "9",
+            b"-.--.-": ")",
+            b"/": " ",
+            b"..--.-": "_",
+            b" ": "/",
+            b"-...-": "=",
         }
 
-        final_morse_code = []
-        inverse_morse_alphabet = dict((v, k) for (k, v) in morse_alphabet.items())
-        token = b""
-        whitespace = bytes(string.whitespace, "utf-8")
-        count = 0
+        morse = match.group()
+        result = []
 
-        with self.target.stream as stream:
-            for c in iter(lambda: stream.read(1), b""):
-                if c in whitespace and len(token) > 0:
-                    if len(token) > 0:
-                        token = token.decode("utf-8")
-                        if token in international_morse_code_mapping:
-                            count += 1
-                            final_morse_code.append(
-                                international_morse_code_mapping[token]
-                            )
-                        elif token in inverse_morse_alphabet:
-                            count += 1
-                            final_morse_code.append(inverse_morse_alphabet[token])
-                        token = b""
-                elif c not in whitespace:
-                    token += c
+        for letter in morse.split(b' '):
+            if letter in international_morse_code_mapping:
+                result.append(international_morse_code_mapping[letter])
+            elif letter in morse_alphabet:
+                result.append(morse_alphabet[letter])
 
-            if len(token) > 0:
-                token = token.decode("utf-8")
-                if token in international_morse_code_mapping:
-                    count += 1
-                    final_morse_code.append(international_morse_code_mapping[token])
-                elif token in inverse_morse_alphabet:
-                    count += 1
-                    final_morse_code.append(inverse_morse_alphabet[token])
-                token = b""
-        if count:
-            final_morse_code = "".join(final_morse_code).upper().strip()
+        result = ''.join(result).strip()
 
-            # if this results in an emptry string, don't bother...
-            if final_morse_code != "":
-                self.manager.register_data(self, final_morse_code)
+        if len(result):
+            self.manager.register_data(self, result)

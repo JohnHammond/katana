@@ -98,6 +98,7 @@ class Target(object):
         self.start_time = time.time()
         self.end_time = -1
         self.units_evaluated = 0
+        self.mmap = None
 
         # Parse out URL pieces (also decide if this is a URL)
         self.url_pieces = ADDRESS_REGEX.match(self.upstream)
@@ -326,11 +327,18 @@ class Target(object):
         if self.content is not None:
             return self.content
         elif self.path is not None:
+            if self.mmap is not None:
+                return self.mmap
             with open(self.path, "rb") as f:
                 try:
-                    return mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+                    self.mmap = mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
+                    return self.mmap
                 except ValueError:
                     return self.upstream
+                except OSError:
+                    # We couldn't memory map the file... we can read it, I guess? This is bad for performance
+                    print("I hope this never happens...")
+                    return f.read()
         else:
             return self.upstream
 

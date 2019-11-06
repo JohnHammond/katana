@@ -14,6 +14,12 @@ class Unit(BaseUnit):
     DEPENDENCIES = ["strings"]
     # Moderately high priority due to speed and broadness of applicability
     PRIORITY = 30
+    # Groups we belong to
+    GROUPS = ["raw"]
+    # Groups we can't recurse into
+    # We block "decode" units, since they are capable of finding their targets within
+    # a file by regular expression
+    BLOCKED_GROUPS = ["decode"]
 
     def __init__(self, manager: Manager, target: Target):
         super(Unit, self).__init__(manager, target)

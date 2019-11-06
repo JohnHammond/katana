@@ -148,11 +148,11 @@ class Manager(configparser.ConfigParser):
         """ Register a flag that was found during processing and raise the
         FoundFlag exception. """
 
-        # Notify the monitor
-        self.monitor.on_flag(self, unit, flag)
-
         # Mark this unit as completed
         unit.origin.completed = True
+
+        # Notify the monitor
+        self.monitor.on_flag(self, unit, flag)
 
     def find_flag(self, unit: Unit, data: Any) -> None:
         """ Search arbitrary data for flags matching the given flag format in

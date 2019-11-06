@@ -11,7 +11,9 @@ from katana.unit import NotApplicable, NotEnglishAndPrintableUnit
 
 def affine(c: int, a: int, b: int, alphabet: bytes):
     """ Perform the affine cipher for a single letter """
-    c = bytes([c]).upper()[0]
+    if isinstance(c, int):
+        c = bytes([c])
+    c = c.upper()[0]
     if c in alphabet:
         return alphabet[(a * alphabet.index(c) + b) % len(alphabet)]
     else:

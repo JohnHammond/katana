@@ -82,17 +82,26 @@ class ReplMonitor(JsonMonitor):
         # Reverse the chain
         chain = chain[::-1]
 
-        # First entry is special
+        # Calculate ellapsed time
+        ellapsed = chain[0].target.end_time - chain[0].target.start_time
+
         log_entry = (
-            f"{Fore.MAGENTA}{chain[0]}{Style.RESET_ALL}("
-            f"{Fore.RED}{chain[0].target}{Style.RESET_ALL}) - "
-            f"{Fore.GREEN}completed{Style.RESET_ALL}!\n"
+            f"{Style.BRIGHT}Target {Fore.GREEN}completed{Fore.RESET} in "
+            f"{Fore.CYAN}{ellapsed:.2f}{Fore.RESET} seconds after "
+            f"{Fore.CYAN}{chain[0].target.units_evaluated}{Fore.RESET} unit cases{Style.RESET_ALL}\n"
         )
 
+        # First entry is special
+        # log_entry = (
+        #     f"{Fore.MAGENTA}{chain[0]}{Style.RESET_ALL}("
+        #     f"{Fore.RED}{chain[0].target}{Style.RESET_ALL}) - "
+        #     f"{Fore.GREEN}completed - {ellapsed:.2f} seconds - {chain[0].target.units_evaluated} cases{Style.RESET_ALL}!\n"
+        # )
+
         # Print the chain
-        for n in range(1, len(chain)):
+        for n in range(len(chain)):
             log_entry += (
-                f" {' '*n}{Fore.MAGENTA}{chain[n]}{Style.RESET_ALL}("
+                f"{' '*n}{Fore.MAGENTA}{chain[n]}{Style.RESET_ALL}("
                 f"{Fore.RED}{chain[n].target}{Style.RESET_ALL}) "
                 f"{Fore.YELLOW}➜ {Style.RESET_ALL}\n"
             )
@@ -295,32 +304,39 @@ class Repl(cmd2.Cmd):
 
         # Find the number of items queued
         items_queued = (
-            f"{Fore.BLUE}{self.manager.work.qsize()} units queued{Style.RESET_ALL}"
+            f"{Fore.WHITE}{self.manager.work.qsize()} units queued{Style.RESET_ALL}"
         )
 
         # Find total number of unit cases evaluated
         cases_completed = f"{Fore.CYAN}{self.manager.cases_completed} cases evaluated{Style.RESET_ALL}"
 
+        # Initial status line
         output = [f"{basic_status} - {items_queued} - {cases_completed}", ""]
-        threads = [""] * self.manager["manager"].getint("threads")
 
+        # Build list of thread statuses
+        threads = [""] * self.manager["manager"].getint("threads")
         for tid, status in self.manager.monitor.thread_status.items():
             unit: Unit = status[0]
             case: Any = status[1]
             threads[tid] = (
-                f"{Fore.MAGENTA}{str(unit)}{Style.RESET_ALL}",
-                f"{Fore.RED}{katana.util.ellipsize(repr(unit.target), 20)}{Style.RESET_ALL})",
-                f"{Fore.CYAN}{katana.util.ellipsize(repr(case), 20)}",
+                f"{str(unit)}",
+                f"{katana.util.ellipsize(repr(unit.target), 50)}",
+                f"{katana.util.ellipsize(repr(case), 20)}",
             )
 
+        # Calculate column widths
         tid_width = max([len("TID"), len(str(len(threads)))]) + 2
         unit_width = max([len("Unit")] + [len(t[0]) for t in threads]) + 2
         target_width = max([len("Target")] + [len(t[1]) for t in threads]) + 2
         case_width = max([len("Case")] + [len(t[2]) for t in threads]) + 2
 
+        # Output table header
         output.append(
             f"{Style.BRIGHT}{'TID':<{tid_width}}{'Unit':<{unit_width}}{'Target':<{target_width}}Case"
+            f"{Style.RESET_ALL}"
         )
+
+        # Output table
         output += [
             (
                 f"{i:<{tid_width}}{Fore.MAGENTA}{t[0]:<{unit_width}}"
@@ -330,6 +346,7 @@ class Repl(cmd2.Cmd):
             for i, t in enumerate(threads)
         ]
 
+        # Print output
         self.poutput("\n".join(output))
 
     exit_parser = Cmd2ArgumentParser(
