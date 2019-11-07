@@ -29,12 +29,12 @@ class Unit(FileUnit):
         yield ""
 
         # Check other passwords specified explicitly
-        for p in self.manager[str(self)].get("passwords", "").split(","):
+        for p in self.get("passwords", "").split(","):
             yield p
 
         # Add all the passwords from the dictionary file
-        if self.manager[str(self)].get("dict") is not None:
-            with open(self.manager[str(self)].get("dict"), "wb") as fh:
+        if self.get("dict") is not None:
+            with open(self.get("dict"), "wb") as fh:
                 yield line.rstrip(b"\n")
 
     def evaluate(self, case):

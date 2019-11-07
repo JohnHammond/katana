@@ -21,21 +21,21 @@ class Unit(FileUnit):
         # Keep track of how many passwords we find (protected by lock)
         self.count_lock = threading.Lock()
         self.npasswords = 0
-        self.max_passwords = self.manager[str(self)].getint("npasswd", 1)
+        self.max_passwords = self.geti("npasswd", 1)
 
     def enumerate(self):
         # The default is to check an empty password
         yield b""
 
         # Check other passwords specified explicitly
-        if self.manager[str(self)].get("passwords") is not None:
-            for p in self.manager[str(self)].get("passwords", "").split(","):
+        if self.get("passwords") is not None:
+            for p in self.get("passwords", "").split(","):
                 yield bytes(p, "utf-8")
 
         # Add all the passwords from the dictionary file
-        if self.manager[str(self)].get("dict") is not None:
+        if self.get("dict") is not None:
             # Read all of the dict
-            with open(self.manager[str(self)].get("dict"), "rb") as fh:
+            with open(self.get("dict"), "rb") as fh:
                 for line in fh:
                     line = line.rstrip(b"\n")
                     yield line

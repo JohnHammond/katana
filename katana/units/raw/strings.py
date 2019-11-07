@@ -30,12 +30,7 @@ class Unit(BaseUnit):
     def evaluate(self, case: Any):
 
         # Run the process.
-        command = [
-            "strings",
-            self.target.path,
-            "-n",
-            self.manager[str(self)].get("length", "10"),
-        ]
+        command = ["strings", self.target.path, "-n", self.get("length", "10")]
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         # Queuing recursion and registering data can be slow on large files. Look for flags first

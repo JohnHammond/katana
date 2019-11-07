@@ -19,6 +19,7 @@ import mmap
 import regex as re
 import os
 import time
+import configparser
 
 import katana.util
 
@@ -35,6 +36,13 @@ DICTIONARY = enchant.Dict()
 DICTIONARY_THRESHOLD = 1
 PRINTABLE_BYTES = bytes(string.printable, "utf-8")
 BASE64_BYTES = bytes(string.ascii_letters + string.digits + "=", "utf-8")
+
+
+class BadTarget(Exception):
+    """ Indicates that we don't want to evaluate this target. This is normally due
+    to a target that is too short """
+
+    pass
 
 
 class Target(object):
@@ -80,6 +88,7 @@ class Target(object):
         manager: katana.manager.Manager,
         upstream: bytes,
         parent: katana.unit.Unit = None,
+        config: configparser.ConfigParser = None,
     ):
 
         # The target class expects the upstream to be bytes
@@ -109,6 +118,16 @@ class Target(object):
         # Initial assumed libmagic file type is just "data"
         self.magic = "data"
 
+        # Decide which configuration to use
+        if config is not None:
+            self.config = config
+        elif parent is not None:
+            self.config = parent.target.config
+        else:
+            # Make a copy of the manager configuration
+            self.config = configparser.ConfigParser()
+            self.config.read_dict(manager)
+
         # Analyze a file target
         if self.is_file:
 
@@ -117,7 +136,7 @@ class Target(object):
             is_sub_results = True
 
             # Grab the full path to the output/artifacts directory
-            results_path = os.path.realpath(manager["manager"]["outdir"])
+            results_path = os.path.realpath(self.config["manager"]["outdir"])
 
             # Check if this is a subdirectory of the origin/base target in this
             # chain, if there is a chain
@@ -150,7 +169,7 @@ class Target(object):
         # Download the target of a URL
         if self.is_url:
             self.url_root = "/".join(upstream.decode("utf-8").split("/")[:3]) + "/"
-            if manager["manager"].getboolean("download"):
+            if self.config["manager"].getboolean("download"):
                 try:
                     url_accessible = True
                     self.request = requests.get(upstream)
@@ -270,6 +289,12 @@ class Target(object):
         #       we didn't....
         if self.path and self.path.startswith("./"):
             self.path = os.path.abspath(self.path)
+
+        if len(self.raw) < 5:
+            raise BadTarget
+
+        # Look for the flag in the raw data
+        # manager.find_flag(self.parent, self.raw)
 
     @property
     def completed(self) -> bool:

@@ -252,7 +252,7 @@ class JsonMonitor(Monitor):
                 result["exceptions"] = []
 
             # Save the artifact name
-            result["exceptions"].append(exception[1])
+            result["exceptions"].append(str(exception[1]))
 
         if target is not None:
             if repr(target) not in results["children"]:

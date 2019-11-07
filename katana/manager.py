@@ -12,7 +12,7 @@ import os
 import regex as re
 
 # katana imports
-from katana.target import Target
+from katana.target import Target, BadTarget
 from katana.unit import Unit, Finder
 from katana.monitor import Monitor
 import katana.util
@@ -124,7 +124,7 @@ class Manager(configparser.ConfigParser):
         self.monitor.on_artifact(self, unit, path)
 
         # Recurse on this target
-        if self["manager"].getboolean("recurse") and recurse:
+        if unit.target.config["manager"].getboolean("recurse") and recurse:
             self.queue_target(path, parent=unit)
 
     def register_data(self, unit: Unit, data: Any, recurse: bool = True) -> None:
@@ -142,7 +142,7 @@ class Manager(configparser.ConfigParser):
         # Look for flags
         self.find_flag(unit, data)
 
-        if self["manager"].getboolean("recurse") and recurse:
+        if unit.target.config["manager"].getboolean("recurse") and recurse:
             # Only do full recursion if requested
             self.queue_target(data, parent=unit)
 
@@ -151,26 +151,29 @@ class Manager(configparser.ConfigParser):
         FoundFlag exception. """
 
         # Mark this unit as completed
-        unit.origin.completed = True
+        if unit is not None:
+            unit.origin.completed = True
 
         # Notify the monitor
         self.monitor.on_flag(self, unit, flag)
 
-    def find_flag(self, unit: Unit, data: Any) -> None:
+    def find_flag(self, unit: Unit, data: Any) -> bool:
         """ Search arbitrary data for flags matching the given flag format in
         the manager configuration """
 
         # Iterate over lists and tuples automatically
         if isinstance(data, list) or isinstance(data, tuple):
+            found = 0
             for item in data:
-                self.find_flag(unit, item)
-            return
+                found += self.find_flag(unit, item)
+            return found > 0
 
         # Iterate over dictionaries
         if isinstance(data, dict):
+            found = 0
             for key, item in data.items():
-                self.find_flag(unit, item)
-            return
+                found += self.find_flag(unit, item)
+            return found > 0
 
         # We deal with bytes here
         if isinstance(data, str):
@@ -184,7 +187,7 @@ class Manager(configparser.ConfigParser):
 
         # Search the data for flags
         match = re.search(
-            bytes(self["manager"]["flag-format"], "utf-8"),
+            bytes(unit.target.config["manager"]["flag-format"], "utf-8"),
             data,
             re.DOTALL | re.MULTILINE | re.IGNORECASE,
         )
@@ -193,14 +196,23 @@ class Manager(configparser.ConfigParser):
             found = match.group().decode("utf-8")
             if katana.util.isprintable(found):
                 # Strict flags means that the flag will be alone in the output
-                if unit.STRICT_FLAGS and len(found) == len(data):
+                if unit is not None and unit.STRICT_FLAGS and len(found) == len(data):
                     self.register_flag(unit, found)
-                elif not unit.STRICT_FLAGS:
+                    return True
+                elif unit is None or not unit.STRICT_FLAGS:
                     self.register_flag(unit, found)
+                    return True
 
-    def target(self, upstream: bytes, parent: Unit = None) -> Target:
+        return False
+
+    def target(
+        self,
+        upstream: bytes,
+        parent: Unit = None,
+        config: configparser.ConfigParser = None,
+    ) -> Target:
         """ Build a new target in the context of this manager """
-        return Target(self, upstream, parent)
+        return Target(self, upstream, parent, config=config)
 
     def validate(self) -> None:
         """ Validate the configuration given this manager, a target, and a set
@@ -218,7 +230,7 @@ class Manager(configparser.ConfigParser):
         upstream: bytes,
         parent: Unit = None,
         scale: float = None,
-        source: str = None,
+        config: configparser.ConfigParser = None,
     ) -> Target:
         """ Create a target, enumerate units, queue them, and return the target
         object """
@@ -244,7 +256,9 @@ class Manager(configparser.ConfigParser):
             if parent.origin.completed:
                 return None
             # Maximum depth reached!
-            if (parent.depth + 1) >= self["manager"].getint("max-depth"):
+            if (parent.depth + 1) >= parent.target.config["manager"].getint(
+                "max-depth"
+            ):
                 self.monitor.on_depth_limit(self, parent.target, parent)
                 return None
 
@@ -256,7 +270,10 @@ class Manager(configparser.ConfigParser):
             scale = 1.0
 
         # Create the target object
-        target = self.target(upstream, parent)
+        try:
+            target = self.target(upstream, parent, config=config)
+        except BadTarget:
+            return None
 
         # Don't requeue targets with the same hash
         if target.hash.hexdigest() in self.target_hash:
@@ -267,6 +284,11 @@ class Manager(configparser.ConfigParser):
         # Track the root targets
         # if parent is None:
         self.targets.append(target)
+
+        # This indicates the flag was in plaintext in the content of the target
+        # No need to queue units.
+        if target.completed:
+            return target
 
         # Enumerate valid units
         for unit in self.finder.match(target, scale=scale):

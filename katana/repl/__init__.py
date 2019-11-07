@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import configparser
 import functools
 import hashlib
 import json
@@ -572,19 +573,96 @@ class Repl(cmd2.Cmd):
         "add", aliases=["a"], help="Add a new target for processing"
     )
     target_add_parser.add_argument(
-        "target",
-        nargs="+",
-        help="the target to evaluate",
-        completer_method=cmd2.Cmd.path_complete,
+        "--flag", "-f", help="Custom flag format for this target"
+    )
+    target_add_parser.add_argument(
+        "--unit",
+        "-u",
+        action="append",
+        default=[],
+        help="Specify a unit to run initially",
+    )
+    target_add_parser.add_argument(
+        "--exclude", "-e", action="append", default=[], help="Specify blacklisted units"
+    )
+    target_add_parser.add_argument(
+        "--auto",
+        "-a",
+        action="store_true",
+        help="Automatically select units for recursive targets",
+        default=None,
+    )
+    target_add_parser.add_argument(
+        "--no-auto",
+        "-na",
+        action="store_false",
+        dest="auto",
+        help="Disable automatic unit selection for recursive targets",
+    )
+    target_add_parser.add_argument(
+        "target", help="the target to evaluate", completer_method=cmd2.Cmd.path_complete
+    )
+    target_add_parser.add_argument(
+        "option",
+        help="Set a configuration option (format: 'section[option]=value')",
+        nargs="*",
     )
     target_add_parser.set_defaults(action="add")
 
     def _target_add(self, args: argparse.Namespace) -> None:
         """ Add a new target for evaluation """
 
-        for target in args.target:
-            self.poutput(f"[{Fore.GREEN}+{Style.RESET_ALL}] {target}: queuing target")
-            self.manager.queue_target(target)
+        # Build custom configuration
+        config: configparser.ConfigParser = configparser.ConfigParser()
+        config.read_dict(self.manager)
+
+        # Custom flag format
+        if args.flag is not None:
+            config["manager"]["flag-format"] = args.flag
+
+        # Custom unit list
+        if len(args.unit) > 0:
+            config["manager"]["units"] = ",".join(args.unit)
+
+        # Custom exclusion list
+        if len(args.exclude) > 0:
+            config["manager"]["exclude"] = ",".join(args.exclude)
+
+        # Auto flag specification
+        if args.auto is not None:
+            config["manager"]["auto"] = args.auto
+
+        # Other custom parameters
+        for option in args.option:
+            # Match the option specifier format
+            match = re.match(r"^([a-zA-Z_\-0-9]+)(\[[a-zA-Z_\-0-9]+\])?=(.*)?$", option)
+
+            # Ensure it's correct
+            if match is None:
+                self.perror(
+                    f"[{Fore.RED}-{Fore.RESET}] {option}: invalid option specifier"
+                )
+                return
+
+            if match.group(2) is None:
+                section = "DEFAULT"
+                option = match.group(1)
+            else:
+                section = match.group(1)
+                option = match.group(2).split("[")[1].split("]")[0]
+
+            # Ensure the section exists
+            if section not in config:
+                config[section] = {}
+
+            # Unset the value, if no value is specified
+            if match.group(3) is None:
+                config.remove_option(section, option)
+            else:
+                config[section][option] = match.group(3)
+
+        self.poutput(f"[{Fore.GREEN}+{Style.RESET_ALL}] {args.target}: queuing target")
+        self.manager.queue_target(args.target, config=config)
 
     # Stop a running target
     target_stop_parser: Cmd2ArgumentParser = target_subparsers.add_parser(

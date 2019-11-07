@@ -143,6 +143,10 @@ class Unit(object):
             self.origin = target.parent.origin
             self.depth = target.parent.depth + 1
 
+        # Ensure we have a configuration block
+        if str(self) not in target.config:
+            target.config[str(self)] = {}
+
     def __str__(self) -> str:
         """ Default string conversion reports the module name for this unit """
         return self.__class__.get_name()
@@ -310,15 +314,15 @@ class Unit(object):
         :param default: default value
         :return: the value or the default value
         """
-        return self.manager.get(str(self), name, fallback=default)
+        return self.target.config.get(str(self), name, fallback=default)
 
     def getb(self, name: str, default: bool = None) -> bool:
         """ same as get, but returns a boolean value """
-        return self.manager.getboolean(str(self), name, fallback=default)
+        return self.target.config.getboolean(str(self), name, fallback=default)
 
     def geti(self, name: str, default: int = None) -> int:
         """ same as get but returns an integer value """
-        return self.manager.getint(str(self), name, fallback=default)
+        return self.target.config.getint(str(self), name, fallback=default)
 
     @classmethod
     def check_deps(cls):
@@ -334,6 +338,12 @@ class Unit(object):
         except (FileNotFoundError, subprocess.CalledProcessError):
             # Ignore modules with bad dependencies
             raise MissingDependency(dep)
+
+
+class NoneUnit(Unit):
+    @classmethod
+    def get_name(cls) -> str:
+        return "None"
 
 
 class FileUnit(Unit):
@@ -530,8 +540,8 @@ class Finder(object):
 
             try:
                 # Check if we have excluded this unit
-                if self.manager["manager"]["exclude"] != "":
-                    for exclude in self.manager["manager"]["exclude"].split(","):
+                if target.config["manager"]["exclude"] != "":
+                    for exclude in target.config["manager"]["exclude"].split(","):
                         if (
                             exclude == unit_class.get_name()
                             or exclude in unit_class.GROUPS
@@ -544,11 +554,11 @@ class Finder(object):
                 # - manual: units are specified and auto is not set. katana runs all units within the specified set that
                 #   are applicable.
                 # - auto manual: root targets obey specified units. recursive targets run all applicable units.
-                if not self.manager["manager"].getboolean("auto") or (
-                    target.parent is None and self.manager["manager"]["units"] != ""
+                if not target.config["manager"].getboolean("auto") or (
+                    target.parent is None and target.config["manager"]["units"] != ""
                 ):
                     # We requested specific units, only match those
-                    for unit in self.manager["manager"]["units"].split(","):
+                    for unit in target.config["manager"]["units"].split(","):
                         if unit == unit_class.get_name() or unit in unit_class.GROUPS:
                             raise Applicable
                     else:
