@@ -92,13 +92,6 @@ class ReplMonitor(JsonMonitor):
             f"{Fore.CYAN}{chain[0].target.units_evaluated}{Fore.RESET} unit cases{Style.RESET_ALL}\n"
         )
 
-        # First entry is special
-        # log_entry = (
-        #     f"{Fore.MAGENTA}{chain[0]}{Style.RESET_ALL}("
-        #     f"{Fore.RED}{chain[0].target}{Style.RESET_ALL}) - "
-        #     f"{Fore.GREEN}completed - {ellapsed:.2f} seconds - {chain[0].target.units_evaluated} cases{Style.RESET_ALL}!\n"
-        # )
-
         # Print the chain
         for n in range(len(chain)):
             log_entry += (

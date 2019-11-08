@@ -13,7 +13,7 @@ class Unit(RegexUnit):
     # Pattern to match
     PATTERN = regex.compile(rb"(([ATCG]{3,4}( ([ATCG]{3,4})){3,}|[ATCG]{16,}))")
     # DNA Mappings
-    DNA_MAP = {b"A": b"00", b"T": b"11", b"C": b"01", b"G": b"10"}
+    DNA_MAP = {b"A": b"0", b"T": b"3", b"C": b"1", b"G": b"2"}
 
     def evaluate(self, match: re.Match) -> None:
         """
@@ -26,12 +26,10 @@ class Unit(RegexUnit):
 
         matches = match.group().split(b" ")
         for match in matches:
-            binary = []
-            for c in match:
-                binary.append(self.DNA_MAP[bytes([c])])
-            value = int(b"".join(binary), 2)
+            binary = b"".join([self.DNA_MAP[bytes([c])] for c in match])
+            value = int(binary, 4)
             results.append(
-                value.to_bytes((value.bit_length() + 7) // 8, byteorder="big")
+                value.to_bytes((value.bit_length() + 7) // 8, byteorder="little")
             )
 
         self.manager.register_data(self, b"".join(results))
