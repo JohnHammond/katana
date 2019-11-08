@@ -114,7 +114,7 @@ class ReplMonitor(JsonMonitor):
         if (
             "ctf" in self.repl.manager
             and "auto-submit" in self.repl.manager["ctf"]
-            and self.repl.manager["ctf"]["auto-submit"]
+            and self.repl.manager["ctf"].getboolean("auto-submit", False)
         ):
             if unit.origin.is_url:
                 u = unit.origin.url_pieces.group("uri").decode("utf-8").split("/")[-1]

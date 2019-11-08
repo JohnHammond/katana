@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Any, List, BinaryIO
 from io import StringIO, BytesIO
 import tempfile
-import regex as requests
+import requests
 import hashlib
 import enchant
 import string

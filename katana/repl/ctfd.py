@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from typing import Generator, Tuple, List, Any, Dict
-import regex as requests
+import requests
 
 from katana.repl.ctf import CTFProvider, Challenge, User, AuthenticationError, Bracket
 
@@ -57,8 +57,8 @@ class Provider(CTFProvider):
             raise RuntimeError(f"failed to retrieve team information")
 
         # Grab team name
-        data = r.json()["data"]
-        self.me.team = data["name"]
+        # data = r.json()["data"]
+        # self.me.team = data["name"]
 
     @property
     def challenges(self) -> Generator[Challenge, None, None]:

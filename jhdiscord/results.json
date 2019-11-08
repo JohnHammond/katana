@@ -1,0 +1,52 @@
+{
+ "https://jhdigital.io/files/f21154d47d0f35cd6e0efb169c2854f2/orchestra?token=eyJ1c2VyX2lkIjoyLCJ0ZWFtX2lkIjpudWxsLCJmaWxlX2lkIjoxfQ.XcV_cw.h_sBy0LUaE1KjL_TSTkO7wB5euY": {
+  "base58": {
+   "children": {},
+   "data": [
+    "8",
+    "+",
+    "&",
+    "'",
+    "5",
+    "\\x0b",
+    "\\t",
+    "2"
+   ]
+  },
+  "target_id": "f5d79140912ca5a53c2c268c9557d8de",
+  "base64": {
+   "children": {},
+   "data": [
+    "`3*",
+    "I;1",
+    "!(T",
+    "%\\tr"
+   ]
+  },
+  "base85": {
+   "children": {},
+   "data": [
+    "u|r"
+   ]
+  },
+  "strings": {
+   "children": {},
+   "data": [
+    "<lk|.\\tLgF2",
+    "C6KRLHka!}",
+    "On9%v!-g/>#",
+    "ziqs7XRFgh",
+    "y\"YZ2^48Oi",
+    "b`JHDCTF{there_is_no_orchestra_without_the_strings}",
+    ")/`n^A,Dd:",
+    "/YIsv)Hc&}",
+    "k~?v=InQq-",
+    "jGmc]\\\\DX#q",
+    ";\\\\16m$02u]t"
+   ],
+   "flags": [
+    "JHDCTF{there_is_no_orchestra_without_the_strings}"
+   ]
+  }
+ }
+}
