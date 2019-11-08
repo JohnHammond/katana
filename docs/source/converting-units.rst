@@ -59,7 +59,7 @@ However, the interface is largely the same for creating an artifact. To create a
 :func:`katana.unit.Unit.generate_artifact` method. The interface and parameters are the same as the old
 `katana.generate_artifact` method. The biggest difference is that the artifact will not automatically be
 registered with the Manager or reported to the Monitor. To do that, call :func:`katana.manager.Manager.register_artifact`.
-As an example, if you have some data you thing is a file::
+As an example, if you have some data you think is a file::
 
     data = b"Something that's probably a file!"
     name, stream = self.generate_artifact("interesting", create=True)

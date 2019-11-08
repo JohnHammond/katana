@@ -33,9 +33,6 @@ class Unit(FileUnit):
 			output = bytes.decode(p.stdout.read(), 'ascii')
 			error = bytes.decode(p.stderr.read(), 'ascii')
 
-			d = "\r"
-			for line in output:
-				s = [e + d for e in line.split(d) if e]
 
 			for line in [l.strip() for l in output.split('\n') if l]:
 				delimeter = '\r'
