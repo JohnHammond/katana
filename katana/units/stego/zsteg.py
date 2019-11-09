@@ -60,10 +60,7 @@ class Unit(FileUnit):
         )
 
         # Create a variable to store the results in
-        result = {
-            "stdout": [],
-            "stderr": [],
-        }
+        result = {"stdout": [], "stderr": []}
 
         # Capture the results from the process
         output = bytes.decode(p.stdout.read(), "ascii")

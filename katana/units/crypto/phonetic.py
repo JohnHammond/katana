@@ -44,7 +44,7 @@ phonetic_names = (
 
 class Unit(RegexUnit):
     # Fill in your groups
-    GROUPS = ["unknown"]
+    GROUPS = ["crypto"]
     # Default priority is 50
     PRIORITY = 50
     # Pattern to match
