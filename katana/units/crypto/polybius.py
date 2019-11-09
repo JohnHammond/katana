@@ -10,7 +10,7 @@ class Unit(RegexUnit):
     # Default priority is 50
     PRIORITY = 50
     # Pattern to match
-    PATTERN = re.compile(rb"([0-9]+ ?)+", re.DOTALL | re.MULTILINE)
+    PATTERN = re.compile(rb"([1-5]+ ?)+", re.DOTALL | re.MULTILINE)
 
     def evaluate(self, match) -> None:
         """

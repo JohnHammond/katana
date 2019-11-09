@@ -6,6 +6,7 @@ import json
 import os
 import regex as re
 from typing import Any, Dict, List, Tuple
+import time
 
 import argparse
 import cmd2.plugin
@@ -576,6 +577,9 @@ class Repl(cmd2.Cmd):
         help="Specify a unit to run initially",
     )
     target_add_parser.add_argument(
+        "--only", "-o", help="Run only this unit. Disable recursion."
+    )
+    target_add_parser.add_argument(
         "--exclude", "-e", action="append", default=[], help="Specify blacklisted units"
     )
     target_add_parser.add_argument(
@@ -623,7 +627,13 @@ class Repl(cmd2.Cmd):
 
         # Auto flag specification
         if args.auto is not None:
-            config["manager"]["auto"] = args.auto
+            config["manager"]["auto"] = "yes" if args.auto else "no"
+
+        # Singular unit specification/one-off run
+        if args.only is not None:
+            config["manager"]["units"] = args.only
+            config["manager"]["recurse"] = "no"
+            config["manager"]["auto"] = "no"
 
         # Other custom parameters
         for option in args.option:
@@ -655,7 +665,37 @@ class Repl(cmd2.Cmd):
                 config[section][option] = match.group(3)
 
         self.poutput(f"[{Fore.GREEN}+{Style.RESET_ALL}] {args.target}: queuing target")
-        self.manager.queue_target(args.target, config=config)
+        target = self.manager.queue_target(args.target, config=config)
+
+        # Wait for target to complete
+        if args.only:
+            self.poutput(
+                f"[{Fore.GREEN}+{Fore.RESET}] waiting for target completion..."
+            )
+            try:
+                while not target.completed:
+                    time.sleep(0.2)
+            except KeyboardInterrupt:
+                self.poutput(f"[{Fore.YELLOW}!{Fore.RESET}] cancelling target...")
+                target.completed = True
+            else:
+                # The target finished! Print the results
+                results = self.manager.monitor.build_results(target=target)
+                if len(results) == 0:
+                    self.poutput(
+                        f"[{Fore.YELLOW}!{Style.RESET_ALL}] no results found :("
+                    )
+                    return
+
+                pretty_json = json.dumps(
+                    results, sort_keys=True, indent=4, separators=(",", ": ")
+                )
+
+                self.ppaged(
+                    highlight(
+                        pretty_json, lexers.JsonLexer(), formatters.TerminalFormatter()
+                    )
+                )
 
     # Stop a running target
     target_stop_parser: Cmd2ArgumentParser = target_subparsers.add_parser(

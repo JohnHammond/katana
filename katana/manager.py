@@ -315,6 +315,9 @@ class Manager(configparser.ConfigParser):
             unit.enumerate(),
         )  # The generator to get the next case
 
+        # Increment unit count for target
+        unit.origin.add_unit()
+
         # Queue the item for usage
         self.work.put(item)
 
@@ -497,6 +500,7 @@ class Manager(configparser.ConfigParser):
 
             # Ignore the unit if it is already completed
             if work.unit.is_complete():
+                work.unit.origin.rem_unit()
                 self.work.task_done()
                 continue
 
@@ -531,6 +535,8 @@ class Manager(configparser.ConfigParser):
                 # allow parallel processing of the cases
                 if not empty:
                     self.requeue(work)
+                else:
+                    work.unit.origin.rem_unit()
 
             for case in cases:
                 # Notify the monitor of thread status (this should be a very short

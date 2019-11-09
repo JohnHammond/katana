@@ -108,6 +108,7 @@ class Target(object):
         self.end_time = -1
         self.units_evaluated = 0
         self.mmap = None
+        self.units_left = 0
 
         # Parse out URL pieces (also decide if this is a URL)
         self.url_pieces = ADDRESS_REGEX.match(self.upstream)
@@ -306,6 +307,16 @@ class Target(object):
             return
         self._completed = True
         self.end_time = time.time()
+
+    def add_unit(self):
+        """ Add a unit for tracking. This is called by Manager.queue """
+        self.units_left += 1
+
+    def rem_unit(self):
+        """ Remove a unit for tracking. Also sets completed if all units are done. """
+        self.units_left -= 1
+        if self.units_left <= 0:
+            self.completed = True
 
     def __repr__(self):
         """ Create a representation of this object based on it's upstream path
