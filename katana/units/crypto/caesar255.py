@@ -27,7 +27,7 @@ class Unit(BaseUnit):
         """
 
         if self.geti("shift", None) is None:
-            for shift in range(256):
+            for shift in range(1, 256):
                 yield shift
         else:
             yield self.geti("shift")
@@ -44,7 +44,7 @@ class Unit(BaseUnit):
 
         # Build the new data
         for c in self.target.raw:
-            result.append((c + shift) % 255)
+            result.append((ord(c) + shift) % 255)
 
         # Register the data
         self.manager.register_data(self, bytes(result))

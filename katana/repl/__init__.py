@@ -335,8 +335,7 @@ class Repl(cmd2.Cmd):
                 f"{Style.RESET_ALL}"
             )
 
-            # Output table, checking if there are any threads running first
-
+            # Output table
             output += [
                 (
                     f"{i:<{tid_width}}{Fore.MAGENTA}{t[0]:<{unit_width}}"
@@ -455,6 +454,8 @@ class Repl(cmd2.Cmd):
 
         if args.action == "add":
             for dir in args.directory:
+
+                dir = os.path.expanduser(dir)  # expand user directory if present
                 if not os.path.isdir(dir):
                     self.perror(f"[{Fore.RED}!{Style.RESET}] {dir}: not a directory")
                     continue
