@@ -321,25 +321,30 @@ class Repl(cmd2.Cmd):
 
         # Calculate column widths
         tid_width = max([len("TID"), len(str(len(threads)))]) + 2
-        unit_width = max([len("Unit")] + [len(t[0]) for t in threads]) + 2
-        target_width = max([len("Target")] + [len(t[1]) for t in threads]) + 2
-        case_width = max([len("Case")] + [len(t[2]) for t in threads]) + 2
+        unit_width = max([len("Unit")] + [len(t[0]) for t in threads if t]) + 2
+        target_width = max([len("Target")] + [len(t[1]) for t in threads if t]) + 2
+        case_width = max([len("Case")] + [len(t[2]) for t in threads if t]) + 2
 
-        # Output table header
-        output.append(
-            f"{Style.BRIGHT}{'TID':<{tid_width}}{'Unit':<{unit_width}}{'Target':<{target_width}}Case"
-            f"{Style.RESET_ALL}"
-        )
-
-        # Output table
-        output += [
-            (
-                f"{i:<{tid_width}}{Fore.MAGENTA}{t[0]:<{unit_width}}"
-                f"{Fore.RED}{t[1]:<{target_width}}{Fore.CYAN}{t[2]:<{case_width}}"
+        # check if there are any running threads to begin with
+        if not all(threads):
+            output.append(f"{Fore.RED}no targets have yet been queued {Fore.RESET}")
+        else:
+            # if there are threads, output table header
+            output.append(
+                f"{Style.BRIGHT}{'TID':<{tid_width}}{'Unit':<{unit_width}}{'Target':<{target_width}}Case"
                 f"{Style.RESET_ALL}"
             )
-            for i, t in enumerate(threads)
-        ]
+
+            # Output table, checking if there are any threads running first
+
+            output += [
+                (
+                    f"{i:<{tid_width}}{Fore.MAGENTA}{t[0]:<{unit_width}}"
+                    f"{Fore.RED}{t[1]:<{target_width}}{Fore.CYAN}{t[2]:<{case_width}}"
+                    f"{Style.RESET_ALL}"
+                )
+                for i, t in enumerate(threads)
+            ]
 
         # Print output
         self.poutput("\n".join(output))

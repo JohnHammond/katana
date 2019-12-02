@@ -9,9 +9,11 @@ from katana.manager import Manager
 from katana.monitor import LoggingMonitor, JsonMonitor
 from katana.repl import Repl, ReplMonitor
 import katana.util
+import os
 
 
 def main():
+
     # Setup basic logging
     logging.basicConfig(level=logging.INFO)
 
