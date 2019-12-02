@@ -26,7 +26,8 @@ class Unit(RegexUnit):
 
         # Decode the cipher
         result = []
-        for idx in range(0, len(data), 2):
+        # subtract one from the full length so we do not have index errors
+        for idx in range(0, len(data) - 1, 2):
             x = int(chr(data[idx])) - 1
             y = int(chr(data[idx + 1])) - 1
             result.append(alphabet[y + x * 5])

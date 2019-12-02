@@ -44,7 +44,10 @@ class Unit(BaseUnit):
 
         # Build the new data
         for c in self.target.raw:
-            result.append((ord(c) + shift) % 255)
+            if type(c) is int:
+                result.append((c + shift) % 255)
+            elif type(c) is bytes:
+                result.append((ord(c) + shift) % 255)
 
         # Register the data
         self.manager.register_data(self, bytes(result))
