@@ -277,7 +277,7 @@ class Manager(configparser.ConfigParser):
 
         # Don't requeue targets with the same hash
         if target.hash.hexdigest() in self.target_hash:
-            return self.target_hash[target.hash.hexdigest()]
+            return None
         else:
             self.target_hash[target.hash.hexdigest()] = target
 
@@ -484,6 +484,7 @@ class Manager(configparser.ConfigParser):
                 try:
                     # Signal this thread is waiting for work
                     # check again every 0.2 seconds, just in case
+                    self.monitor.on_work(self, thread, None, None)
                     self.barrier.wait()
                 except threading.BrokenBarrierError:
                     # A new unit was queued or the timeout happened

@@ -312,10 +312,11 @@ class Repl(cmd2.Cmd):
         threads = [""] * self.manager["manager"].getint("threads")
         for tid, status in self.manager.monitor.thread_status.items():
             unit: Unit = status[0]
+            target: Target = unit.target if unit is not None else None
             case: Any = status[1]
             threads[tid] = (
                 f"{str(unit)}",
-                f"{katana.util.ellipsize(repr(unit.target), 50)}",
+                f"{katana.util.ellipsize(repr(target), 50)}",
                 f"{katana.util.ellipsize(repr(case), 20)}",
             )
 
