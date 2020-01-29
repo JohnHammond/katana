@@ -1,4 +1,12 @@
-#!/usr/bin/env python3
+"""
+ROT47 decoder
+
+The gist of this code is ripped from 
+https://rot47.net/_py/rot47.txt. The unit takes the target, and
+if it does not look English text but it is clearly printable characters, it
+attempts to rot47 the data. 
+
+"""
 
 import io
 import string
