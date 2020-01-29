@@ -80,6 +80,5 @@ class Unit(PrintableDataUnit):
             result = result.replace("  ", "@@DELIM@@")
             result = result.replace(" ", "")
             result = result.replace("@@DELIM@@", " ")
-            print(result)
 
             self.manager.register_data(self, result)
