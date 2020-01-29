@@ -108,7 +108,7 @@ def main():
         manager["manager"]["flag-format"] = args.flag
 
     # Apply requested units
-    units = manager["manager"]["units"].split(",") + args.unit
+    units = [u for u in manager["manager"]["units"].split(",") if u] + args.unit
     manager["manager"]["units"] = ",".join(units)
 
     # Apply excluded units
