@@ -28,8 +28,9 @@ class Unit(NotEnglishAndPrintableUnit):
         super(Unit, self).__init__(manager, target)
 
         # We don't run Caesar on URLs
-        if self.target.is_url:
-            raise NotApplicable("URL")
+
+    #        if self.target.is_url:
+    #            raise NotApplicable("URL")
 
     def enumerate(self) -> Generator[Any, None, None]:
         """

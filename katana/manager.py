@@ -10,6 +10,7 @@ import queue
 import time
 import os
 import regex as re
+import shutil
 
 # katana imports
 from katana.target import Target, BadTarget
@@ -63,7 +64,8 @@ class Manager(configparser.ConfigParser):
             "max-depth": 10,
         }
 
-        self["manager"] = {}
+        if "manager" not in self:
+            self["manager"] = {}
 
         # Load a configuration file if specified
         if config_path is not None and len(self.read(config_path)) == 0:
@@ -566,6 +568,12 @@ class Manager(configparser.ConfigParser):
 
         This function will raise an exception if the chosen output directory
         already exists. """
+
+        if os.path.isdir(self["manager"]["outdir"]) and self["manager"]["force"] in [
+            "yes",
+            "true",
+        ]:
+            shutil.rmtree(self["manager"]["outdir"])
 
         # Create the directory tree for the output
         os.makedirs(self["manager"]["outdir"])

@@ -73,6 +73,11 @@ def main():
         default=[],
     )
     parser.add_argument("--flag", "-f", help="set the flag format")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force execution even if results directory exists",
+    )
 
     # Add options for all the unit specific configurations
     for unit in manager.finder.units:
@@ -114,6 +119,12 @@ def main():
     # Apply excluded units
     excluded = manager["manager"]["exclude"].split(",") + args.exclude
     manager["manager"]["exclude"] = ",".join(excluded)
+
+    # Enable results removal if requested
+    if args.force:
+        manager["manager"]["force"] = "yes"
+    else:
+        manager["manager"]["force"] = "no"
 
     # Apply unit configurations
     args_dict = vars(args)  # We need this because configs have '.'

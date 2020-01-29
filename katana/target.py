@@ -126,7 +126,7 @@ class Target(object):
             self.config = parent.target.config
         else:
             # Make a copy of the manager configuration
-            self.config = configparser.ConfigParser()
+            self.config = configparser.ConfigParser(interpolation=None)
             self.config.read_dict(manager)
 
         # Analyze a file target
