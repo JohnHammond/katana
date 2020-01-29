@@ -32,7 +32,10 @@ class Provider(CTFProvider):
             )
 
         # Grab the CSRF token
-        self.csrf_token = r.text.split('csrf_nonce = "')[1].split('"')[0]
+        try:
+            self.csrf_token = r.text.split('csrf_nonce = "')[1].split('"')[0]
+        except IndexError:
+            self.csrf_token = r.text.split("csrfNonce': \"")[1].split('"')[0]
 
         # Save requests session
         self.session = s
@@ -52,9 +55,9 @@ class Provider(CTFProvider):
         )
 
         # Get the team
-        r = self.session.get(f"{self.url}/api/v1/teams/me")
-        if r.status_code != 200:
-            raise RuntimeError(f"failed to retrieve team information")
+        # r = self.session.get(f"{self.url}/api/v1/teams/me")
+        # if r.status_code != 200:
+        #    raise RuntimeError(f"failed to retrieve team information")
 
         # Grab team name
         # data = r.json()["data"]
