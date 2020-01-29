@@ -9,7 +9,6 @@ attempts to rot47 the data.
 """
 
 import io
-import string
 from typing import Any
 
 from katana.unit import NotEnglishAndPrintableUnit
@@ -42,10 +41,6 @@ class Unit(NotEnglishAndPrintableUnit):
         :param case: A case returned by evaluate
         :return: None
         """
-
-        new_string = []
-        reverse_upper = string.ascii_uppercase[::-1]
-        reverse_lower = string.ascii_lowercase[::-1]
 
         with io.TextIOWrapper(self.target.stream, encoding="utf-8") as stream:
 
