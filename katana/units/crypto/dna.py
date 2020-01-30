@@ -12,6 +12,75 @@ import string
 
 from katana.unit import PrintableDataUnit, NotApplicable
 
+# JOHN: This method is not needed, but I am keeping the mapping
+#       here in case it is ever needed...
+# DNA_mapping = {
+#     "AAA": "a",
+#     "AAC": "b",
+#     "AAG": "c",
+#     "AAT": "d",
+#     "ACA": "e",
+#     "ACC": "f",
+#     "ACG": "g",
+#     "ACT": "h",
+#     "AGA": "i",
+#     "AGC": "j",
+#     "AGG": "k",
+#     "AGT": "l",
+#     "ATA": "m",
+#     "ATC": "n",
+#     "ATG": "o",
+#     "ATT": "p",
+#     "CAA": "q",
+#     "CAC": "r",
+#     "CAG": "s",
+#     "CAT": "t",
+#     "CCA": "u",
+#     "CCC": "v",
+#     "CCG": "w",
+#     "CCT": "x",
+#     "CGA": "y",
+#     "CGC": "z",
+#     "CGG": "A",
+#     "CGT": "B",
+#     "CTA": "C",
+#     "CTC": "D",
+#     "CTG": "E",
+#     "CTT": "F",
+#     "GAA": "G",
+#     "GAC": "H",
+#     "GAG": "I",
+#     "GAT": "J",
+#     "GCA": "K",
+#     "GCC": "L",
+#     "GCG": "M",
+#     "GCT": "N",
+#     "GGA": "O",
+#     "GGC": "P",
+#     "GGG": "Q",
+#     "GGT": "R",
+#     "GTA": "S",
+#     "GTC": "T",
+#     "GTG": "U",
+#     "GTT": "V",
+#     "TAA": "W",
+#     "TAC": "X",
+#     "TAG": "Y",
+#     "TAT": "Z",
+#     "TCA": "1",
+#     "TCC": "2",
+#     "TCG": "3",
+#     "TCT": "4",
+#     "TGA": "5",
+#     "TGC": "6",
+#     "TGG": "7",
+#     "TGT": "8",
+#     "TTA": "9",
+#     "TTC": "0",
+#     "TTG": " ",
+#     "TTT": ".",
+# }
+
 
 class Unit(PrintableDataUnit):
     """
@@ -58,6 +127,7 @@ class Unit(PrintableDataUnit):
         :return: None
         """
 
+        # Try the first technique....
         all_characters: str = string.ascii_lowercase + string.ascii_uppercase + string.digits[
             1:10
         ] + "0 ."
@@ -87,3 +157,18 @@ class Unit(PrintableDataUnit):
         # Compile the new string, add and recurse
         result: str = "".join(result)
         self.manager.register_data(self, result)
+
+        # JOHN: This method uses the above mapping, though it
+        #       seems to wokr just fine with the method just above
+        # # Now try the second technique...
+        # result = []
+
+        # for i in range(0, len(self.raw_target), 3):
+        #     chunk = self.raw_target[i : i + 3]
+        #     if chunk in DNA_mapping:
+        #         result.append(DNA_mapping[chunk])
+
+        # # Compile the new string, add and recurse
+        # result: str = "".join(result)
+        # print(result)
+        # self.manager.register_data(self, result)
