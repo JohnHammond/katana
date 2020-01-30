@@ -9,9 +9,28 @@ import io
 from typing import Any
 
 import binascii
-from pwn import xor
 
 from katana.unit import Unit as BaseUnit
+
+
+def xor(thing, key):
+
+    # Handle a single byte key gracefully
+    if type(key) is int:
+        key = bytes([key])
+    elif type(key) is str:
+        key = key.encode("utf-8")
+
+    result = []
+
+    # XOR with repeating key
+    for i, b in enumerate(thing):
+        if type(b) is bytes:
+            b = b[0]
+        result.append(b ^ key[i % len(key)])
+
+    # Return bytes result
+    return bytes(result)
 
 
 class Unit(BaseUnit):
@@ -43,7 +62,7 @@ class Unit(BaseUnit):
 
         for each_key in xor_key:
             try:
-                result = xor(self.target.stream.read(), each_key).decode("latin-1")
+                result = xor(self.target.raw, each_key).decode("latin-1")
 
                 if result.isprintable():
                     self.manager.register_data(self, result)
