@@ -17,8 +17,8 @@ class Unit(BaseUnit):
     def __init__(self, manager: Manager, target: Target):
         super(Unit, self).__init__(manager, target)
 
-        if self.target.is_url:
-            raise NotApplicable("URL")
+        # if self.target.is_url:
+        #     raise NotApplicable("URL")
 
     def enumerate(self) -> Generator[Any, None, None]:
         """
