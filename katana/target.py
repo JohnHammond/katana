@@ -172,10 +172,10 @@ class Target(object):
             self.url_root = "/".join(upstream.decode("utf-8").split("/")[:3]) + "/"
             if self.config["manager"].getboolean("download"):
                 try:
-                    url_accessible = True
+                    self.url_accessible = True
                     self.request = requests.get(upstream)
                 except requests.exceptions.ConnectionError:
-                    url_accessible = False
+                    self.url_accessible = False
                     self.is_url = False
                     self.content = self.upstream
                 else:

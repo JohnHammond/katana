@@ -20,7 +20,7 @@ class Unit(NotEnglishAndPrintableUnit):
     GROUPS = ["crypto"]
     BLOCKED_GROUPS = ["crypto"]
     # Default priority is 50
-    PRIORITY = 60
+    PRIORITY = 40
     # No recursing into self
     RECURSE_SELF = False
 
@@ -28,9 +28,8 @@ class Unit(NotEnglishAndPrintableUnit):
         super(Unit, self).__init__(manager, target)
 
         # We don't run Caesar on URLs
-
-    #        if self.target.is_url:
-    #            raise NotApplicable("URL")
+        if self.target.is_url and not self.target.url_accessible:
+            raise NotApplicable("URL")
 
     def enumerate(self) -> Generator[Any, None, None]:
         """

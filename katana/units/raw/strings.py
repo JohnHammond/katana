@@ -13,7 +13,7 @@ class Unit(BaseUnit):
     # This unit depends on the `strings` system binary
     DEPENDENCIES = ["strings"]
     # Moderately high priority due to speed and broadness of applicability
-    PRIORITY = 30
+    PRIORITY = 50
     # Groups we belong to
     GROUPS = ["raw"]
     # Groups we can't recurse into

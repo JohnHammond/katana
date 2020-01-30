@@ -12,12 +12,12 @@ class Unit(BaseUnit):
     GROUPS = ["crypto"]
     BLOCKED_GROUPS = ["crypto"]
     # Default priority is 50
-    PRIORITY = 60
+    PRIORITY = 50
 
     def __init__(self, manager: Manager, target: Target):
         super(Unit, self).__init__(manager, target)
 
-        if self.target.is_url:
+        if self.target.is_url and not self.target.url_accessible:
             raise NotApplicable("URL")
 
     def enumerate(self) -> Generator[Any, None, None]:
