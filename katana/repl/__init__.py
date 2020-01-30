@@ -64,6 +64,8 @@ class ReplMonitor(JsonMonitor):
 
         # The repl will assign this for us
         self.repl: Repl = None
+        # Last time we updated the prompt
+        self.last_update = 0
 
     def on_flag(self, manager: Manager, unit: Unit, flag: str):
 
@@ -146,6 +148,26 @@ class ReplMonitor(JsonMonitor):
         # Notify the user
         with self.repl.terminal_lock:
             self.repl.pexcept(exc)
+
+    def on_work(
+        self,
+        manager: katana.manager.Manager,
+        threadid: int,
+        unit: katana.unit.Unit,
+        case: Any,
+    ):
+        super(ReplMonitor, self).on_work(manager, threadid, unit, case)
+
+        # Dynamically update the prompt at most every second during work updates
+        if (time.time() - self.last_update) > 1:
+            if self.repl.terminal_lock.acquire(blocking=False):
+                self.repl.async_update_prompt(
+                    self.repl.generate_prompt(
+                        about_to_wait=unit is None and case is None
+                    )
+                )
+                self.repl.terminal_lock.release()
+                self.last_update = time.time()
 
 
 def get_target_choices(repl, uncomplete=False) -> List[CompletionItem]:
@@ -263,21 +285,26 @@ class Repl(cmd2.Cmd):
         # Maintain exit status
         return data
 
-    def update_prompt(self):
-        """ Updates the prompt with the current state """
+    def generate_prompt(self, about_to_wait=False):
 
         # build a dynamic state
-        if self.manager.barrier.n_waiting == len(self.manager.threads):
+        if self.manager.barrier.n_waiting == len(self.manager.threads) or about_to_wait:
             state = f"{Fore.YELLOW}waiting{Style.RESET_ALL}"
         else:
             state = f"{Fore.GREEN}running{Style.RESET_ALL}"
 
         # update the prompt
-        self.prompt = (
+        prompt = (
             f"{Fore.CYAN}katana{Style.RESET_ALL} - {state} - "
             f"{Fore.BLUE}{self.manager.work.qsize()} units queued{Style.RESET_ALL} "
             f"\n{Fore.GREEN}➜ {Style.RESET_ALL}"
         )
+
+        return prompt
+
+    def update_prompt(self):
+        """ Updates the prompt with the current state """
+        self.prompt = self.generate_prompt()
 
     status_parser = Cmd2ArgumentParser(
         description="Display status message for all running threads"
