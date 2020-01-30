@@ -24,7 +24,7 @@ def vigenere(plaintext, key):
     idx = 0
     ciphertext = ""
 
-    for c in bytes(plaintext, "ascii"):
+    for c in plaintext:
         if c not in valid_chars:
             ciphertext += chr(c)
         else:
@@ -55,7 +55,7 @@ class Unit(NotEnglishAndPrintableUnit):
 
         self.vignere_key = self.get("key")
         if not self.vignere_key:
-            return NotApplicable("empty vigenere key passed")
+            raise NotApplicable("empty vigenere key passed")
 
     def evaluate(self, case: Any) -> None:
         """
@@ -64,5 +64,5 @@ class Unit(NotEnglishAndPrintableUnit):
         :return: None
         """
 
-        result = vigenere(self.target.stream.read().decode("utf-8"), self.vignere_key)
+        result = vigenere(self.target.raw, self.vignere_key)
         self.manager.register_data(self, result)

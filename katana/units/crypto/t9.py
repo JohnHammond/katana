@@ -66,19 +66,17 @@ class Unit(PrintableDataUnit):
         :return: None
         """
 
-        with io.TextIOWrapper(self.target.stream, encoding="utf-8") as stream:
+        # Reverse the given data.
+        result = self.target.raw
+        for mapping in t9_mappings:
+            result = result.replace(mapping[0], mapping[1])
 
-            # Reverse the given data.
-            result = self.target.stream.read()
-            for mapping in t9_mappings:
-                result = result.replace(mapping[0], mapping[1])
+        result = "".join(result.decode("latin-1"))
 
-            result = "".join(result.decode("latin-1"))
+        # Quickly hotswap spaces
+        # This can be made better with a regex at some point...?
+        result = result.replace("  ", "@@DELIM@@")
+        result = result.replace(" ", "")
+        result = result.replace("@@DELIM@@", " ")
 
-            # Quickly hotswap spaces
-            # This can be made better with a regex at some point...?
-            result = result.replace("  ", "@@DELIM@@")
-            result = result.replace(" ", "")
-            result = result.replace("@@DELIM@@", " ")
-
-            self.manager.register_data(self, result)
+        self.manager.register_data(self, result)

@@ -28,7 +28,5 @@ class Unit(NotEnglishUnit):
         :return: None
         """
 
-        with io.TextIOWrapper(self.target.stream, encoding="utf-8") as stream:
-
-            # Reverse the given data.
-            self.manager.register_data(self, (stream.read()[::-1]))
+        # Reverse the given data.
+        self.manager.register_data(self, (self.target.raw[::-1]))

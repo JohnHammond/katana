@@ -28,12 +28,12 @@ class Unit(NotEnglishAndPrintableUnit):
     def do_rot47(self, s):
         x = []
         for i in range(len(s)):
-            j = ord(s[i])
+            j = s[i]
             if 33 <= j <= 126:
-                x.append(chr(33 + ((j + 14) % 94)))
+                x.append(33 + ((j + 14) % 94))
             else:
                 x.append(s[i])
-        return "".join(x)
+        return b"".join([chr(z).encode("latin-1") for z in x])
 
     def evaluate(self, case: Any) -> None:
         """
@@ -42,7 +42,7 @@ class Unit(NotEnglishAndPrintableUnit):
         :return: None
         """
 
-        with io.TextIOWrapper(self.target.stream, encoding="utf-8") as stream:
+        # with io.TextIOWrapper(self.target.stream, encoding="utf-8") as stream:
 
-            result = self.do_rot47(stream.read())
-            self.manager.register_data(self, result)
+        result = self.do_rot47(self.target.raw)
+        self.manager.register_data(self, result)
