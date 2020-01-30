@@ -66,8 +66,8 @@ class Unit(PrintableDataUnit):
         :return: None
         """
 
-        # Reverse the given data.
-        result = self.target.raw
+        # Replace the mappings
+        result = self.target.stream.read()
         for mapping in t9_mappings:
             result = result.replace(mapping[0], mapping[1])
 

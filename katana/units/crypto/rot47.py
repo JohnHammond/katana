@@ -42,7 +42,5 @@ class Unit(NotEnglishAndPrintableUnit):
         :return: None
         """
 
-        # with io.TextIOWrapper(self.target.stream, encoding="utf-8") as stream:
-
         result = self.do_rot47(self.target.raw)
         self.manager.register_data(self, result)
