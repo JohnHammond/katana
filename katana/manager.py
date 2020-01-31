@@ -567,10 +567,9 @@ class Manager(configparser.ConfigParser):
         This function will raise an exception if the chosen output directory
         already exists. """
 
-        if os.path.isdir(self["manager"]["outdir"]) and self["manager"]["force"] in [
-            "yes",
-            "true",
-        ]:
+        if os.path.isdir(self["manager"]["outdir"]) and self["manager"].getboolean(
+            "force"
+        ):
             shutil.rmtree(self["manager"]["outdir"])
 
         # Create the directory tree for the output
