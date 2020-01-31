@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 from typing import Generator, Any
 
 from katana.manager import Manager
@@ -17,30 +18,23 @@ def attempt_ocr(image_path):
 
     # This function is meant to ran as a standalone, so catch this exception
     # in case we aren't doing any dependency checking
-    except pytesseract.pytesseract.TesseractNotFoundError:
+    except (pytesseract.pytesseract.TesseractNotFoundError, OSError):
         ocr_data = None
 
     return ocr_data
 
 
 class Unit(FileUnit):
+
     # Fill in your groups
-    GROUPS = ["unknown"]
+    GROUPS = ["ocr", "tesseract"]
     # Set higher priority because this is lightweight
     PRIORITY = 25
     # Do not recurse into new things
     RECURSE_SELF = False
 
-    def __init__(self, manager: Manager, target: Target):
-        super(Unit, self).__init__(manager, target, keywords=["image"])
-
-    def enumerate(self) -> Generator[Any, None, None]:
-        """
-        Yield unit cases
-        :return: Generator of target cases
-        """
-
-        yield None
+    def __init__(self, *args, **kwargs):
+        super(Unit, self).__init__(*args, **kwargs, keywords=["image"])
 
     def evaluate(self, case: Any) -> None:
         """
@@ -53,12 +47,3 @@ class Unit(FileUnit):
 
         if ocr_data:
             self.manager.register_data(self, ocr_data)
-
-    @classmethod
-    def validate(cls, manager: Manager) -> None:
-        """
-        Stub to validate configuration parameters
-        :param manager: Katana manager
-        :return: None
-        """
-        super(Unit, cls).validate(manager)

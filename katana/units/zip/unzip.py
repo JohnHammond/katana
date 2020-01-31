@@ -54,15 +54,8 @@ class Unit(FileUnit):
 
         result = {"password": "", "namelist": []}
 
-        if isinstance(self.target.path, str):
-            path = self.target.path
-
-        else:
-            path = self.target.path.decode("utf-8")
-
-        directory_path, _ = self.generate_artifact(
-            name=os.path.basename(path), mode="w", create=True, asdir=True
-        )
+        # Create a directory to store the files in
+        directory_path = self.get_output_dir()
 
         p = subprocess.Popen(
             ["unzip", "-P", password, self.target.path],

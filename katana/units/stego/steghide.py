@@ -16,6 +16,7 @@ class Unit(FileUnit):
     GROUPS = ["stego", "image"]
 
     def __init__(self, katana, target):
+
         super(Unit, self).__init__(katana, target, keywords=["jpg ", "jpeg "])
 
         # Keep track of how many passwords we find (protected by lock)
@@ -26,6 +27,10 @@ class Unit(FileUnit):
     def enumerate(self):
         # The default is to check an empty password
         yield b""
+
+        # Check a passed password
+        if self.get("password") is not None:
+            yield bytes(self.get("password"), "utf-8")
 
         # Check other passwords specified explicitly
         if self.get("passwords") is not None:
@@ -83,11 +88,12 @@ class Unit(FileUnit):
         # Increment the number of found passwords
         with self.count_lock:
             self.npasswords += 1
-            if self.npasswords >= self.max_passwords:
+            if self.npasswords > self.max_passwords:
                 return
 
         # Register the new file with the manager
         self.manager.register_artifact(self, output_path)
+
         self.manager.register_data(
             self, {"password": repr(password)[2:-1]}, recurse=False
         )

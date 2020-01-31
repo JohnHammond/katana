@@ -9,6 +9,7 @@ from katana.unit import Unit as BaseUnit
 from katana.unit import NotApplicable
 from katana.manager import Manager
 from katana.target import Target
+from katana.util import is_good_magic
 import katana.util
 
 BASE32_PATTERN = rb"[A-Z2-7+/]+={0,6}"
@@ -30,6 +31,11 @@ class Unit(BaseUnit):
         # Ensure this is not english data
         if self.target.is_english:
             raise NotApplicable("seemingly english")
+
+        # if this was a given file, make sure it's not an image or anything useful
+        if self.target.path:
+            if is_good_magic(magic.from_file(self.target.path)):
+                raise NotApplicable("potentially useful file")
 
         # Are there base32 chunks in the data?
         self.matches = BASE32_REGEX.findall(self.target.raw)
