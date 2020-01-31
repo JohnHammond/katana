@@ -37,7 +37,7 @@ def is_good_magic(magic: str) -> bool:
     ]
 
     for each_type in interesting_types:
-        if each_type in magic:
+        if each_type in magic.lower():
             return True
     else:
         return False

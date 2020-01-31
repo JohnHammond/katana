@@ -65,7 +65,7 @@ class Unit(PrintableDataUnit):
         :param case: A case returned by evaluate
         :return: None
         """
-
+        return
         # Replace the mappings
         result = self.target.stream.read()
         for mapping in t9_mappings:
