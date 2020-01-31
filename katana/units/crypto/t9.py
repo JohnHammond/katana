@@ -11,6 +11,7 @@ import regex as re
 from typing import Any
 
 from katana.unit import RegexUnit
+from katana.units.crypto import CryptoUnit
 
 # JOHN: I do NOT use a dictionary for this, because the sorting and order would
 #       get all messed up, Instead, a force an ordered list.
@@ -49,7 +50,7 @@ t9_mappings = {
 }
 
 
-class Unit(RegexUnit):
+class Unit(RegexUnit, CryptoUnit):
 
     # Fill in your groups
     GROUPS = ["crypto"]
@@ -60,6 +61,9 @@ class Unit(RegexUnit):
     RECURSE_SELF = False
     # Regular expression pattern to match
     PATTERN = re.compile(rb"[0-9*]+(\w([0-9*]+))*")
+
+    # Inheriting from a CryptoUnit will ensure this will not run on URLs
+    # or files that could be anything useful (image, document, audio, etc.)
 
     def decode_one(self, number):
         result = []

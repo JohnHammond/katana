@@ -8,25 +8,18 @@ from katana.target import Target
 from katana.util import is_good_magic
 from katana.unit import Unit as BaseUnit
 from katana.unit import NotApplicable
+from katana.units.crypto import CryptoUnit
 
 
-class Unit(BaseUnit):
+class Unit(CryptoUnit):
     # Fill in your groups
     GROUPS = ["crypto"]
     BLOCKED_GROUPS = ["crypto"]
     # Default priority is 50
     PRIORITY = 50
 
-    def __init__(self, manager: Manager, target: Target):
-        super(Unit, self).__init__(manager, target)
-
-        if self.target.is_url and not self.target.url_accessible:
-            raise NotApplicable("URL")
-
-        # if this was a given file, make sure it's not an image or anything useful
-        if self.target.path:
-            if is_good_magic(magic.from_file(self.target.path)):
-                raise NotApplicable("potentially useful file")
+    # Inheriting from a CryptoUnit will ensure this will not run on URLs
+    # or files that could be anything useful (image, document, audio, etc.)
 
     def enumerate(self) -> Generator[Any, None, None]:
         """

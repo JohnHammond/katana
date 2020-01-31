@@ -29,7 +29,7 @@ class Unit(FileUnit):
 
     # Verify this is not a URL..
     def __init__(self, *args, **kwargs):
-        super(Unit, self).__init__(*args, **kwargs, keyword=["capture file", "pcap"])
+        super(Unit, self).__init__(*args, **kwargs, keywords=["capture file", "pcap"])
 
         if self.target.is_url and not self.target.url_accessible:
             raise NotApplicable("URL")

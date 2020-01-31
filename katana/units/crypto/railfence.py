@@ -15,6 +15,7 @@ from typing import Any
 import string
 
 from katana.unit import NotEnglishAndPrintableUnit, NotApplicable
+from katana.units.crypto import CryptoUnit
 
 # Stolen from https://github.com/tothi/railfence
 def encryptFence(plain, rails, offset=0, debug=False):
@@ -85,7 +86,7 @@ def decryptFence(cipher, rails, offset=0):
     return plain
 
 
-class Unit(NotEnglishAndPrintableUnit):
+class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
 
     # Fill in your groups
     GROUPS = ["crypto"]
@@ -94,6 +95,9 @@ class Unit(NotEnglishAndPrintableUnit):
     PRIORITY = 60
     # Do not recurse into self
     RECURSE_SELF = False
+
+    # Inheriting from a CryptoUnit will ensure this will not run on URLs
+    # or files that could be anything useful (image, document, audio, etc.)
 
     def __init__(self, *args, **kwargs):
         super(Unit, self).__init__(*args, **kwargs)

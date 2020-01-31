@@ -11,6 +11,7 @@ from typing import Any
 import binascii
 
 from katana.unit import Unit as BaseUnit
+from katana.units.crypto import CryptoUnit
 
 
 def xor(thing, key):
@@ -33,7 +34,7 @@ def xor(thing, key):
     return bytes(result)
 
 
-class Unit(BaseUnit):
+class Unit(CryptoUnit):
 
     # Fill in your groups
     GROUPS = ["crypto"]
@@ -42,6 +43,9 @@ class Unit(BaseUnit):
     PRIORITY = 70
     # Do not recurse into self
     RECURSE_SELF = False
+
+    # Inheriting from a CryptoUnit will ensure this will not run on URLs
+    # or files that could be anything useful (image, document, audio, etc.)
 
     def evaluate(self, case: Any) -> None:
         """

@@ -113,6 +113,7 @@ class Target(object):
         # Parse out URL pieces (also decide if this is a URL)
         self.url_pieces = ADDRESS_REGEX.match(self.upstream)
         self.is_url = self.url_pieces is not None
+        self.url_accessible = False  # assume False until we request it later
         # This zero test is here because os.path.isfile chokes on a null-byte
         self.is_file = 0 not in self.upstream and os.path.isfile(self.upstream)
 

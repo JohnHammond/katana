@@ -4,9 +4,10 @@ import string
 from typing import Any
 
 from katana.unit import NotEnglishAndPrintableUnit
+from katana.units.crypto import CryptoUnit
 
 
-class Unit(NotEnglishAndPrintableUnit):
+class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
     # Fill in your groups
     GROUPS = ["crypto"]
     BLOCKED_GROUPS = ["crypto"]
@@ -14,6 +15,9 @@ class Unit(NotEnglishAndPrintableUnit):
     PRIORITY = 60
     # Do not recurse into self
     RECURSE_SELF = False
+
+    # Inheriting from a CryptoUnit will ensure this will not run on URLs
+    # or files that could be anything useful (image, document, audio, etc.)
 
     def evaluate(self, case: Any) -> None:
         """
