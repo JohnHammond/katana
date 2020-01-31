@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 from typing import Generator, Any
 
+import magic
+
 from katana.manager import Manager
 from katana.target import Target
+from katana.util import is_good_magic
 from katana.unit import Unit as BaseUnit
 from katana.unit import NotApplicable
 
@@ -19,6 +22,11 @@ class Unit(BaseUnit):
 
         if self.target.is_url and not self.target.url_accessible:
             raise NotApplicable("URL")
+
+        # if this was a given file, make sure it's not an image or anything useful
+        if self.target.path:
+            if is_good_magic(magic.from_file(self.target.path)):
+                raise NotApplicable("potentially useful file")
 
     def enumerate(self) -> Generator[Any, None, None]:
         """
