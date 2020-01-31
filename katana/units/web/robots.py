@@ -43,10 +43,6 @@ class Unit(WebUnit):
         # Check if the request succeeded
         if r.status_code != 200:
             # Completely fail if there is nothing there.
-            print(
-                "{0}/{1}".format(self.target.url_root.rstrip("/"), "robots.txt"),
-                "failed",
-            )
             raise NotApplicable("no http 200 response from /robots.txt")
 
         # Keep track of the response variable for later use
@@ -87,5 +83,4 @@ class Unit(WebUnit):
 
         # I DO recurse on this, in case there are base64 things to catch...
         # Might be dangerous, but fuck it
-        # self.manager.queue_target(r.text, parent=self)
         self.manager.register_data(self, r.text)
