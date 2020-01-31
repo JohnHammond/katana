@@ -182,8 +182,7 @@ class Target(object):
                 else:
                     self.content = self.request.content
                     fileid, self.path = tempfile.mkstemp()
-                    # JOHN: This used to happen in web.request but it was silly
-                    # katana.locate_flags(parent, self.content)
+
                     os.close(fileid)
                     with open(self.path, "wb") as filp:
                         filp.write(self.content)
@@ -191,12 +190,14 @@ class Target(object):
                 # Carve out the root of the URL
             else:
                 # We were asked not to download URLs
-                self.content = self.upstream
                 try:
                     # CALEB: I don't know why we are ignoring the download
                     # option here...
                     self.request = requests.get(self.upstream)
+                    self.content = self.request.content
+                    self.url_accessible = True
                 except requests.exceptions.ConnectionError:
+                    self.content = self.upstream
                     self.is_url = False
 
         # Save the path to the file
