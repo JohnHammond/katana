@@ -287,6 +287,7 @@ class Unit(object):
                     # Create the file if possible
                     if not os.path.exists(path):
                         fh = open(path, mode)
+                        break
                     else:
                         # Increment counter and try again
                         n += 1
