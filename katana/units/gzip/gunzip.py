@@ -1,6 +1,7 @@
 """
 GZIP file extraction
 
+Note that GZIP files do not have support for passwords, so that is not implemented here.
 """
 from typing import Any
 
@@ -16,7 +17,7 @@ class Unit(FileUnit):
     GROUPS = ["gzip", "archive"]
 
     # In case we have nested GZIPs, we CAN recurse into ourselves.
-    RECURSE_SELF = False
+    RECURSE_SELF = True
 
     # Moderately high priority due to speed and broadness of applicability
     PRIORITY = 30
