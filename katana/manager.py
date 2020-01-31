@@ -54,11 +54,10 @@ class Manager(configparser.ConfigParser):
             "auto": False,
             "recurse": True,
             "exclude": "",
-            "min-data": 10,
+            "min-data": 5,
             "download": False,
             "template": "default",
             "timeout": 0.1,
-            "password": [],
             "prioritize": True,
             "default-units": True,
             "max-depth": 10,
@@ -133,9 +132,7 @@ class Manager(configparser.ConfigParser):
         """ Register arbitrary data results with the manager """
 
         # Sometimes units do weird things
-        if isinstance(data, str) and data == "":
-            return
-        elif isinstance(data, bytes) and data == b"":
+        if len(data) < int(self["manager"]["min-data"]):
             return
 
         # Notify the monitor of the data
@@ -254,6 +251,7 @@ class Manager(configparser.ConfigParser):
 
         # Don't recurse if the parent is already done
         if parent is not None:
+
             # Don't queue recursion for a completed target
             if parent.origin.completed:
                 return None
@@ -276,7 +274,6 @@ class Manager(configparser.ConfigParser):
             target = self.target(upstream, parent, config=config)
         except BadTarget:
             return None
-
         # Don't requeue targets with the same hash
         if target.hash.hexdigest() in self.target_hash:
             return None
@@ -538,8 +535,6 @@ class Manager(configparser.ConfigParser):
                 # allow parallel processing of the cases
                 if not empty:
                     self.requeue(work)
-                else:
-                    work.unit.origin.rem_unit()
 
             for case in cases:
                 # Notify the monitor of thread status (this should be a very short
@@ -558,6 +553,9 @@ class Manager(configparser.ConfigParser):
                 if work.unit.target is not work.unit.origin:
                     work.unit.target.units_evaluated += 1
                 self.cases_completed += 1
+
+            if empty:
+                work.unit.origin.rem_unit()
 
             self.work.task_done()
 

@@ -1,53 +1,67 @@
-#!/usr/bin/env python3
+"""
+ZIP file extraction
+
+This unit can take an argument, "password", which can be used to
+extract the zip file if it is known. 
+
+"""
 from typing import Any
 import subprocess
 import zipfile
+import os
 
 from katana.unit import FileUnit
 
-# JOHN: I started to work on converting this, but didn't get any where
-#       because I could not seem to test it well.
-#       At the time of writing, (Dec 1st 2019) it seems that specifying
-#       a specific unit from the command-line would not work...?
 
 class Unit(FileUnit):
-
-	# Binary dependencies
-	DEPENDENCIES = ["unzip"]
-
-    # Moderately high priority due to speed and broadness of applicability
-    PRIORITY = 40
 
     # Groups we belong to
     GROUPS = ["zip", "office", "archive"]
 
-    def __init__(self, manager: Manager, target: Target):
-        super(Unit, self).__init__(manager, target, keywords = ["zip archive", "OpenDocument"])
+    # In case we have nested ZIPs, we CAN recurse into ourselves.
+    RECURSE_SELF = True
+
+    # Binary dependencies
+    DEPENDENCIES = ["unzip"]
+
+    # Moderately high priority due to speed and broadness of applicability
+    PRIORITY = 40
+
+    def __init__(self, *args, **kwargs):
+
+        super(Unit, self).__init__(
+            *args, **kwargs, keywords=["zip archive", "OpenDocument"]
+        )
 
     def enumerate(self):
-    	# the default is to try with no password
+
+        # the default is to try with no password
         yield ""
 
-        for password in katana.config["zip_password"]:
-            yield password
+        # if they supply a password, use it
+        if self.get("password"):
+            yield self.get("password")
 
-        if "dict" in katana.config and katana.config["dict"] is not None:
-            katana.config["dict"].seek(0)
-            for line in katana.config["dict"]:
-                yield line.rstrip("\n")
-
+        # if they supply a dictionary to look through, use each of those!
+        if self.get("dict"):
+            with open(self.get("dict"), "rb") as handle:
+                for line in handle:
+                    yield line.rstrip(b"\n")
 
     def evaluate(self, case: str):
 
         password = case
+
         result = {"password": "", "namelist": []}
 
         if isinstance(self.target.path, str):
             path = self.target.path
+
         else:
             path = self.target.path.decode("utf-8")
-        directory_path, _ = katana.create_artifact(
-            self, os.path.basename(path), create=True, asdir=True
+
+        directory_path, _ = self.generate_artifact(
+            name=os.path.basename(path), mode="w", create=True, asdir=True
         )
 
         p = subprocess.Popen(
@@ -62,9 +76,8 @@ class Unit(FileUnit):
 
         for root, dirs, files in os.walk(directory_path):
             for name in files:
+                result["namelist"].append(name)
                 path = os.path.join(root, name)
-                katana.add_artifact(self, path)
-                katana.recurse(self, path)
-                self.completed = True
+                self.manager.register_artifact(self, path)
 
-        return
+        self.manager.register_data(self, result)

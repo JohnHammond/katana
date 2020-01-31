@@ -85,18 +85,3 @@ class Unit(FileUnit):
         # Register the figures with the manager
         self.manager.register_artifact(self, linear_path)
         self.manager.register_artifact(self, dB_path)
-
-        # CALEB: This should already happen when Katana recurses on the above artifacts
-
-
-#         ocr_text = attempt_ocr(os.path.abspath(dB_path))
-#         if ocr_text:
-#             if katana.locate_flags(self, ocr_text.replace('\n', '')):
-#                 # If we do find a flag, stop this unit!!
-#                 self.completed = True
-#
-#         ocr_text = attempt_ocr(os.path.abspath(linear_path))
-#         if ocr_text:
-#             if katana.locate_flags(self, ocr_text.replace('\n', '')):
-#                 # If we do find a flag, stop this unit!!
-#                 pass

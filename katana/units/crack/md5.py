@@ -59,7 +59,7 @@ class Unit(BaseUnit):
                 self.manager.register_data(
                     self, {match.decode("utf-8"): repr(case)[2:-1]}, recurse=False
                 )
-                self.completed = True
+                return
 
     @classmethod
     def validate(cls, manager: Manager) -> None:

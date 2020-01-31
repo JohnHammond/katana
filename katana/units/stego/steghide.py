@@ -84,7 +84,7 @@ class Unit(FileUnit):
         with self.count_lock:
             self.npasswords += 1
             if self.npasswords >= self.max_passwords:
-                self.completed = True
+                return
 
         # Register the new file with the manager
         self.manager.register_artifact(self, output_path)
