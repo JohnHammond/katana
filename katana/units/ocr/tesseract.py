@@ -18,7 +18,7 @@ def attempt_ocr(image_path):
 
     # This function is meant to ran as a standalone, so catch this exception
     # in case we aren't doing any dependency checking
-    except pytesseract.pytesseract.TesseractNotFoundError:
+    except (pytesseract.pytesseract.TesseractNotFoundError, OSError):
         ocr_data = None
 
     return ocr_data

@@ -8,6 +8,7 @@ from katana.unit import RegexUnit
 from katana.unit import NotApplicable
 from katana.manager import Manager
 from katana.target import Target
+from katana.util import is_good_magic
 import katana.util
 
 
@@ -22,6 +23,11 @@ class Unit(RegexUnit):
 
     def __init__(self, manager: Manager, target: Target):
         super(Unit, self).__init__(manager, target)
+
+        # if this was a given file, make sure it's not an image or anything useful
+        if self.target.path:
+            if is_good_magic(magic.from_file(self.target.path)):
+                raise NotApplicable("potentially useful file")
 
     def evaluate(self, match):
 

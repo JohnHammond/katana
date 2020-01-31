@@ -42,9 +42,7 @@ class Unit(FileUnit):
             path = self.target.path.decode("utf-8")
 
         # Create a directory to store the images in
-        directory_path, _ = self.generate_artifact(
-            name=os.path.basename(path), mode="w", create=True, asdir=True
-        )
+        directory_path = self.get_output_dir()
 
         # Run the tool to carve out the images
         p = subprocess.Popen(
