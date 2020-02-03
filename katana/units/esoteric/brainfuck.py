@@ -107,7 +107,7 @@ class Unit(BaseUnit):
     def __init__(self, *args, **kwargs):
         super(Unit, self).__init__(*args, **kwargs)
 
-        # if self.target.raw.count(b"+") < self.geti("threshold", default=5):
+        # if self.target.stream.count(b"+") < self.geti("threshold", default=5):
         #     raise NotApplicable("brianfuck character threshold not met")
 
     def evaluate(self, case: Any) -> None:
@@ -120,7 +120,7 @@ class Unit(BaseUnit):
         output = evaluate_brainfuck(
             self.target.raw,
             self.get("input_file", default=None),
-            1,  # self.geti("timeout", default=10),
+            self.geti("bf_timeout", default=1),
         )
 
         if output:
