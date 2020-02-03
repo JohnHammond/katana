@@ -39,7 +39,7 @@ class Unit(WebUnit):
         # Grab the case passed by enumerate -- this will be a cookie, name and value dict
         cookie = case
 
-        for cookie_name, cookie_value in cookies.items():
+        for cookie_name, cookie_value in cookie.items():
 
             ## I cast this to a string because it may be a number or a bool
             # We will recurse on each value...

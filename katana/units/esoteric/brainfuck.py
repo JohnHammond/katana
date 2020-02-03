@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from typing import Generator, Any
 import time
+import traceback
 
 from katana.manager import Manager
 from katana.target import Target
@@ -22,12 +23,13 @@ def cleanup(code):
 
 
 def buildbracemap(code):
+
     temp_bracestack, bracemap = [], {}
 
     for position, command in enumerate(code):
-        if command == "[":
+        if command == b"[":
             temp_bracestack.append(position)
-        if command == "]":
+        if command == b"]":
             try:
                 start = temp_bracestack.pop()
                 bracemap[start] = position
@@ -41,9 +43,7 @@ def evaluate_brainfuck(code, input_file, timeout=1):
 
     # Result from the brainfuck program
     output = []
-
-    # Only grab the valid brainfuck code
-    code = bytes([c for c in code if c in BRAINFUCK_CMDS])
+    code = [c for c in code if c in BRAINFUCK_CMDS]
 
     # Build a tracemap of all jumps/calls
     bracemap = buildbracemap(code)
@@ -57,36 +57,38 @@ def evaluate_brainfuck(code, input_file, timeout=1):
     while codeptr < len(code) and time.time() < (start_time + timeout):
         command = code[codeptr]
 
-        if command == ">":
+        if command == b">":
             cellptr += 1
             if cellptr == len(cells):
                 cells.append(0)
 
-        if command == "<":
+        if command == b"<":
             cellptr = 0 if cellptr <= 0 else cellptr - 1
         try:
-            if command == "+":
+            if command == b"+":
                 cells[cellptr] = (cells[cellptr] + 1) % 256
 
-            if command == "-":
+            if command == b"-":
                 cells[cellptr] = (cells[cellptr] - 1) % 256
 
-            if command == "[" and cells[cellptr] == 0:
+            if command == b"[" and cells[cellptr] == 0:
                 codeptr = bracemap[codeptr]
-            if command == "]" and cells[cellptr] != 0:
+            if command == b"]" and cells[cellptr] != 0:
                 codeptr = bracemap[codeptr]
 
-            if command == ".":
+            if command == b".":
                 output.append(chr(cells[cellptr]))
 
-            if command == ",":
+            if command == b",":
                 if not input_file:
                     cells[cellptr] = 10
 
                 else:
                     cells[cellptr] = input_file.read(1)
 
-        except (KeyError, TypeError):
+        except (KeyError, TypeError) as e:
+            print(e)
+            traceback.print_exc()
             return None
 
         codeptr += 1
@@ -95,24 +97,18 @@ def evaluate_brainfuck(code, input_file, timeout=1):
 
 
 class Unit(BaseUnit):
+
     # Fill in your groups
-    GROUPS = ["esoteric"]
+    GROUPS = ["esoteric", "brainfuck"]
+
     # Default priority is 50
     PRIORITY = 50
 
-    def __init__(self, manager: Manager, target: Target):
-        super(Unit, self).__init__(manager, target)
+    def __init__(self, *args, **kwargs):
+        super(Unit, self).__init__(*args, **kwargs)
 
-        if self.target.raw.count(b"+") < self.geti("threshold", default=5):
-            raise NotApplicable("threshold not met")
-
-    def enumerate(self) -> Generator[Any, None, None]:
-        """
-        Yield unit cases
-        :return: Generator of target cases
-        """
-
-        yield None
+        # if self.target.raw.count(b"+") < self.geti("threshold", default=5):
+        #     raise NotApplicable("brianfuck character threshold not met")
 
     def evaluate(self, case: Any) -> None:
         """
@@ -120,13 +116,12 @@ class Unit(BaseUnit):
         :param case: A case returned by evaluate
         :return: None
         """
-        raise RuntimeError("No evaluate method defined!")
 
-    @classmethod
-    def validate(cls, manager: Manager) -> None:
-        """
-        Stub to validate configuration parameters
-        :param manager: Katana manager
-        :return: None
-        """
-        super(Unit, cls).validate(manager)
+        output = evaluate_brainfuck(
+            self.target.raw,
+            self.get("input_file", default=None),
+            1,  # self.geti("timeout", default=10),
+        )
+
+        if output:
+            self.manager.register_data(self, output)

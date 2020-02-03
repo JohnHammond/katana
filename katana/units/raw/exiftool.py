@@ -18,6 +18,7 @@ class Unit(FileUnit):
     GROUPS = ["raw", "file"]
 
     def __init__(self, manager: Manager, target: Target):
+
         super(Unit, self).__init__(manager, target)
 
     def evaluate(self, case):

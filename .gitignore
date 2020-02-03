@@ -12,6 +12,7 @@ katana.egg-info
 docs/build
 *.swp
 monitor/
+*.ini
 domaintoolsctf.ini
 ctfd.ini
 IDEAS.md

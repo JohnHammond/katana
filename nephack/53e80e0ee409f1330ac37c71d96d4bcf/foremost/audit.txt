@@ -1,0 +1,23 @@
+Foremost version 1.5.7 by Jesse Kornblum, Kris Kendall, and Nick Mikus
+Audit File
+
+Foremost started at Sat Feb  1 16:20:14 2020
+Invocation: foremost /tmp/tmphoxnh8f7 -o ./nephack/53e80e0ee409f1330ac37c71d96d4bcf/foremost 
+Output directory: /home/john/github/katana/nephack/53e80e0ee409f1330ac37c71d96d4bcf/foremost
+Configuration file: /etc/foremost.conf
+------------------------------------------------------------------
+File: /tmp/tmphoxnh8f7
+Start: Sat Feb  1 16:20:14 2020
+Length: 4 KB (4366 bytes)
+ 
+Num	 Name (bs=512)	       Size	 File Offset	 Comment 
+
+0:	00000000.htm 	       4 KB 	         16 	 
+Finish: Sat Feb  1 16:20:14 2020
+
+1 FILES EXTRACTED
+	
+htm:= 1
+------------------------------------------------------------------
+
+Foremost finished at Sat Feb  1 16:20:14 2020
