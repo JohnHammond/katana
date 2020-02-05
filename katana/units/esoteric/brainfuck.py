@@ -85,7 +85,7 @@ def evaluate_brainfuck(code, input_file, timeout=1):
                     cells[cellptr] = input_file.read(1)
 
         except (KeyError, TypeError) as e:
-            traceback.print_exc()
+            # traceback.print_exc()
             return None
 
         codeptr += 1
