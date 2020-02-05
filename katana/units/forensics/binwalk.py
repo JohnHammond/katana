@@ -9,6 +9,7 @@ import subprocess
 import zipfile
 import os
 import hashlib
+import shutil
 
 from katana.unit import FileUnit
 

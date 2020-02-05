@@ -3,8 +3,6 @@ from typing import Generator, Any
 import time
 import traceback
 
-from katana.manager import Manager
-from katana.target import Target
 from katana.unit import Unit as BaseUnit
 from katana.unit import NotApplicable
 
@@ -87,7 +85,6 @@ def evaluate_brainfuck(code, input_file, timeout=1):
                     cells[cellptr] = input_file.read(1)
 
         except (KeyError, TypeError) as e:
-            print(e)
             traceback.print_exc()
             return None
 
@@ -103,12 +100,6 @@ class Unit(BaseUnit):
 
     # Default priority is 50
     PRIORITY = 50
-
-    def __init__(self, *args, **kwargs):
-        super(Unit, self).__init__(*args, **kwargs)
-
-        # if self.target.stream.count(b"+") < self.geti("threshold", default=5):
-        #     raise NotApplicable("brianfuck character threshold not met")
 
     def evaluate(self, case: Any) -> None:
         """
