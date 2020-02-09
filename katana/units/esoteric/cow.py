@@ -59,7 +59,8 @@ def evaluate_cow(code, input_file, timeout=-1):
     except:
         traceback.print_exc()
         return ""
-
+    if not code:
+        return
     cells, codeptr, cellptr, register = [0], 0, 0, None
 
     start_time = time.time()
@@ -75,6 +76,9 @@ def evaluate_cow(code, input_file, timeout=-1):
             codeptr = -codeptr
         else:
             command = code[codeptr : codeptr + 3]
+
+        # convert the command to bytes
+        command = bytes(command)
 
         if command == b"moO":  # moO-ve memory pointer forward
             cellptr += 1
@@ -137,19 +141,26 @@ def evaluate_cow(code, input_file, timeout=-1):
             if command == b"oom":
                 cells[cellptr] = input_file.read(1)
 
+            if len(command) < 3:
+                return None
+
         except (KeyError, TypeError):
 
             return None
 
         codeptr += 3
 
-    return "".join(output)
+    output = "".join(output)
+    return output
 
 
 class Unit(BaseUnit):
 
     # Fill in your groups
     GROUPS = ["esoteric", "cow"]
+
+    # There is no reason to recurse into yourself
+    RECURSE_SELF = False
 
     # Default priority is 50
     PRIORITY = 50
