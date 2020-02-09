@@ -37,7 +37,6 @@ def evaluate_ook(code, input_file, timeout=1):
             command = code[idx : idx + 2]
             bf_code.append(translate_table[command])
         except KeyError as e:
-            traceback.print_exc()
             return
 
     return evaluate_brainfuck(bf_code, input_file, timeout)

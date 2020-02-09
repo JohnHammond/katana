@@ -35,8 +35,17 @@ class Unit(FileUnit):
 
         # Run npiet against the image
         p = subprocess.Popen(
-            ["npiet", self.target.path], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            ["npiet", "-e", "1000000", self.target.path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
+
+        # Wait for th program to finish, or bail after 1 seconds
+        try:
+            p.wait(timeout=1)
+        except subprocess.TimeoutExpired:
+            # if the timeout happened, that's fine -- stop the process and continue
+            p.kill()
 
         # Look for flags, add the results, and recurse on all output
         for line in p.stdout:
