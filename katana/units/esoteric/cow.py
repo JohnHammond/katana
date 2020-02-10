@@ -6,6 +6,21 @@ import traceback
 from katana.unit import Unit as BaseUnit
 from katana.unit import NotApplicable
 
+command_list = [
+    "moo",
+    "mOo",
+    "moO",
+    "mOO",
+    "Moo",
+    "MOo",
+    "MoO",
+    "MOO",
+    "OOO",
+    "MMM",
+    "OOM",
+    "oom",
+]
+
 
 def cleanup(code):
 
@@ -36,20 +51,6 @@ def build_jumpmap(code):
 
 
 def evaluate_cow(code, input_file, timeout=-1):
-    command_list = [
-        "moo",
-        "mOo",
-        "moO",
-        "mOO",
-        "Moo",
-        "MOo",
-        "MoO",
-        "MOO",
-        "OOO",
-        "MMM",
-        "OOM",
-        "oom",
-    ]
 
     output = []
     code = b"".join([c.strip() for c in code])
@@ -166,6 +167,16 @@ class Unit(BaseUnit):
 
     # Default priority is 50
     PRIORITY = 50
+
+    def __init__(self, *args, **kwargs):
+        super(Unit, self).__init__(*args, **kwargs)
+
+        if b"moo" not in self.target.stream:
+            raise NotApplicable("no moo in target, must not be cow esolang")
+
+        # We don't run this on URLs
+        if self.target.is_url and not self.target.url_accessible:
+            raise NotApplicable("URL")
 
     def evaluate(self, case: Any) -> None:
         """

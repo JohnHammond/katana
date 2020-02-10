@@ -22,6 +22,13 @@ class Unit(NotEnglishUnit, CryptoUnit):
     # Do not recurse into self
     RECURSE_SELF = False
 
+    def __init__(self, *args, **kwargs):
+        super(Unit, self).__init__(*args, **kwargs)
+
+        # We don't run Caesar on URLs
+        if self.target.is_url and not self.target.url_accessible:
+            raise NotApplicable("URL")
+
     # Inheriting from a CryptoUnit will ensure this will not run on URLs
     # or files that could be anything useful (image, document, audio, etc.)
 

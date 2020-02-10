@@ -24,8 +24,8 @@ class Unit(NotEnglishAndPrintableUnit):
     # No recursing into self
     RECURSE_SELF = False
 
-    def __init__(self, manager: Manager, target: Target):
-        super(Unit, self).__init__(manager, target)
+    def __init__(self, *args, **kwargs):
+        super(Unit, self).__init__(*args, **kwargs)
 
         # We don't run Caesar on URLs
         if self.target.is_url and not self.target.url_accessible:
