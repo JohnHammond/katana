@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-from typing import Generator, Any
+
+from typing import Any
 import time
 import traceback
 
