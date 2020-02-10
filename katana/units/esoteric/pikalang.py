@@ -1,3 +1,20 @@
+"""
+Pikalang esoteric decoder
+
+This unit will translate Pikalang to brainfuck and then execute it.
+"""
+
+"""
+JOHN: In the previous framework of Katana, this unit attempted to decode
+      Pikalang in seemingly TWO different variations. One was a literal mapping
+      to Brainfuck code, the other did something different that required much more 
+      code (https://github.com/joelsmithjohnson/pikachu-interpreter)
+
+      I have not translated that other code to use bytes, and I do not see the need
+      to do so currently, considering how obscure Pikalang is to begin with.
+"""
+
+
 from katana.unit import PrintableDataUnit, NotApplicable
 from katana.units.esoteric.brainfuck import evaluate_brainfuck
 
