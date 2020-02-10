@@ -118,7 +118,8 @@ def evaluate_cow(code, input_file, timeout=-1):
 
             if command == b"Moo":
                 if cells[cellptr] == 0:
-                    cells[cellptr] = input_file.read(1)
+                    # cells[cellptr] = input_file.read(1)
+                    cells[cellptr] = b"\n"
                 else:
                     output.append(chr(cells[cellptr]))
 
@@ -139,7 +140,8 @@ def evaluate_cow(code, input_file, timeout=-1):
                 output.append(cells[cellptr])
 
             if command == b"oom":
-                cells[cellptr] = input_file.read(1)
+                # cells[cellptr] = input_file.read(1)
+                cells[cellptr] = b"\n"
 
             if len(command) < 3:
                 return None
