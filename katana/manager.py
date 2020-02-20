@@ -138,7 +138,7 @@ class Manager(configparser.ConfigParser):
         # Notify the monitor of the data
         self.monitor.on_data(self, unit, data)
 
-        # Look for flags
+        # Look for flagsregister
         self.find_flag(unit, data)
 
         if unit.target.config["manager"].getboolean("recurse") and recurse:
