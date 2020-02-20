@@ -46,8 +46,10 @@ class Unit(FileUnit):
     RECURSE_SELF = False
     # Groups we belong to
     GROUPS = ["stego", "image"]
-    # Blocked groups
-    BLOCKED_GROUPS = ["stego"]
+
+    # Blocked groups.... do not recurse into forensics because running
+    # binwalk or foremost on new images serves no real purpose
+    BLOCKED_GROUPS = ["stego", "forensics"]
 
     def __init__(self, manager: Manager, target: Target):
         # Call the parent constructor to ensure that this an image file!
@@ -71,15 +73,15 @@ class Unit(FileUnit):
 
         # If we don't know what this is, don't bother with it.
         except OSError:
-            raise units.NotApplicable("cannot read file")
+            raise NotApplicable("cannot read file")
 
         except Exception:
-            raise units.NotApplicable("unknown error occured")
+            raise NotApplicable("unknown error occured")
 
     def enumerate(self):
         channel = self.get("channel", "")
         plane = self.get("plane", "")
-        # Default to 4 planes
+        # Default to 4 planesexplain
         max_plane = self.geti("max-plane", 4)
 
         # Try to decode planes
@@ -117,4 +119,4 @@ class Unit(FileUnit):
             image.save(output_path)
 
             # Register the artifact with the manager
-            self.manager.register_artifact(self, artifact_path)
+            self.manager.register_artifact(self, output_path)

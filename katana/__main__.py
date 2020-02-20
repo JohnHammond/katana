@@ -145,7 +145,7 @@ def main():
 
     # Queue the specified targets
     for target in args.targets:
-        logging.info("queuing target {0}".format(target))
+
         manager.queue_target(target)
 
     # Build the REPL and execute it

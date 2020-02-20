@@ -19,8 +19,8 @@ class Unit(WebUnit):
     # Groups we belong to
     GROUPS = ["web", "robots", "robots.txt"]
 
-    # In case we have nested ZIPs, we CAN recurse into ourselves.
-    RECURSE_SELF = True
+    # No need to recurse into yourself here.. that would just be weird
+    RECURSE_SELF = False
 
     # Moderately high priority due to speed and broadness of applicability
     PRIORITY = 30
