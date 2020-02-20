@@ -20,3 +20,5 @@ pico.ini
 shmoocon/
 rtcp/*
 neverlan/
+**/*.egg-info
+dist
