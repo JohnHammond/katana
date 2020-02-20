@@ -41,7 +41,8 @@ class MissingDependency(Exception):
 
 
 class Unit(object):
-    r""" Abstract the interface with a specific unit of evaluation for CTF
+    r"""
+    Abstract the interface with a specific unit of evaluation for CTF
     challenges. This class must implement the `evaluate` and `validate` methods
     in order to be used with Katana.
 
@@ -327,10 +328,12 @@ class Unit(object):
 
     @classmethod
     def check_deps(cls):
-        """ The default dependency check will make sure that every item in
+        """ 
+        The default dependency check will make sure that every item in
         self.DEPENDENCIES exists as an external executable in the current
         environment, and raise a NotApplicable exception otherwise. You
-         likely won't need to override this, but you can if you'd like. """
+        likely won't need to override this, but you can if you'd like. 
+        """
 
         # Check that all the given binary dependencies exist
         try:

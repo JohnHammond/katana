@@ -23,17 +23,33 @@ the ``help`` command from within the interpreter. At the time of writing, the fo
 supplied::
 
     usage: katana [-h] [--config CONFIG] [--manager MANAGER] [--timeout TIMEOUT]
-                  [--auto] [--unit UNIT] [--exclude EXCLUDE] [--flag FLAG]
-                  [--ascii85 ASCII85] [--base32 BASE32] [--base58 BASE58]
-                  [--base64 BASE64] [--base85 BASE85] [--exiftool EXIFTOOL]
-                  [--morsecode MORSECODE] [--qrcode QRCODE] [--strings STRINGS]
-                  [--unbinary UNBINARY] [--undecimal UNDECIMAL]
-                  [--unhexlify UNHEXLIFY] [--urldecode URLDECODE]
-                  [--audio_spectrogram AUDIO_SPECTROGRAM]
-                  [--dtmf_decode DTMF_DECODE] [--jsteg JSTEG] [--snow SNOW]
-                  [--steghide STEGHIDE] [--stegsnow STEGSNOW]
-                  [--whitespace WHITESPACE]
-                  [targets [targets ...]]
+              [--auto] [--unit UNIT] [--exclude EXCLUDE] [--flag FLAG]
+              [--force] [--apktool APKTOOL] [--md5 MD5] [--affine AFFINE]
+              [--atbash ATBASH] [--caesar CAESAR] [--caesar255 CAESAR255]
+              [--dna DNA] [--phonetic PHONETIC] [--polybius POLYBIUS]
+              [--quipqiup QUIPQIUP] [--railfence RAILFENCE]
+              [--reverse REVERSE] [--rot47 ROT47] [--rsa RSA] [--t9 T9]
+              [--vigenere VIGENERE] [--xor XOR] [--brainfuck BRAINFUCK]
+              [--cow COW] [--jsfuck JSFUCK] [--malbolge MALBOLGE] [--ook OOK]
+              [--piet PIET] [--pikalang PIKALANG] [--binwalk BINWALK]
+              [--foremost FOREMOST] [--gunzip GUNZIP] [--tesseract TESSERACT]
+              [--tcpflow TCPFLOW] [--pdf2text PDF2TEXT] [--pdfcrack PDFCRACK]
+              [--pdfimages PDFIMAGES] [--pdfinfo PDFINFO] [--ascii85 ASCII85]
+              [--base32 BASE32] [--base58 BASE58] [--base64 BASE64]
+              [--base85 BASE85] [--exiftool EXIFTOOL] [--morsecode MORSECODE]
+              [--qrcode QRCODE] [--strings STRINGS] [--unbinary UNBINARY]
+              [--undecimal UNDECIMAL] [--unhexlify UNHEXLIFY]
+              [--urldecode URLDECODE] [--audio_spectrogram AUDIO_SPECTROGRAM]
+              [--dtmf_decode DTMF_DECODE] [--jsteg JSTEG] [--snow SNOW]
+              [--steghide STEGHIDE] [--stegsnow STEGSNOW]
+              [--stegsolve STEGSOLVE] [--whitespace WHITESPACE]
+              [--zsteg ZSTEG] [--extract EXTRACT]
+              [--basic_img_shell BASIC_IMG_SHELL]
+              [--basic_nosqli BASIC_NOSQLI] [--basic_sqli BASIC_SQLI]
+              [--cookies COOKIES] [--form_submit FORM_SUBMIT] [--git GIT]
+              [--logon_cookies LOGON_COOKIES] [--robots ROBOTS]
+              [--spider SPIDER] [--unzip UNZIP]
+              [targets [targets ...]]
 
     Automatically identify and solve basic Capture the Flag challenges
 
@@ -54,6 +70,45 @@ supplied::
       --exclude EXCLUDE, -e EXCLUDE
                             exclude a unit from running
       --flag FLAG, -f FLAG  set the flag format
+      --force               Force execution even if results directory exists
+      --apktool APKTOOL     comma separated unit configuration
+      --md5 MD5             comma separated unit configuration
+      --affine AFFINE       comma separated unit configuration
+      --atbash ATBASH       comma separated unit configuration
+      --caesar CAESAR       comma separated unit configuration
+      --caesar255 CAESAR255
+                            comma separated unit configuration
+      --dna DNA             comma separated unit configuration
+      --phonetic PHONETIC   comma separated unit configuration
+      --polybius POLYBIUS   comma separated unit configuration
+      --quipqiup QUIPQIUP   comma separated unit configuration
+      --railfence RAILFENCE
+                            comma separated unit configuration
+      --reverse REVERSE     comma separated unit configuration
+      --rot47 ROT47         comma separated unit configuration
+      --rsa RSA             comma separated unit configuration
+      --t9 T9               comma separated unit configuration
+      --vigenere VIGENERE   comma separated unit configuration
+      --xor XOR             comma separated unit configuration
+      --brainfuck BRAINFUCK
+                            comma separated unit configuration
+      --cow COW             comma separated unit configuration
+      --jsfuck JSFUCK       comma separated unit configuration
+      --malbolge MALBOLGE   comma separated unit configuration
+      --ook OOK             comma separated unit configuration
+      --piet PIET           comma separated unit configuration
+      --pikalang PIKALANG   comma separated unit configuration
+      --binwalk BINWALK     comma separated unit configuration
+      --foremost FOREMOST   comma separated unit configuration
+      --gunzip GUNZIP       comma separated unit configuration
+      --tesseract TESSERACT
+                            comma separated unit configuration
+      --tcpflow TCPFLOW     comma separated unit configuration
+      --pdf2text PDF2TEXT   comma separated unit configuration
+      --pdfcrack PDFCRACK   comma separated unit configuration
+      --pdfimages PDFIMAGES
+                            comma separated unit configuration
+      --pdfinfo PDFINFO     comma separated unit configuration
       --ascii85 ASCII85     comma separated unit configuration
       --base32 BASE32       comma separated unit configuration
       --base58 BASE58       comma separated unit configuration
@@ -79,8 +134,27 @@ supplied::
       --snow SNOW           comma separated unit configuration
       --steghide STEGHIDE   comma separated unit configuration
       --stegsnow STEGSNOW   comma separated unit configuration
+      --stegsolve STEGSOLVE
+                            comma separated unit configuration
       --whitespace WHITESPACE
                             comma separated unit configuration
+      --zsteg ZSTEG         comma separated unit configuration
+      --extract EXTRACT     comma separated unit configuration
+      --basic_img_shell BASIC_IMG_SHELL
+                            comma separated unit configuration
+      --basic_nosqli BASIC_NOSQLI
+                            comma separated unit configuration
+      --basic_sqli BASIC_SQLI
+                            comma separated unit configuration
+      --cookies COOKIES     comma separated unit configuration
+      --form_submit FORM_SUBMIT
+                            comma separated unit configuration
+      --git GIT             comma separated unit configuration
+      --logon_cookies LOGON_COOKIES
+                            comma separated unit configuration
+      --robots ROBOTS       comma separated unit configuration
+      --spider SPIDER       comma separated unit configuration
+      --unzip UNZIP         comma separated unit configuration
 
 
 Configuration
@@ -151,7 +225,7 @@ After adding a target, you can view the progress of all targets with the ``targe
 
     ./tests/cases/orchestra - completed
      hash: 2f0a02add67b58de837c7be054ae9e77
-     flag: USCGA{strings}
+     flag: JHDCTF{strings}
 
 When a target locates a flag, it will produce an asynchronous message to the screen identifying the unit and the flag
 which was found. The flag will also be copied to the primary clipboard::
@@ -159,7 +233,7 @@ which was found. The flag will also be copied to the primary clipboard::
     katana - waiting - 0 units queued
     ➜ target ad
     strings(./tests/cases/orchestra) - completed!
-      USCGA{strings} - (copied)
+      JHDCTF{strings} - (copied)
     katana - running - 0 units queued
     ➜ target ad
 
@@ -169,7 +243,7 @@ After a target has located flag(s), you can view the solution path for a target 
     ➜ target solution -r ./tests/cases/evil_ducky.jpg
     steghide(./tests/cases/evil_ducky.jpg) ➜
       strings(./results/60959e0ca0e4a202fd928c50f49a34fb/steghide/dGlua2Vy) ➜
-       USCGA{we_finally_found_the_the_flag} - (copied)
+       JHDCTF{we_finally_found_the_the_flag} - (copied)
 
 
 Monitoring Directories

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 
-Katana documentation is cool!
+Katana
 
 """
 import katana.manager

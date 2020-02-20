@@ -56,3 +56,19 @@ distribution documentation for further assistance in installing them.
 
 - exiftool
 - steghide
+- stegsnow
+- zsteg
+- jsteg
+- node
+- binwalk
+- foremosy
+- unzip
+- npiet
+- tcpflow
+- git
+- apktool
+- tesseract
+- qpdf
+- pdfinfo
+- pdfimages
+- strings
