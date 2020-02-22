@@ -1,4 +1,22 @@
-#!/usr/bin/env python3
+"""
+Perform the classic Atbash cipher on the given target.
+
+You can read more about the Atbash cipher here:
+https://en.wikipedia.org/wiki/Atbash
+
+This unit inherits from the 
+:class:`katana.unit.NotEnglishAndPrintableUnit` class, as we can expect
+the data to still be printable characters (letters, numbers and punctuation)
+but not readable English. It also inherits from the 
+:class:`katana.units.crypto.CryptoUnit` class to ensure it is not a viable
+URL or potentially useful file.
+
+
+The gist of the Atbash cipher is that it will perform a substitution cipher
+with the key being the typical English alphabet, just reversed. Basically,
+A-Z maps to Z-A.
+
+"""
 import io
 import string
 from typing import Any
@@ -8,28 +26,39 @@ from katana.units.crypto import CryptoUnit
 
 
 class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
+
     # Fill in your groups
-    GROUPS = ["crypto"]
-    BLOCKED_GROUPS = ["crypto"]
+    GROUPS: list = ["crypto"]
+
+    BLOCKED_GROUPS: list = ["crypto"]
+
     # Default priority is 50
-    PRIORITY = 60
+    PRIORITY: int = 60
+
     # Do not recurse into self
-    RECURSE_SELF = False
+    RECURSE_SELF: bool = False
 
     # Inheriting from a CryptoUnit will ensure this will not run on URLs
     # or files that could be anything useful (image, document, audio, etc.)
 
     def evaluate(self, case: Any) -> None:
         """
-        Evaluate the target.
-        :param case: A case returned by evaluate
-        :return: None
+        This ``evaluate`` function performs the Atbash cipher on the target.
+        
+        :param case: A case returned by ``enumerate``. For this unit, 
+         the enumerate function is not used.
+         
+        :return: None. This function should not return any data.
         """
 
-        new_string = []
-        reverse_upper = string.ascii_uppercase[::-1]
-        reverse_lower = string.ascii_lowercase[::-1]
+        # Create a list to store the new information in.
+        new_string: list = []
 
+        # Reverse the alphabet, to be used as the mapping key
+        reverse_upper: str = string.ascii_uppercase[::-1]
+        reverse_lower: str = string.ascii_lowercase[::-1]
+
+        # Perform the actual mapping translation/atbash cipher
         with io.TextIOWrapper(self.target.stream, encoding="utf-8") as stream:
             try:
                 for ch in iter(lambda: stream.read(1), ""):
@@ -46,5 +75,8 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
             except UnicodeDecodeError:
                 pass
 
-        result = "".join(new_string)
+        # Join together the final result as a complete string
+        result: str = "".join(new_string)
+
+        # Register the data!
         self.manager.register_data(self, result)

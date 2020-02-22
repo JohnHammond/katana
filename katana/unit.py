@@ -28,18 +28,6 @@ import katana
 logger = logging.getLogger(__name__)
 
 
-class NotApplicable(Exception):
-    r""" Indicates the Unit which was created is not applicable to the given
-    target, and the unit is in an undefined state. """
-    pass
-
-
-class MissingDependency(Exception):
-    r""" Indicates the unit was missing a dependency, and cannot be loaded. The
-    message content is the name of the missing dependency """
-    pass
-
-
 class Unit(object):
     r"""
     Abstract the interface with a specific unit of evaluation for CTF
@@ -344,111 +332,6 @@ class Unit(object):
             raise MissingDependency(dep)
 
 
-class NoneUnit(Unit):
-    @classmethod
-    def get_name(cls) -> str:
-        return "None"
-
-
-class FileUnit(Unit):
-    r""" This unit base class requires that the given target be a file, and also
-    optionally have a libmagic signature which contains one of a specified set
-    of keywords. To use this unit, you simply pass a special `keywords`
-    argument to its constructor in your unit subclass:
-
-    .. code-block:: python
-        
-        # A unit that requires a file containing some sort of image
-        class Unit(units.FileUnit):
-            def __init__(self, manager, target):
-                super(Unit, self).__init__(manager, target, keywords=['image'])
-    """
-
-    def __init__(
-        self,
-        manager: katana.manager.Manager,
-        target: katana.target.Target,
-        keywords=None,
-    ):
-        super(FileUnit, self).__init__(manager, target)
-
-        # Ensure the target is a file
-        if not self.target.is_file:
-            raise NotApplicable("not a file")
-
-        if keywords is None or keywords == []:
-            return
-
-        # Check keywords against magic type
-        for k in keywords:
-            if k.lower() in self.target.magic.lower():
-                return
-
-        # No keywords matched
-        raise NotApplicable("no matching keywords found in magic")
-
-
-class PrintableDataUnit(Unit):
-    r""" This unit base class ensures that the target content contains only
-    printable data (that is, data which is not binary/is readable). """
-
-    def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
-        super(PrintableDataUnit, self).__init__(manager, target)
-
-        if not self.target.is_printable:
-            raise NotApplicable("not printable data")
-
-
-class NotEnglishUnit(Unit):
-    r""" This unit base class ensures that the target content contains mostly
-    non-english text. """
-
-    def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
-        super(NotEnglishUnit, self).__init__(manager, target)
-
-        if self.target.is_english:
-            raise NotApplicable("potential english text")
-
-
-class NotEnglishAndPrintableUnit(Unit):
-    r""" This unit base class ensures that the target content is printable, and
-    is also *not* english text (e.g. base64 data, white space, etc.) """
-
-    def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
-        super(NotEnglishAndPrintableUnit, self).__init__(manager, target)
-
-        if self.target.is_english or not self.target.is_printable:
-            raise NotApplicable("not english or not printable")
-
-
-class RegexUnit(Unit):
-    """ Utilizes a regular expression pattern to locate matching sections of the
-    input data. The Unit will raise NotApplicable if the target has no matches. """
-
-    # The pattern used for matching (pre-compiled)
-    PATTERN: re.Pattern
-
-    def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
-        super(RegexUnit, self).__init__(manager, target)
-
-        self.match_iter = self.PATTERN.finditer(target.raw)
-
-        try:
-            self.first_match = next(self.match_iter)
-        except StopIteration:
-            raise NotApplicable("No matches found")
-
-    def enumerate(self):
-        """ Yield's all the match objects """
-
-        # Yield the first match we found in the constructor
-        yield self.first_match
-
-        # Yield all the other matches
-        for match in self.match_iter:
-            yield match
-
-
 class Finder(object):
     r""" Utilize python dynamic introspection and loading to locate units
     either within the default unit list bundled with Katana or in a custom
@@ -586,3 +469,120 @@ class Finder(object):
             else:
                 # unit.PRIORITY *= scale
                 yield unit
+
+
+class NotApplicable(Exception):
+    r""" Indicates the Unit which was created is not applicable to the given
+    target, and the unit is in an undefined state. """
+    pass
+
+
+class MissingDependency(Exception):
+    r""" Indicates the unit was missing a dependency, and cannot be loaded. The
+    message content is the name of the missing dependency """
+    pass
+
+
+class NoneUnit(Unit):
+    @classmethod
+    def get_name(cls) -> str:
+        return "None"
+
+
+class FileUnit(Unit):
+    r""" This unit base class requires that the given target be a file, and also
+    optionally have a libmagic signature which contains one of a specified set
+    of keywords. To use this unit, you simply pass a special `keywords`
+    argument to its constructor in your unit subclass:
+
+    .. code-block:: python
+        
+        # A unit that requires a file containing some sort of image
+        class Unit(units.FileUnit):
+            def __init__(self, manager, target):
+                super(Unit, self).__init__(manager, target, keywords=['image'])
+    """
+
+    def __init__(
+        self,
+        manager: katana.manager.Manager,
+        target: katana.target.Target,
+        keywords=None,
+    ):
+        super(FileUnit, self).__init__(manager, target)
+
+        # Ensure the target is a file
+        if not self.target.is_file:
+            raise NotApplicable("not a file")
+
+        if keywords is None or keywords == []:
+            return
+
+        # Check keywords against magic type
+        for k in keywords:
+            if k.lower() in self.target.magic.lower():
+                return
+
+        # No keywords matched
+        raise NotApplicable("no matching keywords found in magic")
+
+
+class PrintableDataUnit(Unit):
+    r""" This unit base class ensures that the target content contains only
+    printable data (that is, data which is not binary/is readable). """
+
+    def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
+        super(PrintableDataUnit, self).__init__(manager, target)
+
+        if not self.target.is_printable:
+            raise NotApplicable("not printable data")
+
+
+class NotEnglishUnit(Unit):
+    r""" This unit base class ensures that the target content contains mostly
+    non-english text. """
+
+    def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
+        super(NotEnglishUnit, self).__init__(manager, target)
+
+        if self.target.is_english:
+            raise NotApplicable("potential english text")
+
+
+class NotEnglishAndPrintableUnit(Unit):
+    r""" This unit base class ensures that the target content is printable, and
+    is also *not* english text (e.g. base64 data, white space, etc.) """
+
+    def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
+        super(NotEnglishAndPrintableUnit, self).__init__(manager, target)
+
+        if self.target.is_english or not self.target.is_printable:
+            raise NotApplicable("not english or not printable")
+
+
+class RegexUnit(Unit):
+    """ Utilizes a regular expression pattern to locate matching sections of the
+    input data. The Unit will raise NotApplicable if the target has no matches. """
+
+    # The pattern used for matching (pre-compiled)
+    PATTERN: re.Pattern
+
+    def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
+        super(RegexUnit, self).__init__(manager, target)
+
+        self.match_iter = self.PATTERN.finditer(target.raw)
+
+        try:
+            self.first_match = next(self.match_iter)
+        except StopIteration:
+            raise NotApplicable("No matches found")
+
+    def enumerate(self):
+        """ Yield's all the match objects """
+
+        # Yield the first match we found in the constructor
+        yield self.first_match
+
+        # Yield all the other matches
+        for match in self.match_iter:
+            yield match

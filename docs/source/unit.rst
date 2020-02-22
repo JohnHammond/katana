@@ -2,4 +2,7 @@ Unit - Abstract Challenge Solution
 ==================================
 
 .. automodule:: katana.unit
-    :members: Unit, Finder
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :member-order: bysource

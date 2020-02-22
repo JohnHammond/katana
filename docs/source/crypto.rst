@@ -8,6 +8,9 @@ These units handle procedures that are often necessary for challenges in the Cry
 	Often times, these units can take a long amount of time and bottleneck Katana's operations. If you know you do not need these checks, include ``--exclude crypto`` in your command. 
 
 
+.. automodule:: katana.units.crypto
+   :members:
+
 .. toctree::
 	crypto/affine
 	crypto/atbash

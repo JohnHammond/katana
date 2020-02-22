@@ -26,7 +26,7 @@ class Unit(web.WebUnit):
 
         if not self.upload:
             # If there is no upload functionality, don't bother with this unit
-            raise units.NotApplicable
+            raise NotApplicable
 
     def enumerate(self):
 
