@@ -47,7 +47,7 @@ class Unit(FileUnit):
 
     def __init__(self, *args, **kwargs):
 
-        super(Unit, self).__init__(katana, *args, **kwargs, keywords=["jpg ", "jpeg "])
+        super(Unit, self).__init__(*args, **kwargs, keywords=["jpg ", "jpeg "])
 
         # Keep track of how many passwords we find (protected by lock)
         self.count_lock = threading.Lock()
@@ -87,8 +87,8 @@ class Unit(FileUnit):
         Evaluate the target. Extract any info with steghide and
         recurse on any new found files.
 
-        :param case: A case returned by ``enumerate``. For this unit, \
-        ``case`` will first be an empty password, then the password supplied \
+        :param password: A case returned by ``enumerate``. For this unit, \
+        ``password`` will first be an empty password, then the password supplied \
         as an argument, then the contents of a provided dictionary file. 
 
         :return: None. This function should not return any data.

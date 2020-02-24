@@ -44,10 +44,10 @@ class Unit(PrintableDataUnit):
     def __init__(self, *args, **kwargs):
         super(Unit, self).__init__(*args, **kwargs)
 
-        if URL_DATA.search(target.raw) is None:
+        if URL_DATA.search(self.target.raw) is None:
             raise NotApplicable("No URL encoded parts")
 
-    def evaluate(self, case):
+    def evaluate(self, case: Any):
         """
         Evaluate the target. URL decode the  
         target and recurse on any new found information.

@@ -113,7 +113,7 @@ class Unit(object):
         ):
             raise NotApplicable("protected recurse violation")
         elif self.NO_RECURSE:
-            parent = target.parent
+            unit = target.parent
             while unit is not None:
                 if isinstance(unit, type(self)):
                     raise NotApplicable("no recurse violation")

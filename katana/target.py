@@ -21,6 +21,12 @@ import os
 import time
 import configparser
 
+
+# Suppress only the single warning from urllib3 needed.
+from urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+
 import katana.util
 
 ADDRESS_PATTERN = (
@@ -174,7 +180,7 @@ class Target(object):
             if self.config["manager"].getboolean("download"):
                 try:
                     self.url_accessible = True
-                    self.request = requests.get(upstream)
+                    self.request = requests.get(upstream, verify=False)
                 except requests.exceptions.ConnectionError:
                     self.url_accessible = False
                     self.is_url = False
@@ -188,17 +194,16 @@ class Target(object):
                         filp.write(self.content)
                     self.is_file = True
                 # Carve out the root of the URL
+
+            #####  to fix
             else:
                 # We were asked not to download URLs
-                try:
-                    # CALEB: I don't know why we are ignoring the download
-                    # option here...
-                    self.request = requests.get(self.upstream)
-                    self.content = self.request.content
-                    self.url_accessible = True
-                except requests.exceptions.ConnectionError:
-                    self.content = self.upstream
-                    self.is_url = False
+
+                # CALEB: I don't know why we are ignoring the download
+                # option here...
+                # self.request = requests.get(self.upstream)
+                self.content = self.upstream
+                self.is_url = False
 
         # Save the path to the file
         elif self.is_file:
