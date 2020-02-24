@@ -981,13 +981,24 @@ class Repl(cmd2.Cmd):
         elif args.parameter is None:
             # Display the entire configuration
             for section in ["DEFAULT"] + self.manager.sections():
-                # Print section
-                self.poutput(f"[{section}]")
 
-                # Print each item in the section
-                for name in self.manager[section]:
-                    if section == "DEFAULT" or name not in self.manager["DEFAULT"]:
-                        self.poutput(f"  {name} = {self.manager[section][name]}")
+                # Grab the configurations which are unique to this section
+                values = {
+                    name: self.manager[section][name]
+                    for name in self.manager[section]
+                    if section == "DEFAULT"
+                    or name not in self.manager["DEFAULT"]
+                    or self.manager[section][name] != self.manager["DEFAULT"][name]
+                }
+
+                # Don't print empty configurations
+                if len(values) == 0:
+                    continue
+
+                # Print section header
+                self.poutput(f"[{section}]")
+                for name, value in values.items():
+                    self.poutput(f"  {name} = {value}")
 
         elif args.section is None:
             if args.reset:
