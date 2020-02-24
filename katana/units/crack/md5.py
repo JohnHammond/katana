@@ -76,7 +76,7 @@ class Unit(BaseUnit):
         cracked the hash and that ``case`` value is registered as new data.
 
 
-        :param case: A case returned by ``evaluate``
+        :param case: A case returned by ``enumerate``
 
         :return: None. This function should not return any data.
         """

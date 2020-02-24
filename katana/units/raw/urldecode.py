@@ -1,4 +1,13 @@
-#!/usr/bin/env python3
+"""
+Decode URL-encoded/percent-ecoded data.
+
+This unit will return the data represented in both little-endian notation
+and in big-endian notation.
+
+This unit inherits from :class:`katana.unit.PrintableDataUnit` as the targets
+for this should include data that is often part of a URL.
+"""
+
 from typing import Any
 import urllib.request
 import binascii
@@ -11,22 +20,42 @@ import katana.util
 import regex as re
 
 URL_DATA = re.compile(rb"%[0-9A-Fa-f]{1,2}", re.IGNORECASE | re.MULTILINE | re.DOTALL)
+"""
+The pattern to match for URL encoded data.
+"""
 
 
 class Unit(PrintableDataUnit):
 
-    # Moderate priority
     PRIORITY = 25
-    # Groups
-    GROUPS = ["raw", "decode"]
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a higher
+    priority.
+    """
 
-    def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
-        super(Unit, self).__init__(manager, target)
+    GROUPS = ["raw", "decode", "urldecode"]
+    """
+    These are "tags" for a unit. Considering it is a Raw unit, "raw"
+    is included, as well as the tag "decode", and the name of the unit itself,
+    "urldecode".
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(Unit, self).__init__(*args, **kwargs)
 
         if URL_DATA.search(target.raw) is None:
             raise NotApplicable("No URL encoded parts")
 
     def evaluate(self, case):
+        """
+        Evaluate the target. URL decode the  
+        target and recurse on any new found information.
+
+        :param match: A match returned by the ``RegexUnit``.
+
+        :return: None. This function should not return any data.
+        """
 
         try:
             # Attempt to urldecode the data

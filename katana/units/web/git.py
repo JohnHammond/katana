@@ -1,19 +1,22 @@
 """
 Git Dumper
 
-This unit will detect if a /.git/ directory is found on a website.
+This unit will detect if a ``/.git/`` directory is found on a website.
 If it is, it will pull down all the files and search for flags within
 the commits and objects inside of the public facing git repository.
 
 This process is threaded, alongside Katana already being threaded...
 so your mileage may vary.
 
-Note that this code  is shamelessly ripped from
-https://github.com/arthaud/git-dumper
+This unit inherits from :class:`katana.units.web.WebUnit` as that contains
+lots of predefined variables that can be used throughout multiple web units.
+
+.. note::  
+
+    This code is shamelessly ripped from https://github.com/arthaud/git-dumper
+
 """
 
-
-#!/usr/bin/env python3
 
 import multiprocessing
 import os
@@ -42,12 +45,6 @@ from katana.units.web import WebUnit
 from katana.unit import NotApplicable
 
 
-# This is a convenience function I have yet to clean and remove
-def printf(a):
-    # print(a)
-    pass
-
-
 def is_html(response):
     """ Return True if the response is a HTML webpage """
     return "<html>" in response.text
@@ -56,6 +53,7 @@ def is_html(response):
 def get_indexed_files(response):
     """
     Part of the Git Dumper procedure.
+
     Return all the files in the directory index webpage.
     """
     html = bs4.BeautifulSoup(response.text, "html.parser")
@@ -80,6 +78,7 @@ def get_indexed_files(response):
 def create_intermediate_dirs(path):
     """
     Part of the Git Dumper procedure.
+
     Create intermediate directories, if necessary
     """
 
@@ -232,7 +231,6 @@ class DownloadWorker(Worker):
                 timeout=timeout,
             )
         ) as response:
-            # printf('[-] Fetching %s/%s [%d]\n', url, filepath, response.status_code)
 
             if response.status_code != 200:
                 return []
@@ -302,7 +300,6 @@ class FindRefsWorker(DownloadWorker):
         response = self.session.get(
             "%s/%s" % (url, filepath), allow_redirects=False, timeout=timeout
         )
-        # printf('[-] Fetching %s/%s [%d]\n', url, filepath, response.status_code)
 
         if response.status_code != 200:
             return []
@@ -356,7 +353,12 @@ class FindObjectsWorker(DownloadWorker):
 
 
 def fetch_git(unit, url, directory, jobs, retry, timeout, katana):
-    """ Dump a git repository into the output directory """
+    """ 
+    Dump a .git repository into the output directory. 
+
+    This is the core function of the https://github.com/arthaud/git-dumper
+    code.
+    """
 
     assert os.path.isdir(directory), "%s is not a directory" % directory
     assert not os.listdir(directory), "%s is not empty" % directory
@@ -543,12 +545,16 @@ def fetch_git(unit, url, directory, jobs, retry, timeout, katana):
 # -----------------------------------------------
 
 
-# Avoid inline JavaScript, anchors, and external links
 bad_starting_links = [b"#", b"javascript:", b"https://", b"http://", b"//"]
+"""
+This is a blacklist to avoid inline JavaScript, anchors, and external links..
+"""
 
 
-# This is a convenience function just to avoid bad links above
 def has_a_bad_start(link):
+    """
+    This is a convenience function just to avoid bad links above
+    """
     for bad_start in bad_starting_links:
         if link.startswith(bad_start):
             return False
@@ -559,9 +565,22 @@ def has_a_bad_start(link):
 class Unit(WebUnit):
 
     PRIORITY = 40
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a somewhat
+    higher priority.
+    """
 
-    # It would make no sense to recurse on yourself
+    GROUPS = ["web", "git"]
+    """
+    These are "tags" for a unit. Considering it is a Web unit, "web"
+    is included, as well as the name of the unit, "git".
+    """
+
     RECURSE_SELF = False
+    """
+    This unit should not recurse into itself. It would make no sense.
+    """
 
     # If find a downloadable file, uh, just leave it alone
     BAD_MIME_TYPES = ["application/octet-stream"]
@@ -624,6 +643,16 @@ class Unit(WebUnit):
             self.response = r
 
     def evaluate(self, case: Any):
+        """
+        Evaluate the target. If a ``.git`` repository is found, download
+        it and look through all of the objects for a flag.
+
+        :param case: A case returned by ``enumerate``. For this unit,\
+        the ``enumerate`` function is not used.
+
+        :return: None. This function should not return any data.
+
+        """
 
         # Keep track of seen files for the target
         self.target.seen_files = []
@@ -644,11 +673,6 @@ class Unit(WebUnit):
             )
         except AssertionError as e:
             return  # something went wrong. stop.
-
-        # This function is no longer in the Katana framework.
-        # Still determining how to get the functionality in place..
-        # katana.add_artifact(self, git_directory)
-        # -------------------
 
         # Do a basic grep for flags
         grep = subprocess.run(

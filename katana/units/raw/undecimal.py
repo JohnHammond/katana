@@ -1,4 +1,10 @@
-#!/usr/bin/env python3
+"""
+Decode data represented as decimal values.
+
+This unit will return the data represented in both little-endian notation
+and in big-endian notation.
+"""
+
 import regex as re
 
 from katana.unit import RegexUnit
@@ -6,14 +12,34 @@ from katana.unit import RegexUnit
 
 class Unit(RegexUnit):
 
-    # Moderate-high unit priority
     PRIORITY = 50
-    # Grousp we belong to
-    GROUPS = ["raw", "decode"]
-    # Pattern we're looking for
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has the default
+    priority.
+    """
+
+    GROUPS = ["raw", "decode", "undecimal"]
+    """
+    These are "tags" for a unit. Considering it is a Raw unit, "raw"
+    is included, as well as the tag "decode", and the unit name itself,
+    "undecimal"
+    """
+
     PATTERN = re.compile(rb"[0-9]+( ([0-9]+))*")
+    """
+    The pattern to match for decimal data.
+    """
 
     def evaluate(self, match):
+        """
+        Evaluate the target. Convert the decimal data found within the target
+        and recurse on any new found information.
+
+        :param match: A match returned by the ``RegexUnit``.
+
+        :return: None. This function should not return any data.
+        """
 
         match = match.group().split(b" ")
 

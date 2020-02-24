@@ -23,10 +23,19 @@ from katana import util
 from katana.unit import NotEnglishUnit, NotApplicable
 
 
-## JOHN: These are functions for Weiner's Little D attack.
-# -------------------------------------------
-def rational_to_contfrac(x, y):
-    # Converts a rational x/y fraction into a list of partial quotients [a0, ..., an]
+def rational_to_contfrac(x: int, y: int) -> list:
+    """
+    This function is used for the Weiner's Little D attack.
+
+    Converts a rational x/y fraction into a list of partial quotients [a0, ..., an]
+
+    :param x: The numerator of the provided fraction.
+
+    :param y: The denominator of the provided fraction.
+
+    :return: a list of partial quotients.
+    """
+
     a = x // y
     pquotients = [a]
     while a * y != x:
@@ -36,16 +45,30 @@ def rational_to_contfrac(x, y):
     return pquotients
 
 
-def convergents_from_contfrac(frac):
-    # computes the list of convergents using the list of partial quotients
+def convergents_from_contfrac(frac: list) -> list:
+    """
+    This function is used for the Weiner's Little D attack.
+
+    Computes the list of convergents using the list of partial quotients
+
+    :param frac: Fractions represented by a list
+
+    :return: A list of convergents
+    """
+
     convs = []
     for i in range(len(frac)):
         convs.append(contfrac_to_rational(frac[0:i]))
     return convs
 
 
-def contfrac_to_rational(frac):
-    # Converts a finite continued fraction [a0, ..., an] to an x/y rational.
+def contfrac_to_rational(frac: list):
+    """
+    This function is used for the Weiner's Little D attack.
+
+    Converts a finite continued fraction ``[a0, ..., an]`` to an x/y rational.
+    """
+
     if len(frac) == 0:
         return 0, 1
     num = frac[-1]
@@ -56,6 +79,19 @@ def contfrac_to_rational(frac):
 
 
 def egcd(a, b):
+    """
+    This function is used for the Weiner's Little D attack.
+
+    Determines the Euclidean Greatest Common Denominator between 
+    given values.
+
+    :param a: One value to be used to find the GCD for.
+
+    :param b: Another value to be used to find the GCD for.
+
+    :return: 
+    """
+
     if a == 0:
         return b, 0, 1
     g, x, y = egcd(b % a, a)
@@ -63,11 +99,33 @@ def egcd(a, b):
 
 
 def mod_inv(a, m):
+    """
+    This function is used for the Weiner's Little D attack.
+
+    Deterine the modular inverse, given a base and the modulus.
+
+    :param a: The base to use for the modular inverse operation.
+
+    :param m: The modulus to use for the modular inverse operation.
+
+    :return: An integer as the result of the modular inverse.
+
+    """
     g, x, _ = egcd(a, m)
     return (x + m) % m
 
 
 def isqrt(n):
+    """
+    This function is used for the Weiner's Little D attack.
+
+    Determines the integer square root of a nunber.
+
+    :param n: The number to determine the integer square root of.
+
+    :return: The resulting integer square root.
+
+    """
     x = n
     y = (x + 1) // 2
     while y < x:
@@ -77,6 +135,16 @@ def isqrt(n):
 
 
 def find_cube_root(n):
+    """
+    This function is used for the Cube Root attack.
+
+    Determines the cube root of a number.
+
+    :param n: The number to determine the cube root of.
+
+    :return: The resulting cube root.
+
+    """
     lo = 0
     hi = n
     while lo < hi:
@@ -89,6 +157,19 @@ def find_cube_root(n):
 
 
 def weiners_little_d(e, n):
+    """
+    This function is used for the Weiner's Little D attack.
+
+    Actually 
+
+    :param e: The RSA e-value (exponent).
+
+    :param n: The RSA N-value (modulus).
+
+    :return: The determined RSA d-value (private key) after the \
+    Weiner's Little D attack.
+
+    """
     frac = rational_to_contfrac(e, n)
     convergents = convergents_from_contfrac(frac)
 
@@ -107,8 +188,17 @@ def weiners_little_d(e, n):
 # ---------------------------------------
 
 
-# JOHN: This is used to detect variables in a given file, or handle a given pubkey.
 def find_variables(text):
+    """
+    This is used to detect variables in a given file, or handle a given \
+    pubkey. 
+
+    :param text: The string to pull the variables from.
+
+    :return: A Generator for an RSA letter variable and its value.
+
+    """
+
     # First, check if this is a public key file.
     beginning_pubkey = re.search(
         "^-----BEGIN.*?-----\s", text, re.MULTILINE | re.DOTALL
@@ -165,6 +255,16 @@ def find_variables(text):
 
 
 def parse_int(given):
+    """
+    This function will parse out a Python value regardless of the
+    representation a number is given in the provided string. It will
+    detect hex or an integer form.
+
+    :param given: The string information that potentially includes a \
+    number.
+
+    :return: The Python integer value found.
+    """
 
     found = -1
 
@@ -196,13 +296,29 @@ def parse_int(given):
 
 class Unit(NotEnglishUnit):
 
-    # Fill in your groups
-    GROUPS = ["crypto"]
+    GROUPS = ["crypto", "rsa"]
+    """
+    These are "tags" for a unit. Considering it is a Crypto unit, "crypto"
+    is included, and the name of the unit, "rsa".
+    """
+
     BLOCKED_GROUPS = ["crypto"]
-    # Default priority is 50
+    """
+    These are tags for groups to not recurse into. Recursing into other crypto units
+    would be silly.
+    """
+
     PRIORITY = 60
-    # Do not recurse into self
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a slightly
+    lower priority.
+    """
+
     RECURSE_SELF = False
+    """
+    Do not recurse into self
+    """
 
     def __init__(self, *args, **kwargs):
         super(Unit, self).__init__(*args, **kwargs)
@@ -248,8 +364,11 @@ class Unit(NotEnglishUnit):
     def evaluate(self, case: Any) -> None:
         """
         Evaluate the target.
-        :param case: A case returned by enumerate
-        :return: None
+
+        :param case: A case returned by ``enumerate``. For this unit, \
+        the ``enumerate`` function is not used.
+
+        :return: None. This function should return any data.
         """
 
         def factor_n():

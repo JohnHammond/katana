@@ -1,4 +1,16 @@
-#!/usr/bin/env python3
+"""
+Extract metadata with ``exiftool``
+
+This unit will extract metadata file using the ``exiftool``
+command-line utility. The syntax runs as::
+
+    exiftool <target_path>
+
+The unit inherits from :class:`katana.unit.FileUnit` to ensure the target
+is a file.
+
+"""
+
 from typing import Any
 import subprocess
 import logging
@@ -10,18 +22,35 @@ import katana.util
 
 
 class Unit(FileUnit):
-    # We depend on the system tool `exiftool`
+
     DEPENDENCIES = ["exiftool"]
-    # Moderate-to-high priority
+    """
+    This unit needs the ``exiftool`` command-line tool to run.
+    """
+
     PRIORITY = 40
-    # Groups we belong to
-    GROUPS = ["raw", "file"]
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a
+    moderate-to-high priority
+    """
 
-    def __init__(self, manager: Manager, target: Target):
-
-        super(Unit, self).__init__(manager, target)
+    GROUPS = ["raw", "file", "exiftool"]
+    """
+    These are "tags" for a unit. Considering it is a Raw unit, "raw" is 
+    included, as well as the tag "file", and the name of the unit "exiftool".
+    """
 
     def evaluate(self, case):
+        """
+        Evaluate the target. Run ``exiftool`` on the target and
+        recurse on any newfound information.
+
+        :param case: A case returned by ``enumerate``. For this unit,\
+        the ``enumerate`` function is not used.
+
+        :return: None. This function should not return any data.
+        """
 
         # Run exiftool on the target file
         p = subprocess.Popen(
@@ -44,6 +73,6 @@ class Unit(FileUnit):
                     if metadata in ["Comment", "Album", "Artist", "Title"]:
                         self.manager.queue_target(value, parent=self)
 
-            # Don't recurse on this data, just save it for review and check for
-            # flags
+            # Don't recurse on this data, just save it for review and check
+            # for flags
             self.manager.register_data(self, response, recurse=False)

@@ -4,6 +4,8 @@ JSFuck decoder
 This unit will attempt to execute JSFuck and
 look for flags in the result.
 
+
+
 """
 
 
@@ -17,17 +19,31 @@ from katana.unit import NotEnglishUnit, NotApplicable
 
 class Unit(NotEnglishUnit):
 
-    # Groups we belong to
     GROUPS = ["esoteric", "jsfuck", "javascript"]
+    """
+    These are "tags" for a unit. Considering it is a Esoteric unit,
+    "esoteric" is included, as well as the unit name "jsfuck", and
+    the tag "javascript".
+    """
 
-    # It would not make sense to recurse into ourself
     RECURSE_SELF = False
+    """
+    It would not make sense to recurse into ourself. We shouldn't get JSFuck 
+    out.
+    """
 
-    # Binary dependencies
     DEPENDENCIES = ["node"]
+    """
+    Because this requires JavaScript code, ``node`` is a necessary binary
+    dependency. 
+    """
 
-    # Moderately high priority due to speed and broadness of applicability
     PRIORITY = 60
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a moderately
+    low priority because it requires an external tool.
+    """
 
     def __init__(self, *args, **kwargs):
         super(Unit, self).__init__(*args, **kwargs)
@@ -37,6 +53,15 @@ class Unit(NotEnglishUnit):
             raise NotApplicable("no jsfuck code found")
 
     def evaluate(self, case: Any):
+        """
+        Evaluate the target. Run the target as JSFuck code and
+        return the evaluated source code to Katana.
+
+        :param case: A case returned by ``enumerate``. For this unit,\
+        the ``enumerate`` function is not used.
+
+        :return: None. This function should not return any data.
+        """
 
         # First, get the location of the JS library that handles JSFuck...
         this_folder = os.path.dirname(os.path.realpath(__file__))

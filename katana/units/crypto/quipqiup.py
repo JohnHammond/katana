@@ -6,6 +6,12 @@ https://github.com/rallip/substituteBreaker. The unit takes the target, and
 if it does not look English text but it is clearly printable characters, it
 offers it to quipqiup online. 
 
+This unit inherits from the 
+:class:`katana.unit.NotEnglishAndPrintableUnit` class, as we can expect
+the data to still be printable characters (letters, numbers and punctuation)
+but not readable English. It also inherits from the 
+:class:`katana.units.crypto.CryptoUnit` class to ensure it is not a viable
+URL or potentially useful file.
 
 .. note::
 
@@ -44,16 +50,30 @@ def decodeSubstitute(cipher: str, time=3, spaces=True) -> str:
 
 class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
 
-    # Fill in your groups
-    GROUPS = ["crypto"]
-    BLOCKED_GROUPS = ["crypto"]
-    # Default priority is 50
-    PRIORITY = 60
-    # Do not recurse into self
-    RECURSE_SELF = False
+    GROUPS = ["crypto", "quipquip", "substitution"]
+    """
+    These are "tags" for a unit. Considering it is a Crypto unit, "crypto"
+    is included, and the name of the unit and some other related topics.
+    """
 
-    # Inheriting from a CryptoUnit will ensure this will not run on URLs
-    # or files that could be anything useful (image, document, audio, etc.)
+    BLOCKED_GROUPS = ["crypto"]
+    """
+    These are tags for groups to not recurse into. Recursing into other crypto units
+    would be silly.
+    """
+
+    PRIORITY = 60
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a slightly
+    lower priority.
+    """
+
+    RECURSE_SELF = False
+    """
+    This unit **does not recurse**. It simply looks for flags in the output of
+    quipqiup's best potential solution.
+    """
 
     def __init__(self, *args, **kwargs):
         super(Unit, self).__init__(*args, **kwargs)
@@ -72,8 +92,11 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
     def evaluate(self, case: Any) -> None:
         """
         Evaluate the target.
-        :param case: A case returned by evaluate
-        :return: None
+
+        :param case: A case returned by ``enumerate``. For this unit, the \
+        ``enumerate`` function is not used.
+
+        :return: None. This function should not return any data.
         """
 
         with io.TextIOWrapper(self.target.stream, encoding="utf-8") as stream:

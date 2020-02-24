@@ -2,9 +2,14 @@
 ROT47 decoder
 
 The gist of this code is ripped from 
-https://rot47.net/_py/rot47.txt. The unit takes the target, and
-if it does not look English text but it is clearly printable characters, it
-attempts to rot47 the data. 
+https://rot47.net/_py/rot47.txt. 
+
+This unit inherits from the 
+:class:`katana.unit.NotEnglishAndPrintableUnit` class, as we can expect
+the data to still be printable characters (letters, numbers and punctuation)
+but not readable English. It also inherits from the 
+:class:`katana.units.crypto.CryptoUnit` class to ensure it is not a viable
+URL or potentially useful file.
 
 """
 
@@ -17,19 +22,39 @@ from katana.units.crypto import CryptoUnit
 
 class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
 
-    # Fill in your groups
-    GROUPS = ["crypto"]
+    GROUPS = ["crypto", "rot47"]
+    """
+    These are "tags" for a unit. Considering it is a Crypto unit, "crypto"
+    is included, and the name of the unit, "rot47".
+    """
+
     BLOCKED_GROUPS = ["crypto"]
-    # Default priority is 50
+    """
+    These are tags for groups to not recurse into. Recursing into other 
+    crypto units would be silly.
+    """
+
     PRIORITY = 45
-    # Do not recurse into self
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a slightly
+    higher priority.
+    """
+
     RECURSE_SELF = False
+    """
+    Do not recurse into self
+    """
 
-    # Inheriting from a CryptoUnit will ensure this will not run on URLs
-    # or files that could be anything useful (image, document, audio, etc.)
-
-    # Shamelessly stolen from https://rot47.net/_py/rot47.txt
     def do_rot47(self, s):
+        """
+        Shamelessly stolen from https://rot47.net/_py/rot47.txt
+
+        This function takes a string and performs the ROT47 operation 
+        on it.
+
+        :param s: The byte string to perform the ROT47 operation on.
+        """
         x = []
         for i in range(len(s)):
             j = s[i]
@@ -42,7 +67,10 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
     def evaluate(self, case: Any) -> None:
         """
         Evaluate the target.
-        :param case: A case returned by evaluate
+
+        :param case: A case returned by ``enumerate``. For this unit, \
+        the ``enumerate`` function is not used.
+
         :return: None
         """
 

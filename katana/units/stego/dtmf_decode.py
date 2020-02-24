@@ -1,4 +1,14 @@
-#!/usr/bin/env python3
+"""
+Unit to read values from DTMF tones.
+
+This unit inherits from the :class:`katana.unit.FileUnit` to ensure
+that the target is in fact an audio file.
+
+..note::
+
+    Currently, this unit only supports WAVE files (sorry, no MP3s).
+"""
+
 import traceback
 import struct
 import math
@@ -10,7 +20,10 @@ from katana.target import Target
 
 
 class DTMFdetector(object):
-    """ I didn't write this, and I'm not going to attempt to comment it. """
+    """ 
+    This is used for the DTMF processing operations. 
+    Admittedly, it was found online and adapted to work within Katana.
+    """
 
     def __init__(self):
 
@@ -208,13 +221,27 @@ class DTMFdetector(object):
 
 class Unit(FileUnit):
 
-    # High priority for matching files
     PRIORITY = 30
-    # Groups we belong to
-    GROUPS = ["audio", "stego"]
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a high
+    priority for matching files
+    """
 
-    def __init__(self, manager: Manager, target: Target):
-        super(Unit, self).__init__(manager, target, keywords=["audio"])
+    GROUPS = ["audio", "stego"]
+    """
+    These are "tags" for a unit. Considering it is a Stego unit, "stego"
+    is included, as well as the tag "audio".
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        The constructor is included just to provide a keyword for the
+        ``FileUnit``, ensuring the provided target is an audio file. This
+        also validates it is a .wav file (.mp3 is not yet supported)
+        """
+
+        super(Unit, self).__init__(*args, **kwargs, keywords=["audio"])
 
         # Create a detector object
         self.detector = DTMFdetector()
@@ -231,6 +258,15 @@ class Unit(FileUnit):
             raise NotApplicable("failure reading dtmf tones")
 
     def evaluate(self, case):
+        """
+        Evaluate the target. Attempt to retrieve the DTMF tones present in
+        the target sound file.
+
+        :param case: A case returned by ``enumerate``. For this unit,\
+        the ``enumerate`` function is not used.
+
+        :return: None. This function should not return any data.
+        """
 
         # Decode DTMF Tones
         results = self.detector.getDTMFfromWAV(self.target.path.decode("utf-8"))

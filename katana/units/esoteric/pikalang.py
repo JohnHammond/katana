@@ -1,17 +1,17 @@
 """
 Pikalang esoteric decoder
 
-This unit will translate Pikalang to brainfuck and then execute it.
-"""
+This unit will map the Pikalang operations to their Brainfuck equivalant,
+and then pass along the actual execution to the Brainfuck unit's
+``evaluate_brainfuck`` function.
 
-"""
-JOHN: In the previous framework of Katana, this unit attempted to decode
-      Pikalang in seemingly TWO different variations. One was a literal mapping
-      to Brainfuck code, the other did something different that required much more 
-      code (https://github.com/joelsmithjohnson/pikachu-interpreter)
+In the previous framework of Katana, this unit attempted to decode
+Pikalang in seemingly TWO different variations. One was a literal mapping
+to Brainfuck code, the other did something different that required much more 
+code (https://github.com/joelsmithjohnson/pikachu-interpreter)
 
-      I have not translated that other code to use bytes, and I do not see the need
-      to do so currently, considering how obscure Pikalang is to begin with.
+I have not translated that other code to use bytes, and I do not see the need
+to do so currently, considering how obscure Pikalang is to begin with.
 """
 
 
@@ -40,11 +40,18 @@ regex_finder = "({})".format("|".join([x for x in p_mappings]))
 
 class Unit(PrintableDataUnit):
 
-    # Fill in your groups
     GROUPS = ["esoteric", "pikalang"]
+    """
+    These are "tags" for a unit. Considering it is a Esoteric unit,
+    "esoteric" is included, as well as the unit name "pikalang".
+    """
 
-    # Default priority is 50
     PRIORITY = 40
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. Has a slightly higher
+    priority
+    """
 
     def __init__(self, *args, **kwargs):
         super(PrintableDataUnit, self).__init__(*args, **kwargs)
@@ -56,6 +63,15 @@ class Unit(PrintableDataUnit):
             raise NotApplicable("not enough pikalang")
 
     def evaluate(self, case: Any):
+        """
+        Evaluate the target. Run the target as Pikalang code and
+        give the standard output results to Katana.
+
+        :param case: A case returned by ``enumerate``. For this unit,\
+        the ``enumerate`` function is not used.
+
+        :return: None. This function should not return any data.
+        """
 
         # Convert the found pikalang commands to brainfuck
         new_brainfuck = []

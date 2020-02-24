@@ -1,7 +1,9 @@
 """
 XOR decoder
 
-This unit takes one argument "key" that can be used 
+You can supply a ``key`` argument to use for the XOR operation.
+With the current implementation, if the key is not provided, this unit will
+attempt to bruteforce the XOR with a single-byte range (0-255).
 
 """
 
@@ -14,7 +16,16 @@ from katana.unit import Unit as BaseUnit
 from katana.units.crypto import CryptoUnit
 
 
-def xor(thing, key):
+def xor(data, key):
+    """
+    Perform an XOR operation across the provided data with a given key.
+
+    :param data: A byte string to use as the data for the XOR operation.
+
+    :param key: The key to use the for the XOR operation.
+
+    :return: The result of the XOR operation as a byte string.
+    """
 
     # Handle a single byte key gracefully
     if type(key) is int:
@@ -25,7 +36,7 @@ def xor(thing, key):
     result = []
 
     # XOR with repeating key
-    for i, b in enumerate(thing):
+    for i, b in enumerate(data):
         if type(b) is bytes:
             b = b[0]
         result.append(b ^ key[i % len(key)])
@@ -36,22 +47,44 @@ def xor(thing, key):
 
 class Unit(CryptoUnit):
 
-    # Fill in your groups
-    GROUPS = ["crypto"]
+    GROUPS = ["crypto", "xor"]
+    """
+    These are "tags" for a unit. Considering it is a Crypto unit, "crypto"
+    is included, and the name of the unit itself, "xor".
+    """
+
     BLOCKED_GROUPS = ["crypto"]
-    # Default priority is 50
+    """
+    These are tags for groups to not recurse into. Recursing into other crypto units
+    would be silly.
+    """
+
     PRIORITY = 70
-    # Do not recurse into self
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a lower
+    priority.
+    """
+
     RECURSE_SELF = False
+    """
+    Do not recurse into self.
+    """
 
     # Inheriting from a CryptoUnit will ensure this will not run on URLs
     # or files that could be anything useful (image, document, audio, etc.)
 
     def evaluate(self, case: Any) -> None:
         """
-        Evaluate the target.
-        :param case: A case returned by evaluate
-        :return: None
+        Evaluate the target. Perform the XOR operation with the provided
+        ``key`` argument. If no key is provided, it will bruteforce a
+        single-byte XOR within the range of 0-255.
+
+        :param case: A case returned by ``enumerate``. For this unit, \
+        the ``enumerate`` function is not used.
+
+
+        :return: None. This function should not return any data.
         """
 
         # Get the value passed

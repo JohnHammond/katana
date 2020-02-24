@@ -1,3 +1,10 @@
+"""
+Unit to decode Morsecode 
+
+This unit will attempt to read data from Morsecode, both in the International 
+sound mapping as well as the text representation with dots and dashes.
+"""
+
 #!/usr/bin/env python3
 import string
 from typing import Any
@@ -8,10 +15,21 @@ from katana.unit import RegexUnit
 
 
 class Unit(RegexUnit):
-    # Moderate priority
+
     PRIORITY = 30
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a moderate
+    priority
+    """
+
     # Unit groups
-    GROUPS = ["raw", "decode"]
+    GROUPS = ["raw", "decode", "morsecode"]
+    """
+    These are "tags" for a unit. Considering it is a Raw unit, "raw"
+    is included, as well as the tag "decode", and the unit name "morsecode".
+    """
+
     # This matches international or traditional morse code strings of at least 4 characters
     PATTERN = re.compile(
         rb"((((dit|dah|di)-?)+)|([.\-]+))( ((((dit|dah|di)-?)+)|([.\-]+))){3,}",
@@ -19,6 +37,14 @@ class Unit(RegexUnit):
     )
 
     def evaluate(self, match):
+        """
+        Evaluate the target. Translate any morsecode in the target and
+        to its English representation and recurse on any newfound information.
+
+        :param match: A match returned by the ``RegexUnit``.
+
+        :return: None. This function should not return any data.
+        """
 
         international_morse_code_mapping = {
             b"di-dah": "A",

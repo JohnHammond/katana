@@ -1,4 +1,10 @@
-#!/usr/bin/env python3
+"""
+Decode Base58 encoded text
+
+This is done by the Python3 ``base58`` module which has the
+``b58decode`` function.
+
+"""
 import binascii
 import base58
 import magic
@@ -6,30 +12,45 @@ import regex as re
 
 from katana.unit import RegexUnit
 from katana.unit import NotApplicable
-from katana.manager import Manager
-from katana.target import Target
 from katana.util import is_good_magic
 import katana.util
 
 
 class Unit(RegexUnit):
 
-    # Low priority
     PRIORITY = 60
-    # Group settings
-    GROUPS = ["raw", "decode"]
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a low
+    priority.
+    """
+
+    GROUPS = ["raw", "decode", "base58"]
+    """
+    These are "tags" for a unit. Considering it is a Raw unit, "raw"
+    is included, as well as the tag "decode", and the unit name "base58".
+    """
+
     # What are we looking for?
     PATTERN = re.compile(rb"[a-zA-Z0-9+/]+", re.MULTILINE | re.DOTALL)
 
-    def __init__(self, manager: Manager, target: Target):
-        super(Unit, self).__init__(manager, target)
+    def __init__(self, *args, **kwargs):
+        super(Unit, self).__init__(*args, **kwargs)
 
-        # if this was a given file, make sure it's not an image or anything useful
+        # if this was a file, ensure it's not an image or anything useful
         if self.target.path:
             if is_good_magic(magic.from_file(self.target.path)):
                 raise NotApplicable("potentially useful file")
 
     def evaluate(self, match):
+        """
+        Evaluate the target. Run ``base58.b58decode`` on the target and
+        recurse on any new found information.
+
+        :param match: A match returned by the ``RegexUnit``.
+
+        :return: None. This function should not return any data.
+        """
 
         try:
             # Decode chunk
@@ -39,7 +60,7 @@ class Unit(RegexUnit):
             if katana.util.isprintable(result):
                 self.manager.register_data(self, result)
             else:
-                # if it's not printable, we might only want it if it is a file...
+                # if not printable, we might only want it if it is a file.
                 magic_info = magic.from_buffer(result)
                 if katana.util.is_good_magic(magic_info):
                     # Generate an artifact and dump the data
@@ -57,15 +78,13 @@ class Unit(RegexUnit):
             pass
 
         # Base58 can also include error checking... so try to "check" as well!
-        # -----------------------------------------------------------------------
-
         try:
             result = base58.b58decode_check(match.group())
 
             if katana.util.isprintable(result):
                 self.manager.register_data(self, result)
             else:
-                # if it's not printable, we might only want it if it is a file...
+                # if not printable, we might only want it if it is a file.
                 magic_info = magic.from_buffer(result)
                 if katana.util.is_good_magic(magic_info):
                     # Create an artifact and dump data
