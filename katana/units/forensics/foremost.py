@@ -1,19 +1,25 @@
 """
-Foremost file carving
+Binwalk file carving
 
-This unit will run foremost to extract other files out of one given file
+This unit will run ``foremost`` to extract other files out of one given file.
+The syntax runs as::
+
+    foremost <target_path> -o <foremost_directory>
 
 """
+
 from typing import Any
 import subprocess
-import zipfile
 import os
 import hashlib
 
 from katana.unit import FileUnit
 
-# Quick function to get the MD5 hash of a file
+
 def md5sum(path):
+    """
+    Quick covenience function to get the MD5 hash of a file
+    """
     md5 = hashlib.md5()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
@@ -23,17 +29,30 @@ def md5sum(path):
 
 class Unit(FileUnit):
 
-    # Groups we belong to
     GROUPS = ["forensics", "foremost"]
+    """
+    These are "tags" for a unit. Considering it is a Forensics unit,
+    "forensics" is included, as well as the unit name "foremost".
+    """
 
-    # In case we have nested ZIPs, we CAN recurse into ourselves.
-    RECURSE_SELF = True
+    RECURSE_SELF = False
+    """
+    Don't recurse into any of the extract objects. Binwalk should
+    have carved them out already.
+    """
 
-    # Binary dependencies
     DEPENDENCIES = ["foremost"]
+    """
+    Required depenencies for this unit "foremost". This must be in
+    your PATH to be executed.
+    """
 
-    # Moderately high priority due to speed and broadness of applicability
     PRIORITY = 30
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a moderately
+    high priority due to speed and broadness of applicability
+    """
 
     # Verify this is not a URL..
     def __init__(self, *args, **kwargs):
@@ -43,6 +62,15 @@ class Unit(FileUnit):
             raise NotApplicable("URL")
 
     def evaluate(self, case: str):
+        """
+        Evaluate the target. Run ``foremost`` on the target and
+        recurse on any new found files.
+
+        :param case: A case returned by ``enumerate``. For this unit,\
+        the ``enumerate`` function is not used.
+
+        :return: None. This function should not return any data.
+        """
 
         # Grab the directory to store results
         foremost_directory = self.get_output_dir()

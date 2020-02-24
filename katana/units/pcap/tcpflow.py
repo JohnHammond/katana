@@ -1,8 +1,13 @@
 """
 tcpflow 
 
-This unit will carve out files from a given PCAP file using the "tcpflow"
-command-line utility.
+This unit will carve out files from a given PCAP file using the ``tcpflow``
+command-line utility. The syntax runs as::
+
+    tcpflow -r <target_path> -o <tcpflow_directory>
+
+The unit inherits from :class:`katana.unit.FileUnit` to ensure the target
+is a PCAP file.
 
 """
 from typing import Any
@@ -15,26 +20,51 @@ from katana.unit import FileUnit
 
 class Unit(FileUnit):
 
-    # Groups we belong to
     GROUPS = ["network", "pcap", "tcpflow"]
+    """
+    These are "tags" for a unit. Considering it is a pcap unit, "pcap"
+    is included, as well as the tag "network", and unit name "tcpflow"
+    """
 
-    # In case we have extract other PCAPs for some reason, we CAN recurse into ourselves.
     RECURSE_SELF = True
+    """
+    In case we have extract other PCAPs for some reason, we CAN recurse into 
+    ourselves.    
+    """
 
-    # Binary dependencies
     DEPENDENCIES = ["tcpflow"]
+    """
+    Required depenencies for this unit "tcpflow"
+    """
 
-    # Moderately high priority due to speed and broadness of applicability
     PRIORITY = 30
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a moderately
+    high priority due to speed and broadness of applicability
+    """
 
     # Verify this is not a URL..
     def __init__(self, *args, **kwargs):
+        """
+        The constructor is included just to provide a keyword for the
+        ``FileUnit``, ensuring the provided target is in fact a PCAP file.
+        """
         super(Unit, self).__init__(*args, **kwargs, keywords=["capture file", "pcap"])
 
         if self.target.is_url and not self.target.url_accessible:
             raise NotApplicable("URL")
 
-    def evaluate(self, case: str):
+    def evaluate(self, case: Any):
+        """
+        Evaluate the target. Run ``tcpflow`` on the target and
+        recurse on any new found files.
+
+        :param case: A case returned by ``enumerate``. For this unit,\
+        the ``enumerate`` function is not used.
+
+        :return: None. This function should not return any data.
+        """
 
         # Grab the directory to store results
         tcpflow_directory = self.get_output_dir()

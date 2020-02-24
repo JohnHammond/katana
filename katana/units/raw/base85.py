@@ -1,4 +1,10 @@
-#!/usr/bin/env python3
+"""
+Decode Base85 encoded text
+
+This is done by the Python3 ``base64`` module which has the
+``b85decode`` function.
+
+"""
 from typing import Any
 import binascii
 import base64
@@ -15,22 +21,40 @@ import katana.util
 
 class Unit(RegexUnit):
 
-    # Low priority, uncommon
     PRIORITY = 60
-    # Groups
-    GROUPS = ["raw", "decode"]
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a low 
+    priority, uncommon
+    """
+
+    GROUPS = ["raw", "decode", "base85"]
+    """
+    These are "tags" for a unit. Considering it is a Raw unit, "raw"
+    is included, as well as the tag "decode", and the unit name "base85".
+    """
+
     # REGEX matching base58
     PATTERN = re.compile(rb"[\x21-\x75]{4,}", re.DOTALL | re.MULTILINE)
 
     def __init__(self, manager: Manager, target: Target):
         super(Unit, self).__init__(manager, target)
 
-        # if this was a given file, make sure it's not an image or anything useful
+        # if this was a file, ensure it's not an image or anything useful
         if self.target.path:
             if is_good_magic(magic.from_file(self.target.path)):
                 raise NotApplicable("potentially useful file")
 
     def evaluate(self, match):
+        """
+        Evaluate the target. Run ``base64.b85decode`` on the target and
+        recurse on any new found information.
+
+        :param match: A match returned by the ``RegexUnit``.
+
+        :return: None. This function should not return any data.
+        """
+
         try:
             # Attempt decode
             result = base64.b85decode(match.group())
@@ -39,7 +63,7 @@ class Unit(RegexUnit):
             if katana.util.isprintable(result):
                 self.manager.register_data(self, result)
             else:
-                # if it's not printable, we might only want it if it is a file...
+                # if not printable, we might only want it if it is a file.
                 magic_info = magic.from_buffer(result)
                 if katana.util.is_good_magic(magic_info):
                     # Generate a new artifact

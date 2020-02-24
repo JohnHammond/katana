@@ -52,18 +52,32 @@ t9_mappings = {
 
 class Unit(RegexUnit, CryptoUnit):
 
-    # Fill in your groups
-    GROUPS = ["crypto"]
+    GROUPS = ["crypto", "t9"]
+    """
+    These are "tags" for a unit. Considering it is a Crypto unit, "crypto"
+    is included, and the name of the unit, "t9".
+    """
+
     BLOCKED_GROUPS = ["crypto"]
-    # Default priority is 50
+    """
+    These are tags for groups to not recurse into. Recursing into other crypto units
+    would be silly.
+    """
+
     PRIORITY = 50
-    # Do not recurse into self
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a defualt
+    priority.
+    """
+
     RECURSE_SELF = False
+    """
+    Do not recurse into self
+    """
+
     # Regular expression pattern to match
     PATTERN = re.compile(rb"[0-9*]+(\w([0-9*]+))*")
-
-    # Inheriting from a CryptoUnit will ensure this will not run on URLs
-    # or files that could be anything useful (image, document, audio, etc.)
 
     def decode_one(self, number):
         result = []

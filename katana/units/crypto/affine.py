@@ -52,20 +52,30 @@ def affine(c: int, a: int, b: int, alphabet: bytes) -> str:
 
 class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
 
-    # Fill in your groups
-    GROUPS: list = ["crypto"]
+    GROUPS: list = ["crypto", "affine"]
+    """
+    These are "tags" for a unit. Considering it is a Crypto unit, "crypto"
+    is included, as well as the name of the unit, "affine". 
+    """
 
-    # Block this from recursing into even more
     BLOCKED_GROUPS: list = ["crypto"]
+    """
+    This unit does not recurse into other Crypto units because that might
+    spiral into a disaster.
+    """
 
-    # Default priority is 50
     PRIORITY: int = 65
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a somewhat
+    lower priority due to how uncommon this is within CTFs.
+    """
 
-    # Prevent recursion into itself
     RECURSE_SELF: bool = False
-
-    # Inheriting from a CryptoUnit will ensure this will not run on URLs
-    # or files that could be anything useful (image, document, audio, etc.)
+    """
+    This unit should not recurse into itself. That could spiral in to an 
+    infinite loop.
+    """
 
     def enumerate(self) -> Generator[Any, None, None]:
         """
@@ -78,7 +88,8 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
         only correspondent value that is mathematically 
         required for the Affine cipher to work.
 
-        :return: Generator of target cases, in this case  a tuple of ``A`` and ``B`` values.
+        :return: Generator of target cases, in this case  a tuple of\
+         ``A`` and ``B`` values.
 
         """
 
@@ -116,9 +127,10 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
         """
         Evaluate the target. This will perform
         
-        :param case: A case returned by evaluate, in this case a tuple of ``A`` and ``B`` values.
+        :param case: A case returned by ``enumerate``, in this case a tuple of\
+        ``A`` and ``B`` values.
         
-        :return: None
+        :return: None. This function should not return any data.
 
         """
 

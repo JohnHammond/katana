@@ -1,4 +1,18 @@
-#!/usr/bin/env python3
+"""
+Reveal color planes on an image with ``stegsolve``.
+
+This unit is a Python implementation of ``stegsolve.jar``, which is often
+used for CTF challenges.
+
+You can supply a ``channel`` or ``plane`` index to specifically extract, but
+if these arguments are not given the unit will bruteforce and grab the least
+4 bits of each color channel (R, G, B, typically).
+
+The unit inherits from :class:`katana.unit.FileUnit` to ensure the target
+is an image file.
+
+
+"""
 from PIL import Image
 import traceback
 import os
@@ -8,8 +22,20 @@ from katana.manager import Manager
 from katana.target import Target
 
 
-def get_plane(img, data, channel, index=0):
-    """ Get a plane of an image? I don't know. I didn't write this. """
+def get_plane(img, data, channel: str, index: str = 0):
+    """ 
+    Get a new image showcasing only one channel and index of an image.
+
+    :param img: The Python PIL original image object
+
+    :param data: The pixel data of the original image object
+
+    :param channel: The channel to extract, as a string (e.g. "R", "G", "B")
+
+    :param index: The specific bit index (0-7) you want to extract
+
+    :return: A new Python PIL image with only the given channel and index.
+    """
     if channel in img.mode:
         new_image = Image.new("L", img.size)
         new_image_data = new_image.load()
@@ -40,20 +66,38 @@ def get_plane(img, data, channel, index=0):
 
 class Unit(FileUnit):
 
-    # Low priority
     PRIORITY = 70
-    # Prevent recursion into self
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a priorty
+    of 70.
+    """
+
     RECURSE_SELF = False
-    # Groups we belong to
-    GROUPS = ["stego", "image"]
+    """
+    Recurssion would be silly in this case.
+    """
 
-    # Blocked groups.... do not recurse into forensics because running
-    # binwalk or foremost on new images serves no real purpose
+    GROUPS = ["stego", "image", "stegsolve"]
+    """
+    These are "tags" for a unit. Considering it is a Stego unit, "stego"
+    is included, as well as the tag "image", and the name of the unit itself,
+    "stegsolve".
+    """
+
     BLOCKED_GROUPS = ["stego", "forensics"]
+    """
+    Blocked groups.... do not recurse into forensics because running
+    binwalk or foremost on new images serves no real purpose
+    """
 
-    def __init__(self, manager: Manager, target: Target):
-        # Call the parent constructor to ensure that this an image file!
-        super(Unit, self).__init__(manager, target, keywords=[" image "])
+    def __init__(self, *args, **kwargs):
+        """
+        The constructor is included just to provide a keyword for the
+        ``FileUnit``, ensuring the provided target is an image file. This
+        also validates it can be read and resizes the image if necessary.
+        """
+        super(Unit, self).__init__(*args, **kwargs, keywords=[" image "])
 
         try:
             self.img = Image.open(self.target.path)
@@ -79,9 +123,19 @@ class Unit(FileUnit):
             raise NotApplicable("unknown error occured")
 
     def enumerate(self):
+        """
+        This function will first yield the ``channel`` and ``plane`` that are 
+        supplied as arguments by the end-user. If they are not supplied, by
+        default it will loop through all colors channels and the least 4 bits 
+        to extract from the target. These ``channel`` and ``plane`` pairs 
+        will be presented as a tuple, to be used by the ``evaluate`` 
+        function.
+        """
+
         channel = self.get("channel", "")
         plane = self.get("plane", "")
-        # Default to 4 planesexplain
+
+        # Default to 4 planes
         max_plane = self.geti("max-plane", 4)
 
         # Try to decode planes
@@ -105,6 +159,16 @@ class Unit(FileUnit):
                 yield (channel, plane)
 
     def evaluate(self, case):
+        """
+        Evaluate the target. Create new images on specific color channels
+        and their specified bit indexes.
+
+        :param case: A case returned by ``enumerate``. For this unit, this \
+        will be a tuple with the channel (R, G, B) and plane (0-7) to extract.
+
+        :return: None. This function should not return any data.
+        """
+
         # Grab the current case
         channel, plane = case
 

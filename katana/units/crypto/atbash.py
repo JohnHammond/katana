@@ -27,19 +27,30 @@ from katana.units.crypto import CryptoUnit
 
 class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
 
-    # Fill in your groups
-    GROUPS: list = ["crypto"]
+    GROUPS: list = ["crypto", "atbash"]
+    """
+    These are "tags" for a unit. Considering it is a Crypto unit, "crypto"
+    is included, as well as the name of the unit, "atbash". 
+    """
 
     BLOCKED_GROUPS: list = ["crypto"]
+    """
+    This unit does not recurse into other Crypto units because that might
+    spiral into a disaster.
+    """
 
-    # Default priority is 50
     PRIORITY: int = 60
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a somewhat
+    lower priority due to how uncommon this is within CTFs.
+    """
 
-    # Do not recurse into self
     RECURSE_SELF: bool = False
-
-    # Inheriting from a CryptoUnit will ensure this will not run on URLs
-    # or files that could be anything useful (image, document, audio, etc.)
+    """
+    This unit should not recurse into itself. That could spiral in to an 
+    infinite loop.
+    """
 
     def evaluate(self, case: Any) -> None:
         """

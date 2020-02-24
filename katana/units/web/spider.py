@@ -1,4 +1,19 @@
-#!/usr/bin/env python3
+"""
+Spider web pages
+
+This unit will look through all of the different links on a website and
+queue each of them as a new target, or link to explore.
+
+This unit inherits from :class:`katana.units.web.WebUnit` as that contains
+lots of predefined variables that can be used throughout multiple web units.
+
+.. warning::
+    
+    This unit automatically attempts to perform malicious actions on the 
+    target. **DO NOT** use this in any circumstances where you do not have the
+    authority to operate!
+
+"""
 
 import requests
 from typing import Any
@@ -7,12 +22,17 @@ import re
 from katana.units.web import WebUnit
 from katana.unit import NotApplicable
 
-# Avoid inline JavaScript, anchors, and external links
+
 bad_starting_links = [b"#", b"javascript:", b"https://", b"http://", b"//"]
+"""
+Avoid inline JavaScript, anchors, and external links
+"""
 
 
-# This is a convenience function just to avoid bad links above
 def has_a_bad_start(link):
+    """
+    This is a convenience function just to avoid bad links above
+    """
     for bad_start in bad_starting_links:
         if link.startswith(bad_start):
             return False
@@ -23,16 +43,30 @@ def has_a_bad_start(link):
 class Unit(WebUnit):
 
     PRIORITY = 20
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a somewhat
+    higher priority.
+    """
 
-    # We don't really want to spider on EVERYTHING and start an infinite loop..
-    # We can protect against this once we create a target object
-    # and start to "keep track" of links we find in one specific website target
     PROTECTED_RECURSE = True
+    """
+    We don't really want to spider on EVERYTHING and start an infinite loop..
+    We can protect against this once we create a target object
+    and start to "keep track" of links we find in one specific website target
+    """
 
-    # If find a downloadable file, uh, just leave it alone
     BAD_MIME_TYPES = ["application/octet-stream"]
+    """
+    Avoid mime types that are downloadable files.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        The constructor is included to first determine if a found target
+        is an attachment or a bad MIME type. If this is the case, the unit
+        will abort.
+        """
         super(Unit, self).__init__(*args, **kwargs)
 
         # avoid attachments
@@ -50,6 +84,15 @@ class Unit(WebUnit):
                     )
 
     def evaluate(self, case: Any):
+        """
+        Evaluate the target. Look for links inside of the target web page and
+        reach out to each of them, queueing them as a new target.
+
+        :param case: A case returned by ``enumerate``. For this unit,\
+        the ``enumerate`` function is not used.
+
+        :return: None. This function should not return any data.
+        """
 
         # Look for links inside the page
         links = re.findall(
@@ -71,8 +114,7 @@ class Unit(WebUnit):
         for link in links:
             new_link = "{0}/{1}".format(last_location, link.decode("utf-8").lstrip("/"))
 
-            # If we found a new link, add it as as a result, recurse on it, and hunt for flags
+            # If we found a new link, add as as a result, recurse on it, and
+            # hunt for flags
             if new_link:
                 self.manager.register_data(self, new_link)
-                # katana.recurse(self, new_link)
-                # katana.add_results(self, new_link)

@@ -1,4 +1,10 @@
-#!/usr/bin/env python3
+"""
+Decode Base64 encoded text
+
+This is done by the Python3 ``base64`` module which has the
+``b64decode`` function.
+
+"""
 from typing import Any
 import binascii
 import base64
@@ -18,38 +24,40 @@ BASE64_REGEX = re.compile(BASE64_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECA
 
 class Unit(RegexUnit):
 
-    # High priority. Base64 is quick and common and matches fairly unilaterally
     PRIORITY = 25
-    # Groups this unit belongs
-    GROUPS = ["raw", "decode"]
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a high
+    priority. Base64 is quick and common and matches fairly unilaterally
+    """
+
+    GROUPS = ["raw", "decode", "base64"]
+    """
+    These are "tags" for a unit. Considering it is a Raw unit, "raw"
+    is included, as well as the tag "decode", and the unit name "base64".
+    """
+
     # Regular expression pattern
     PATTERN = re.compile(rb"[a-zA-Z0-9+/]{4,}={0,2}", re.MULTILINE | re.DOTALL)
 
     def __init__(self, manager: Manager, target: Target):
         super(Unit, self).__init__(manager, target)
 
-        # if this was a given file, make sure it's not an image or anything useful
+        # if this was a file, ensure it's not an image or anything useful
         if self.target.path:
             if is_good_magic(magic.from_file(self.target.path)):
                 raise NotApplicable("potentially useful file")
 
-        # if self.target.is_file:
-        #     raise NotApplicable("is a file")
-        #
-        # # Must be printable
-        # # if not self.target.is_printable:
-        # #    raise NotApplicable("not printable data")
-        #
-        # # Must not be english text
-        # # if self.target.is_english:
-        # # 	raise NotApplicable("seemingly english")
-        #
-        # # Find matching base64 chunks
-        # self.matches = BASE64_REGEX.findall(self.target.raw)
-        # if self.matches is None or len(self.matches) == 0:
-        #     raise NotApplicable("no base64 text found")
-
     def evaluate(self, match):
+        """
+        Evaluate the target. Run ``base64.b64decode`` on the target and
+        recurse on any new found information.
+
+        :param match: A match returned by the ``RegexUnit``.
+
+        :return: None. This function should not return any data.
+        """
+
         try:
             # Decode chunk
             result = base64.b64decode(match.group())
@@ -58,7 +66,7 @@ class Unit(RegexUnit):
             if katana.util.isprintable(result):
                 self.manager.register_data(self, result)
             else:
-                # if it's not printable, we might only want it if it is a file...
+                # if not printable, we might only want it if it is a file.
                 magic_info = magic.from_buffer(result)
                 if katana.util.is_good_magic(magic_info):
                     # Generate a new artifact
@@ -69,6 +77,7 @@ class Unit(RegexUnit):
                     handle.close()
                     # Register the artifact with the manager
                     self.manager.register_artifact(self, filename)
+
         except (UnicodeDecodeError, binascii.Error, ValueError):
             # This won't decode right... must not be right! Ignore it.
             # I pass here because there might be more than one string to decode

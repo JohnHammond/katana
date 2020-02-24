@@ -1,26 +1,58 @@
-#!/usr/bin/env python3
+"""
+Extract hidden data with ``snow``
+
+This unit will extract hidden data file using the ``snow``
+command-line utility. The syntax runs as::
+
+    snow <target_path>
+
+You can read more about the ``snow`` tool at the homepage, here: 
+http://www.darkside.com.au/snow/
+
+The unit inherits from :class:`katana.unit.FileUnit` to ensure the target
+is a file.
+
+"""
+
+
 from hashlib import md5
 import subprocess
 
 from katana.unit import NotApplicable, FileUnit
-from katana.manager import Manager
-from katana.target import Target
 import katana.units
 
 
 class Unit(FileUnit):
 
-    # Binary dependencies
     DEPENDENCIES = ["snow"]
-    # Higher priority for matching files
-    PRIORITY = 30
-    # Groups we belong to
-    GROUPS = ["stego", "image"]
+    """
+    Required depenencies for this unit "snow"
+    """
 
-    def __init__(self, manager: Manager, target: Target):
-        super(Unit, self).__init__(manager, target)
+    PRIORITY = 30
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a higher
+    priority for matching files
+    """
+
+    GROUPS = ["stego", "text", "snow"]
+    """
+    These are "tags" for a unit. Considering it is a Stego unit, "stego"
+    is included, as well as the tag "text" and the name of unit itself,
+    "snow".
+    """
 
     def evaluate(self, case):
+        """
+        Evaluate the target. Run ``snow`` on the target and
+        recurse on the standard output.
+
+        :param case: A case returned by ``enumerate``. For this unit,\
+        the ``enumerate`` function is not used.
+
+        :return: None. This function should not return any data.
+        """
 
         # Run snow on the target
         p = subprocess.Popen(

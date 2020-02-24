@@ -1,11 +1,26 @@
-#!/usr/bin/env python3
+"""
+Extract hidden data with ``stegsnow``
+
+This unit will extract hidden data file using the ``steghide``
+command-line utility. First the unit will try with an empty
+password, and then it will try with the user-supplied password argument. 
+Finally, it will bruteforce with a upplied dictionary file. 
+The syntax runs as::
+
+    stegsnow -C -p  <password> <target_path>
+
+
+The unit inherits from :class:`katana.unit.FileUnit` to ensure the target
+is a file.
+
+
+"""
+
 from hashlib import md5
 import subprocess
 import regex as re
 
 from katana.unit import FileUnit, NotApplicable
-from katana.manager import Manager
-from katana.target import Target
 import katana.util
 
 PASSWORD_PATTERN = rb"password\s*(is)?\s*[:=]\s*(\S+)\s*"
@@ -14,17 +29,33 @@ PASSWORD_REGEX = re.compile(PASSWORD_PATTERN, re.MULTILINE | re.DOTALL | re.IGNO
 
 class Unit(FileUnit):
 
-    # Binary dependencies
     DEPENDENCIES = ["stegsnow"]
-    # Higher priority for matching files
-    PRIORITY = 30
-    # Groups we are part of
-    GROUPS = ["stego", "bruteforce", "password"]
+    """
+    Required depenencies for this unit "stegsnow"
+    """
 
-    def __init__(self, manager: Manager, target: Target):
-        super(Unit, self).__init__(manager, target)
+    PRIORITY = 30
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a higher
+    priority for matching files
+    """
+
+    GROUPS = ["stego", "bruteforce", "password", "stegsnow"]
+    """
+    These are "tags" for a unit. Considering it is a stego unit, "stego"
+    is included, as well as the tags "bruteforce", "password", and the name
+    of the unit itself, "stegsnow".
+    """
 
     def enumerate(self):
+        """
+        This function will first yield an empty password, then the
+        supplied password argument, then loop through each line of
+        a provided dictionary file. The password will then be used by
+        the ``evaluate`` function to try and open the encrypted PDF.
+        """
+
         # The default is to check an empty password
         yield ""
 
@@ -38,6 +69,16 @@ class Unit(FileUnit):
                 yield line.rstrip(b"\n")
 
     def evaluate(self, case):
+        """
+        Evaluate the target. Extract any info with steghide and
+        recurse on any new found files.
+
+        :param case: A case returned by ``enumerate``. For this unit, \
+        ``case`` will first be an empty password, then the password supplied \
+        as an argument, then the contents of a provided dictionary file. 
+
+        :return: None. This function should not return any data.
+        """
 
         # Run stegsnow on the target
         p = subprocess.Popen(

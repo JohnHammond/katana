@@ -1,4 +1,23 @@
-#!/usr/bin/env python3
+"""
+Extract hidden data with ``steghide``
+
+This unit will extract hidden data file using the ``steghide``
+command-line utility. First the unit will try with an empty
+password, and then it will try with the user-supplied password argument. 
+Finally, it will bruteforce with a upplied dictionary file. 
+The syntax runs as::
+
+    steghide extract -sf <target_path> -p <password> -xf <steghide_directory>
+
+
+The unit inherits from :class:`katana.unit.FileUnit` to ensure the target
+is a JPG file.
+
+.. note::
+    
+    ``steghide`` only works on JPG files!
+
+"""
 import base64
 import subprocess
 import threading
@@ -8,16 +27,27 @@ from katana.unit import FileUnit
 
 class Unit(FileUnit):
 
-    # Binary dependencies
     DEPENDENCIES = ["steghide"]
-    # High priority for matching files
+    """
+    Required depenencies for this unit "steghide"
+    """
+
     PRIORITY = 20
-    # Groups we're a member of
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a high
+    priority for matching files
+    """
+
     GROUPS = ["stego", "image"]
+    """
+    These are "tags" for a unit. Considering it is a Stego unit, "stego"
+    is included, as well as the tag "image".
+    """
 
-    def __init__(self, katana, target):
+    def __init__(self, *args, **kwargs):
 
-        super(Unit, self).__init__(katana, target, keywords=["jpg ", "jpeg "])
+        super(Unit, self).__init__(katana, *args, **kwargs, keywords=["jpg ", "jpeg "])
 
         # Keep track of how many passwords we find (protected by lock)
         self.count_lock = threading.Lock()
@@ -25,6 +55,13 @@ class Unit(FileUnit):
         self.max_passwords = self.geti("npasswd", 1)
 
     def enumerate(self):
+        """
+        This function will first yield an empty password, then the
+        supplied password argument, then loop through each line of
+        a provided dictionary file. The password will then be used by
+        the ``evaluate`` function to try and open the encrypted PDF.
+        """
+
         # The default is to check an empty password
         yield b""
 
@@ -46,6 +83,16 @@ class Unit(FileUnit):
                     yield line
 
     def evaluate(self, password):
+        """
+        Evaluate the target. Extract any info with steghide and
+        recurse on any new found files.
+
+        :param case: A case returned by ``enumerate``. For this unit, \
+        ``case`` will first be an empty password, then the password supplied \
+        as an argument, then the contents of a provided dictionary file. 
+
+        :return: None. This function should not return any data.
+        """
 
         # Grab the output path for this target and password
         # CALEB: This is a race condition. Someone could create the file

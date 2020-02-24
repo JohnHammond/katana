@@ -1,9 +1,16 @@
 """
 Railfence Cipher decoder
 
-This takes arguments "rails" and "offset" which you can set, 
+This takes arguments ``rails`` and ``offset`` which you can set, 
 but they will be bruteforce within the range of 2-10 and 0-10 
 respectively.
+
+This unit inherits from the 
+:class:`katana.unit.NotEnglishAndPrintableUnit` class, as we can expect
+the data to still be printable characters (letters, numbers and punctuation)
+but not readable English. It also inherits from the 
+:class:`katana.units.crypto.CryptoUnit` class to ensure it is not a viable
+URL or potentially useful file.
 
 The code for this is shamelessly stolen from
 https://github.com/tothi/railfence
@@ -17,8 +24,23 @@ import string
 from katana.unit import NotEnglishAndPrintableUnit, NotApplicable
 from katana.units.crypto import CryptoUnit
 
-# Stolen from https://github.com/tothi/railfence
-def encryptFence(plain, rails, offset=0, debug=False):
+
+def encryptFence(plain, rails, offset=0):
+    """
+    Stolen from https://github.com/tothi/railfence.
+
+    This is a convenience function to encrypt data with the Railfence
+    cipher.
+
+    :param plain: The plaintext as a string.
+
+    :param rails: The integer number of rails to use in the Railfence cipher \
+    operations.
+
+    :param offset: The integer offset number to use in the Railfence cipher \
+    operations.
+    """
+
     cipher = ""
 
     # offset
@@ -37,10 +59,6 @@ def encryptFence(plain, rails, offset=0, debug=False):
             dr = 1
         rail += dr
 
-    # print pretty fence
-    if debug:
-        printFence(fence)
-
     # read fence
     for rail in range(rails):
         for x in range(length):
@@ -49,8 +67,22 @@ def encryptFence(plain, rails, offset=0, debug=False):
     return cipher
 
 
-# Stolen from https://github.com/tothi/railfence
 def decryptFence(cipher, rails, offset=0):
+    """
+    Stolen from https://github.com/tothi/railfence.
+
+    This is a convenience function to decrypt data with the Railfence
+    cipher.
+
+    :param cipher: The ciphertext as a string.
+
+    :param rails: The integer number of rails to use in the Railfence cipher \
+    operations.
+
+    :param offset: The integer offset number to use in the Railfence cipher \
+    operations.
+
+    """
     plain = ""
 
     # offset
@@ -88,24 +120,36 @@ def decryptFence(cipher, rails, offset=0):
 
 class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
 
-    # Fill in your groups
-    GROUPS = ["crypto"]
-    BLOCKED_GROUPS = ["crypto"]
-    # Default priority is 50
-    PRIORITY = 60
-    # Do not recurse into self
-    RECURSE_SELF = False
+    GROUPS = ["crypto", "railfence"]
+    """
+    These are "tags" for a unit. Considering it is a Crypto unit, "crypto"
+    is included, and the name of the unit, "railfence".
+    """
 
-    # Inheriting from a CryptoUnit will ensure this will not run on URLs
-    # or files that could be anything useful (image, document, audio, etc.)
+    BLOCKED_GROUPS = ["crypto"]
+    """
+    These are tags for groups to not recurse into. Recursing into other crypto units
+    would be silly.
+    """
+
+    PRIORITY = 60
+    """
+    Priority works with 0 being the highest priority, and 100 being the 
+    lowest priority. 50 is the default priorty. This unit has a slightly
+    lower priority.
+    """
+
+    RECURSE_SELF = False
+    """
+    This unit does not recurse into itself. That would be silly.
+    """
 
     def __init__(self, *args, **kwargs):
         super(Unit, self).__init__(*args, **kwargs)
 
+        # Grab the supplied arguments
         self.rails = self.geti("rails")
         self.offset = self.geti("offset")
-
-        self.raw_target = self.target.stream.read()
 
     def enumerate(self):
 
@@ -127,8 +171,14 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
 
     def evaluate(self, case: Any) -> None:
         """
-        Evaluate the target.
-        :param case: A case returned by enumerate
+        Evaluate the target. This simply attemptes to decrypt the \
+        target with the Railfence cipher, using the ``rails`` and \
+        ``offset`` values returned by `enumerate``. 
+        
+        :param case: A case returned by ``enumerate``. In this case, \
+        it is a tuple containing a rail value and offset value \
+        to be used for the Railfence cipher operations.
+        
         :return: None
         """
 
