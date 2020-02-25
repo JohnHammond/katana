@@ -3,7 +3,8 @@
 units against an arbitrary number of Targets of varying types in a
 multithreaded manner and reporting results to a Monitor object """
 from dataclasses import dataclass, field
-from typing import List, Any, Generator, Dict
+from typing import List, Any, Generator, Dict, Callable, Tuple
+from tqdm import tqdm
 import configparser
 import threading
 import queue
@@ -11,12 +12,30 @@ import time
 import os
 import regex as re
 import shutil
+import requests
+
 
 # katana imports
 from katana.target import Target, BadTarget
 from katana.unit import Unit, Finder
 from katana.monitor import Monitor
 import katana.util
+
+
+@dataclass
+class Download(object):
+    """ Tracks data about an active download """
+
+    # The URL being downloaded
+    url: str
+    # The size of the download (if known, -1 otherwise)
+    size: int
+    # The number of bytes already transferred
+    trans: int
+    # Average speed (bytes/second)
+    speed: float
+    # Whether this download is completed
+    completed: bool
 
 
 class Manager(configparser.ConfigParser):
@@ -96,6 +115,8 @@ class Manager(configparser.ConfigParser):
         self.cases_completed = 0
         # This might be a bad idea
         self.lock: threading.Lock = threading.Lock()
+        # Downloads that are in progress
+        self.downloads: List[Download] = []
 
     def set(self, section: str, option: str, value: Any = None) -> None:
         """ Wrapper around ConfigParser.set. We need to take into account some special
@@ -117,6 +138,78 @@ class Manager(configparser.ConfigParser):
                 return
 
         return super(Manager, self).set(section, option, value)
+
+    def download(
+        self,
+        url: str,
+        blocksize: int = 512,
+        method: Callable = requests.get,
+        *args,
+        **kwargs
+    ) -> Tuple[requests.Request, Generator[bytes, None, None]]:
+        """ Begin the streaming download of a URL.
+        
+        :param url: the URL to download
+        :type url: str
+        :param blocksize: The size of each block of data to return
+        :type blocksize: int
+        :param method: The method used to request the page, defaults to ``requests.get``
+        :type method: Callable
+        :returns: A tuple of the request object and a generator returning the chunks
+        :rtype: Tuple[requests.Request, Generator[bytes, None, None]]
+        """
+
+        # Initiate the connection
+        request: requests.Request = method(url, stream=True, *args, **kwargs)
+
+        # extract the content length
+        if "content-length" in request.headers:
+            size = int(request.headers["content-length"])
+        else:
+            size = -1
+
+        # Build the download object
+        d = Download(url, size, 0, 0, False)
+
+        # Track the download
+        self.downloads.append(d)
+
+        def _iterate_content():
+            # We catch the first one to ensure we don't start reading data too early
+            yield None
+
+            start = time.time()
+            last_update = 0
+
+            # Iterate over the data
+            for chunk in request.iter_content(chunk_size=blocksize):
+                # Increment total transfer count
+                d.trans += len(chunk)
+                # Recalculate transfer speed
+                d.speed = d.trans / (time.time() - start)
+
+                if (time.time() - last_update) > 1:
+                    self.monitor.on_download_update(self, d)
+                    last_update = time.time()
+
+                # Return the chunk
+                yield chunk
+
+            d.completed = True
+            self.monitor.on_download_update(self, d)
+
+        # Create the Generator and ignore the first result
+        gen = _iterate_content()
+        next(gen)
+
+        # Return the
+        return request, gen
+
+    @property
+    def active_downloads(self) -> List[Download]:
+        """ Grab a list of active downloads. This also cleans the download list """
+        self.downloads = [d for d in self.downloads if not d.completed]
+        return self.downloads
 
     def register_artifact(self, unit: Unit, path: str, recurse: bool = True) -> None:
         """ Register an artifact result with the manager """
@@ -315,7 +408,7 @@ class Manager(configparser.ConfigParser):
 
         if background:
             # Queue the target at a later time, so we can continue (e.g. w/ REPL)
-            threading.Thread(target=_do_queue).start()
+            t = threading.Thread(target=_do_queue, daemon=True).start()
         else:
             _do_queue()
 

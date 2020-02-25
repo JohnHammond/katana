@@ -169,6 +169,15 @@ class ReplMonitor(JsonMonitor):
                 self.repl.terminal_lock.release()
                 self.last_update = time.time()
 
+    def on_download_update(
+        self, manager: katana.manager.Manager, download: katana.manager.Download
+    ) -> None:
+        super(ReplMonitor, self).on_download_update(manager, download)
+
+        if self.repl.terminal_lock.acquire(blocking=False):
+            self.repl.async_update_prompt(self.repl.generate_prompt())
+            self.repl.terminal_lock.release()
+
 
 def get_target_choices(repl, uncomplete=False) -> List[CompletionItem]:
     """
@@ -293,9 +302,53 @@ class Repl(cmd2.Cmd):
         else:
             state = f"{Fore.GREEN}running{Style.RESET_ALL}"
 
+        downloads = self.manager.active_downloads
+        if len(downloads):
+            partials = [
+                " ",
+                "\u258F",
+                "\u258E",
+                "\u258D",
+                "\u258C",
+                "\u258B",
+                "\u258A",
+                "\u2589",
+            ]
+            if any([True for d in downloads if d.size == -1]):
+                percentage = "??"
+            else:
+                percentage = sum([d.trans for d in downloads]) / sum(
+                    [d.size for d in downloads]
+                )
+            speed = sum([d.speed for d in downloads]) / len(downloads)
+            if speed < 1024:
+                unit = "B/s"
+            elif speed < (1024 ** 2):
+                unit = "KB/s"
+                speed /= 1024.0
+            elif speed < (1024 ** 3):
+                unit = "MB/s"
+                speed /= float(1024 ** 2)
+            else:
+                unit = "GB/s"
+                speed /= float(1024 ** 3)
+            if percentage != "??":
+                percent_scaled = int(percentage * (10 * 8))
+                progress = (
+                    "\u2588" * int(percent_scaled / 8)
+                    + partials[int(percent_scaled % 8)]
+                )
+                download_state = f"[{progress.ljust(10, ' ')}] {speed:.2f}{unit}"
+            else:
+                download_state = (
+                    f"{len(downloads)} downloads - {percentage}% - {speed:.2f}{unit}"
+                )
+        else:
+            download_state = "no downloads"
+
         # update the prompt
         prompt = (
-            f"{Fore.CYAN}katana{Style.RESET_ALL} - {state} - "
+            f"{Fore.CYAN}katana{Style.RESET_ALL} - {state} - {download_state} - "
             f"{Fore.BLUE}{self.manager.work.qsize()} units queued{Style.RESET_ALL} "
             f"\n{Fore.GREEN}➜ {Style.RESET_ALL}"
         )

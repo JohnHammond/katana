@@ -70,7 +70,7 @@ class Unit(web.WebUnit):
         self.action = [b"#"]
         self.upload = re.findall(
             rb'enctype=[\'"]multipart/form-data[\'"]',
-            self.target.content,
+            self.target.raw,
             flags=re.IGNORECASE,
         )
 

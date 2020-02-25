@@ -89,6 +89,11 @@ class Monitor(object):
         """ This is called upon completion of evaluation (after manager.join()
         is complete). `timed_out` indicates if we reached a timeout. """
 
+    def on_download_update(
+        self, manager: katana.manager.Manager, download: katana.manager.Download
+    ) -> None:
+        """ Called at most once per second while downloading files for targets """
+
 
 class LoggingMonitor(Monitor):
     logger = logging.getLogger("monitor")

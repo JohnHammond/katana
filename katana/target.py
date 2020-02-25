@@ -102,6 +102,7 @@ class Target(object):
             upstream = upstream.encode("utf-8")
 
         # Initialize local variables
+        self.manager = manager
         self.upstream = upstream
         self.parent = parent
         self.is_printable = True
@@ -185,19 +186,22 @@ class Target(object):
             if self.config["manager"].getboolean("download"):
                 try:
                     self.url_accessible = True
-                    self.request = requests.get(self.upstream, verify=False)
+                    self.request, gen = self.manager.download(
+                        self.upstream, verify=False
+                    )
                 except requests.exceptions.ConnectionError:
                     self.url_accessible = False
                     self.is_url = False
                     self.content = self.upstream
                 else:
-                    self.content = self.request.content
+                    # self.content = self.request.content
                     fileid, self.path = tempfile.mkstemp()
-
                     os.close(fileid)
                     with open(self.path, "wb") as filp:
-                        filp.write(self.content)
+                        for chunk in gen:
+                            filp.write(chunk)
                     self.is_file = True
+                    self.content = None
                 # Carve out the root of the URL
             else:
                 # We were asked not to download URLs
