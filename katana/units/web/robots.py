@@ -66,6 +66,7 @@ class Unit(WebUnit):
                 "{0}/{1}".format(self.target.url_root.rstrip("/"), "robots.txt"),
                 headers=headers,
             )
+
         except requests.exceptions.ConnectionError:
 
             raise NotApplicable("cannot reach url")

