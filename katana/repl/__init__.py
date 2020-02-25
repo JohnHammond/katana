@@ -1370,7 +1370,9 @@ class Repl(cmd2.Cmd):
         for file, url in challenge.files.items():
             self.poutput(f"[{Fore.GREEN}+{Style.RESET_ALL}] ctf: queuing {file}")
             self.ctf_targets[file] = [challenge, None]
-            self.ctf_targets[file][1] = self.manager.queue_target(bytes(url, "utf-8"))
+            self.ctf_targets[file][1] = self.manager.queue_target(
+                bytes(url, "utf-8"), background=True
+            )
 
         # Queue description
         if args.description:
@@ -1380,7 +1382,7 @@ class Repl(cmd2.Cmd):
             key = hashlib.md5(challenge.description.encode("utf-8")).hexdigest()
             self.ctf_targets[key] = [challenge, None]
             self.ctf_targets[key][1] = self.manager.queue_target(
-                bytes(challenge.description, "utf-8")
+                bytes(challenge.description, "utf-8"), background=True
             )
 
         return
