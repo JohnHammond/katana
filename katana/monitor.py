@@ -4,6 +4,7 @@ from typing import BinaryIO, Any
 import logging
 import json
 import os
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,7 @@ class Monitor(object):
         directory of the Manager. The return value indicates whether a new
         target should be queued for recursion with this artifact as an upstream
         """
+
         self.artifacts.append((unit, path))
 
     def on_flag(

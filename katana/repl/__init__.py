@@ -7,6 +7,8 @@ import os
 import regex as re
 from typing import Any, Dict, List, Tuple
 import time
+from PIL import Image
+import magic
 
 import argparse
 import cmd2.plugin
@@ -26,6 +28,18 @@ from katana.repl import ctf
 from katana.target import Target
 from katana.unit import Unit
 from katana.repl.ctf import CTFProvider, Challenge, User
+
+
+def md5sum(path):
+    """
+    Quick covenience function to get the MD5 hash of a file.
+    This is used for the image display functionality.
+    """
+    md5 = hashlib.md5()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            md5.update(chunk)
+    return md5
 
 
 class MonitoringEventHandler(FileSystemEventHandler):
@@ -66,6 +80,9 @@ class ReplMonitor(JsonMonitor):
         self.repl: Repl = None
         # Last time we updated the prompt
         self.last_update = 0
+
+        # Keep track of images
+        self.images = []
 
     def on_flag(self, manager: Manager, unit: Unit, flag: str):
 
@@ -168,6 +185,32 @@ class ReplMonitor(JsonMonitor):
                 )
                 self.repl.terminal_lock.release()
                 self.last_update = time.time()
+
+    def on_artifact(
+        self, manager: katana.manager.Manager, unit: katana.unit.Unit, path: str = None
+    ) -> None:
+
+        # If this artifact is an image, determine the hash to check if we have
+        # seen this image before.
+        if " image " in magic.from_file(path):
+            md5hash = md5sum(path).hexdigest()
+
+            # If we have not seen the image before, display it and add it
+            # to our records.
+            if md5hash not in self.images:
+                self.images.append(md5hash)
+
+                # Resize the image (in case it is huge)
+                try:
+                    img = Image.open(path)
+                    basewidth = 600
+                    wpercent = basewidth / float(img.size[0])
+                    hsize = int((float(img.size[1]) * float(wpercent)))
+                    img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+                    img.show()
+                except:
+                    # If we can't seem to open the image, just ignore it.
+                    pass
 
 
 def get_target_choices(repl, uncomplete=False) -> List[CompletionItem]:

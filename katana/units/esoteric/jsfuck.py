@@ -72,17 +72,21 @@ class Unit(NotEnglishUnit):
 
             jsfuck = jsfuck.decode("utf-8")
 
-            output = subprocess.Popen(
-                [
-                    "node",
-                    "-e",
-                    "var lib = require('{0}'); lib.decode('{1}')".format(
-                        jsfuck_lib, jsfuck
-                    ),
-                ],
-                stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-            )
+            try:
+                output = subprocess.Popen(
+                    [
+                        "node",
+                        "-e",
+                        "var lib = require('{0}'); lib.decode('{1}')".format(
+                            jsfuck_lib, jsfuck
+                        ),
+                    ],
+                    stderr=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                )
+            except OSError:
+                # This cannot run the command. Stop trying this unit!!
+                return
 
             response = output.communicate()
 
