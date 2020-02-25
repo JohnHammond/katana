@@ -18,7 +18,7 @@ from katana.unit import FileUnit
 
 def md5sum(path):
     """
-    Quick covenience function to get the MD5 hash of a file
+    Quick convenience function to get the MD5 hash of a file
     """
     md5 = hashlib.md5()
     with open(path, "rb") as f:

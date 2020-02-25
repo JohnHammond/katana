@@ -33,7 +33,7 @@ from katana.repl.ctf import CTFProvider, Challenge, User
 
 def md5sum(path):
     """
-    Quick covenience function to get the MD5 hash of a file.
+    Quick convenience function to get the MD5 hash of a file.
     This is used for the image display functionality.
     """
     md5 = hashlib.md5()
@@ -106,7 +106,9 @@ class ReplMonitor(JsonMonitor):
 
         # Send a desktop notification
         notify2.init("new flag")
-        notification = notify2.Notification(f"{flag}", f"{unit} - solved challenge")
+        notification = notify2.Notification(
+            f"{flag}", f"{' -> '.join([str(x) for x in chain])}: solved"
+        )
         notification.show()
 
         # Calculate ellapsed time
