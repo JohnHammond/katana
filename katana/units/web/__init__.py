@@ -67,4 +67,5 @@ class WebUnit(BaseUnit):
         super(WebUnit, self).__init__(*args, **kwargs)
 
         if not self.target.is_url:
+
             raise NotApplicable("not a web url")

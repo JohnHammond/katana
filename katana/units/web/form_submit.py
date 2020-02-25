@@ -33,7 +33,7 @@ class Unit(web.WebUnit):
     is included, as well as the name of the unit, "cookies".
     """
 
-    RECURSE_SELF = False
+    RECURSE_SELF = True
     """
     This unit should not recurse into itself. 
     """
