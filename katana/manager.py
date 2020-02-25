@@ -4,7 +4,6 @@ units against an arbitrary number of Targets of varying types in a
 multithreaded manner and reporting results to a Monitor object """
 from dataclasses import dataclass, field
 from typing import List, Any, Generator, Dict, Callable, Tuple
-from tqdm import tqdm
 import configparser
 import threading
 import queue

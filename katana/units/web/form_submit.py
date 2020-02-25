@@ -49,12 +49,12 @@ class Unit(web.WebUnit):
 
         self.action = re.findall(
             rb'<\s*form.*action\s*=\s*[\'"](.+?)[\'"]',
-            self.target.content,
+            self.target.raw,
             flags=re.IGNORECASE,
         )
         self.method = re.findall(
             rb'<\s*form.*method\s*=\s*[\'"](.+?)[\'"]',
-            self.target.content,
+            self.target.raw,
             flags=re.IGNORECASE,
         )
 

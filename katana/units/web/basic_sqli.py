@@ -56,21 +56,17 @@ class Unit(web.WebUnit):
 
         self.action = re.findall(
             rb'<\s*form.*action\s*=\s*[\'"](.+?)[\'"]',
-            self.target.content,
+            self.target.raw,
             flags=re.IGNORECASE,
         )
         self.method = re.findall(
             rb'<\s*form.*method\s*=\s*[\'"](.+?)[\'"]',
-            self.target.content,
+            self.target.raw,
             flags=re.IGNORECASE,
         )
 
-        self.username = re.findall(
-            web.user_regex, self.target.content, flags=re.IGNORECASE
-        )
-        self.password = re.findall(
-            web.pass_regex, self.target.content, flags=re.IGNORECASE
-        )
+        self.username = re.findall(web.user_regex, self.target.raw, flags=re.IGNORECASE)
+        self.password = re.findall(web.pass_regex, self.target.raw, flags=re.IGNORECASE)
 
         # Sometimes, a form might not have an explicit location. Assume the current page!
         if self.action == []:

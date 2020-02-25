@@ -59,22 +59,18 @@ class Unit(WebUnit):
         # Look for form actions on the page
         self.action = re.findall(
             rb'<\s*form.*action\s*=\s*[\'"](.+?)[\'"]',
-            self.target.content,
+            self.target.raw,
             flags=re.IGNORECASE,
         )
         self.method = re.findall(
             rb'<\s*form.*method\s*=\s*[\'"](.+?)[\'"]',
-            self.target.content,
+            self.target.raw,
             flags=re.IGNORECASE,
         )
 
         # Look for username and password entries on the page
-        self.username = re.findall(
-            web.user_regex, self.target.content, flags=re.IGNORECASE
-        )
-        self.password = re.findall(
-            web.pass_regex, self.target.content, flags=re.IGNORECASE
-        )
+        self.username = re.findall(web.user_regex, self.target.raw, flags=re.IGNORECASE)
+        self.password = re.findall(web.pass_regex, self.target.raw, flags=re.IGNORECASE)
 
         # Only run this if we have potential information...
         if not (self.action and self.method and self.username and self.password):
