@@ -55,7 +55,7 @@ class Manager(configparser.ConfigParser):
             "recurse": True,
             "exclude": "",
             "min-data": 5,
-            "download": False,
+            "download": True,
             "template": "default",
             "timeout": 0.1,
             "prioritize": True,
@@ -211,7 +211,8 @@ class Manager(configparser.ConfigParser):
         config: configparser.ConfigParser = None,
     ) -> Target:
         """ Build a new target in the context of this manager """
-        return Target(self, upstream, parent, config=config)
+        t = Target(self, upstream, parent, config=config)
+        return t
 
     def validate(self) -> None:
         """ Validate the configuration given this manager, a target, and a set
@@ -230,6 +231,7 @@ class Manager(configparser.ConfigParser):
         parent: Unit = None,
         scale: float = None,
         config: configparser.ConfigParser = None,
+        background: bool = False,
     ) -> Target:
         """ Create a target, enumerate units, queue them, and return the target
         object """
@@ -274,24 +276,48 @@ class Manager(configparser.ConfigParser):
             target = self.target(upstream, parent, config=config)
         except BadTarget:
             return None
-        # Don't requeue targets with the same hash
-        if target.hash.hexdigest() in self.target_hash:
-            return None
+
+        def _do_queue():
+
+            # Build the target
+            try:
+                target.build_target()
+            except BadTarget:
+                target._completed = True
+                return
+
+            # Don't requeue targets with the same hash
+            if target.hash.hexdigest() in self.target_hash:
+                target._completed = True
+                return
+            else:
+                self.target_hash[target.hash.hexdigest()] = target
+
+            # Track the root targets
+            # if parent is None:
+            self.targets.append(target)
+
+            # This indicates the flag was in plaintext in the content of the target
+            # No need to queue units.
+            if target.completed:
+                return
+
+            # Enumerate valid units
+            for unit in self.finder.match(target, scale=scale):
+                self.queue(unit)
+
+            # Tell the unit we are done adding units
+            target.building = False
+
+            # If we missed this due to `building == True`, set it now
+            if target.units_left <= 0:
+                target.completed = True
+
+        if background:
+            # Queue the target at a later time, so we can continue (e.g. w/ REPL)
+            threading.Thread(target=_do_queue).start()
         else:
-            self.target_hash[target.hash.hexdigest()] = target
-
-        # Track the root targets
-        # if parent is None:
-        self.targets.append(target)
-
-        # This indicates the flag was in plaintext in the content of the target
-        # No need to queue units.
-        if target.completed:
-            return target
-
-        # Enumerate valid units
-        for unit in self.finder.match(target, scale=scale):
-            self.queue(unit)
+            _do_queue()
 
         # Return the target object
         return target

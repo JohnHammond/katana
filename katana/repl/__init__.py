@@ -699,7 +699,7 @@ class Repl(cmd2.Cmd):
                 config[section][option] = match.group(3)
 
         self.poutput(f"[{Fore.GREEN}+{Style.RESET_ALL}] {args.target}: queuing target")
-        target = self.manager.queue_target(args.target, config=config)
+        target = self.manager.queue_target(args.target, config=config, background=True)
 
         # Wait for target to complete
         if args.only:
