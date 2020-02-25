@@ -390,17 +390,17 @@ class Repl(cmd2.Cmd):
                     "\u2588" * int(percent_scaled / 8)
                     + partials[int(percent_scaled % 8)]
                 )
-                download_state = f"[{progress.ljust(10, ' ')}] {speed:.2f}{unit}"
+                download_state = f"[{progress.ljust(10, ' ')}] {speed:.2f}{unit} - "
             else:
                 download_state = (
-                    f"{len(downloads)} downloads - {percentage}% - {speed:.2f}{unit}"
+                    f"{len(downloads)} downloads - {percentage}% - {speed:.2f}{unit} - "
                 )
         else:
-            download_state = "no downloads"
+            download_state = ""
 
         # update the prompt
         prompt = (
-            f"{Fore.CYAN}katana{Style.RESET_ALL} - {state} - {download_state} - "
+            f"{Fore.CYAN}katana{Style.RESET_ALL} - {state} - {download_state}"
             f"{Fore.BLUE}{self.manager.work.qsize()} units queued{Style.RESET_ALL} "
             f"\n{Fore.GREEN}➜ {Style.RESET_ALL}"
         )
