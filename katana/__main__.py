@@ -146,7 +146,7 @@ def main():
     # Queue the specified targets
     for target in args.targets:
 
-        manager.queue_target(target)
+        manager.queue_target(target, background=True)
 
     # Build the REPL and execute it
     sys.argv = sys.argv[:1]
