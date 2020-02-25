@@ -115,16 +115,7 @@ class Target(object):
         self.units_evaluated = 0
         self.mmap = None
         self.units_left = 0
-
-        # Parse out URL pieces (also decide if this is a URL)
-        self.url_pieces = ADDRESS_REGEX.match(self.upstream)
-        self.is_url = self.url_pieces is not None
-        self.url_accessible = False  # assume False until we request it later
-        # This zero test is here because os.path.isfile chokes on a null-byte
-        self.is_file = 0 not in self.upstream and os.path.isfile(self.upstream)
-
-        # Initial assumed libmagic file type is just "data"
-        self.magic = "data"
+        self.building = True
 
         # Decide which configuration to use
         if config is not None:
@@ -135,6 +126,20 @@ class Target(object):
             # Make a copy of the manager configuration
             self.config = configparser.ConfigParser(interpolation=None)
             self.config.read_dict(manager)
+
+    def build_target(self):
+        """ This method does the resource intensive part of building the target. It is done in a separate thread to
+        decrease the time to return from the `Manager.queue_target` method (e.g. when running w/ a REPL) """
+
+        # Parse out URL pieces (also decide if this is a URL)
+        self.url_pieces = ADDRESS_REGEX.match(self.upstream)
+        self.is_url = self.url_pieces is not None
+        self.url_accessible = False  # assume False until we request it later
+        # This zero test is here because os.path.isfile chokes on a null-byte
+        self.is_file = 0 not in self.upstream and os.path.isfile(self.upstream)
+
+        # Initial assumed libmagic file type is just "data"
+        self.magic = "data"
 
         # Analyze a file target
         if self.is_file:
@@ -148,22 +153,22 @@ class Target(object):
 
             # Check if this is a subdirectory of the origin/base target in this
             # chain, if there is a chain
-            if parent is not None:
-                origin = parent.origin
+            if self.parent is not None:
+                origin = self.parent.origin
                 if origin.is_file:
                     base_target_path = os.path.dirname(origin.path)
                     base_target_path = os.path.realpath(base_target_path)
-                    if not upstream.startswith(
+                    if not self.upstream.startswith(
                         bytes(str(base_target_path), "utf-8") + b"/"
                     ):
                         is_sub_target = False
             else:
                 is_sub_target = True
 
-            upstream = os.path.realpath(upstream)
+            self.upstream = os.path.realpath(self.upstream)
 
             # Is this a sub-directory of the base results/output directory?
-            if not upstream.startswith(bytes(results_path + "/", "utf-8")):
+            if not self.upstream.startswith(bytes(results_path + "/", "utf-8")):
                 is_sub_results = False
 
             # We only analyze things as files if they are either
@@ -172,15 +177,15 @@ class Target(object):
             if not is_sub_results and not is_sub_target:
                 self.is_file = False
             else:
-                self.path = upstream
+                self.path = self.upstream
 
         # Download the target of a URL
         if self.is_url:
-            self.url_root = "/".join(upstream.decode("utf-8").split("/")[:3]) + "/"
+            self.url_root = "/".join(self.upstream.decode("utf-8").split("/")[:3]) + "/"
             if self.config["manager"].getboolean("download"):
                 try:
                     self.url_accessible = True
-                    self.request = requests.get(upstream, verify=False)
+                    self.request = requests.get(self.upstream, verify=False)
                 except requests.exceptions.ConnectionError:
                     self.url_accessible = False
                     self.is_url = False
@@ -210,7 +215,7 @@ class Target(object):
         else:
             # This is raw data. There is no file/path associated.
             self.path = None
-            self.content = upstream
+            self.content = self.upstream
 
         if isinstance(self.path, bytes):
             self.path = self.path.decode("utf-8")
@@ -320,7 +325,7 @@ class Target(object):
     def rem_unit(self):
         """ Remove a unit for tracking. Also sets completed if all units are done. """
         self.units_left -= 1
-        if self.units_left <= 0:
+        if self.units_left <= 0 and not self.building:
             self.completed = True
 
     def __repr__(self):
