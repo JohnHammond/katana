@@ -18,6 +18,8 @@ import gmpy
 from Crypto.Util.number import inverse, long_to_bytes
 from OpenSSL import crypto
 import re
+from operator import mul
+from functools import reduce
 
 from katana import util
 from katana.unit import NotEnglishUnit, NotApplicable
@@ -380,7 +382,24 @@ class Unit(NotEnglishUnit):
                 elif len(factors) == 1:
                     raise NotImplemented("factordb could not factor this!")
                 else:
-                    raise NotImplemented("We need support for multifactor RSA!")
+                    # This is the case for Multi-factor RSA!
+                    # raise NotImplemented("We need support for multifactor RSA!")
+
+                    # Multiply all factors together to get phi
+
+                    self.phi = reduce(mul, [factor - 1 for factor in factors], 1)
+
+                    # Calulate the new d private key
+                    self.d = inverse(self.e, self.phi)
+
+                    # Now calculate the plaintext
+                    self.m = pow(self.c, self.d, self.n)
+
+                    # Grab the result and give it to Katana
+                    print(self.m)
+                    result = long_to_bytes(self.m).decode()
+                    self.manager.register_data(self, result)
+                    return
 
         # If we have d, c, and n, just decrypt!
         if self.d != -1 and self.c != -1 and self.n != -1:
