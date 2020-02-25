@@ -96,7 +96,7 @@ class Unit(WebUnit):
 
         # Look for links inside the page
         links = re.findall(
-            rb'href=[\'"](.+?)[\'"]', self.target.content, flags=re.IGNORECASE
+            rb'href=[\'"](.+?)[\'"]', self.target.raw, flags=re.IGNORECASE
         )
 
         # Remove anything that might not be local (remove all bad links)
