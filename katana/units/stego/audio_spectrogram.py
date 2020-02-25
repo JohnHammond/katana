@@ -32,10 +32,14 @@ def get_info(wav_file: bytes) -> tuple:
         frame_rate = sound.frame_rate
     else:
         # Open the wave file
-        wav = wave.open(wav_file.decode("utf-8"), "r")
-        frames = wav.readframes(-1)
-        frame_rate = wav.getframerate()
-        wav.close()
+        try:
+            wav = wave.open(wav_file.decode("utf-8"), "r")
+            frames = wav.readframes(-1)
+            frame_rate = wav.getframerate()
+            wav.close()
+        except OSError:
+            # If we fail to read this, then stop
+            return None, None
 
     sound_info = pylab.fromstring(frames, "int16")
     return sound_info, frame_rate
@@ -89,6 +93,11 @@ class Unit(FileUnit):
         pylab.style.use(["seaborn-dark"])
         pylab.tight_layout()
         sound_info, frame_rate = get_info(self.target.path)
+
+        # If we fail to get info, then stop this unit/
+        if sound_info is None and frame_rate is None:
+            return  # Stop the unit
+
         pylab.figure(num=None, figsize=(18, 10), frameon=False)
         pylab.specgram(
             x=sound_info,

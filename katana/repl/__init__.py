@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Tuple
 import time
 from PIL import Image
 import magic
+import notify2
 
 import argparse
 import cmd2.plugin
@@ -102,6 +103,11 @@ class ReplMonitor(JsonMonitor):
 
         # Reverse the chain
         chain = chain[::-1]
+
+        # Send a desktop notification
+        notify2.init("new flag")
+        notification = notify2.Notification(f"{flag}", f"{unit} - solved challenge")
+        notification.show()
 
         # Calculate ellapsed time
         ellapsed = chain[0].target.end_time - chain[0].target.start_time
