@@ -190,27 +190,28 @@ class ReplMonitor(JsonMonitor):
         self, manager: katana.manager.Manager, unit: katana.unit.Unit, path: str = None
     ) -> None:
 
-        # If this artifact is an image, determine the hash to check if we have
-        # seen this image before.
-        if " image " in magic.from_file(path):
-            md5hash = md5sum(path).hexdigest()
+        if manager["manager"]["imagegui"] == "yes":
+            # If this artifact is an image, determine the hash to check if we have
+            # seen this image before.
+            if " image " in magic.from_file(path):
+                md5hash = md5sum(path).hexdigest()
 
-            # If we have not seen the image before, display it and add it
-            # to our records.
-            if md5hash not in self.images:
-                self.images.append(md5hash)
+                # If we have not seen the image before, display it and add it
+                # to our records.
+                if md5hash not in self.images:
+                    self.images.append(md5hash)
 
-                # Resize the image (in case it is huge)
-                try:
-                    img = Image.open(path)
-                    basewidth = 600
-                    wpercent = basewidth / float(img.size[0])
-                    hsize = int((float(img.size[1]) * float(wpercent)))
-                    img = img.resize((basewidth, hsize), Image.ANTIALIAS)
-                    img.show()
-                except:
-                    # If we can't seem to open the image, just ignore it.
-                    pass
+                    # Resize the image (in case it is huge)
+                    try:
+                        img = Image.open(path)
+                        basewidth = 600
+                        wpercent = basewidth / float(img.size[0])
+                        hsize = int((float(img.size[1]) * float(wpercent)))
+                        img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+                        img.show()
+                    except:
+                        # If we can't seem to open the image, just ignore it.
+                        pass
 
 
 def get_target_choices(repl, uncomplete=False) -> List[CompletionItem]:

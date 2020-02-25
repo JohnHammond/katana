@@ -8,6 +8,7 @@ import sys
 from katana.manager import Manager
 from katana.monitor import LoggingMonitor, JsonMonitor
 from katana.repl import Repl, ReplMonitor
+
 import katana.util
 import os
 
@@ -78,6 +79,13 @@ def main():
         action="store_true",
         help="Force execution even if results directory exists",
     )
+    parser.add_argument(
+        "--imagegui",
+        "-i",
+        action="store_true",
+        help="Display images as katana finds them",
+        default=False,
+    )
 
     # Add options for all the unit specific configurations
     for unit in manager.finder.units:
@@ -125,6 +133,12 @@ def main():
         manager["manager"]["force"] = "yes"
     else:
         manager["manager"]["force"] = "no"
+
+    # Determine whether to display images or not
+    if args.imagegui:
+        manager["manager"]["imagegui"] = "yes"
+    else:
+        manager["manager"]["imagegui"] = "no"
 
     # Apply unit configurations
     args_dict = vars(args)  # We need this because configs have '.'
