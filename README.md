@@ -67,36 +67,6 @@ Whenever Katana runs, it creates a `results` directory where it stores its findi
 
 **Katana will not run if the `results` directory already exists.**
 
-If you are running Katana multiple times and just want to see the output, you may want to prepend a `rm -r results;` before your Katana command. **ENSURE THAT THE SEMI-COLON IS IN PLACE SO YOU DO NOT REMOVE KATANA AND ALL OF YOUR FILES.**
-
-Katana can operate in ``auto`` mode -- as in, try every single unit applicable and throw the kitchen sink -- or it can run with individual units specified. No matter how you start Katana, you will always need to supply a *target*.
-
-- Using auto mode:
-
-```
-rm -r results; ./katana.py -a ctf_image.png
-```
-
-* Using specific units:
-
-```
-rm -r results; ./katana.py --unit stego ctf_image.png
-rm -r results; ./katana.py --unit stego.zsteg ctf_image.png
-```
-
-In these examples, the target supplied is the simple `ctf_image.png` file. You could instead supply a URL, or just given data like a ciphertext. **Note, if you supply a file that does not exist (perhaps after a typo!) Katana will treat it as data, and operate regardless of whether or not you realize your mistake.**
-
-Arguably the best feature of Katana is the ability to hunt for a flag amongst the data it cuts through. You can supply ``--flag-format`` (or shorthand ``-ff``) with a regular expression to return a flag if there was one in Katana's findings.
-
-```
-rm -r results; ./katana.py --unit raw --unit stego pierre.png --flag-format FLAG{.*}
-```
-
-Running Tests
--------------
-
-We have no formal "unittests" for Katana, admittedly. We do however have a directory `tests` where we store some of the CTF challenges or files that we have been testing Katana _against._ We do not include this in the Git repo, because that would make for a horrific mess.
-
 If you are interested, [you can download the `test` directory here](https://www.dropbox.com/sh/j0lgpwdp86j96rb/AAC5OKKAzgE69L9geBIEvOjGa?dl=0). That will allow you to run `./tests.sh` (John's bad rendition) or `./katana-test.py` (Caleb's rendition).
 
 
@@ -108,8 +78,6 @@ Katana works with a "boss -> worker" topology. One thread (the boss) spins off o
 To add functionality to Katana, you simply need to create units. The boss will then handle them appropriately.
 
 You can read more about it in the `docs` directory.
-
-
 
 
 Contributing

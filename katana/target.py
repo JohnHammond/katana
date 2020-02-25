@@ -199,16 +199,14 @@ class Target(object):
                         filp.write(self.content)
                     self.is_file = True
                 # Carve out the root of the URL
-
-            #####  to fix
             else:
                 # We were asked not to download URLs
 
                 # CALEB: I don't know why we are ignoring the download
                 # option here...
-                # self.request = requests.get(self.upstream)
-                self.content = self.upstream
-                self.is_url = False
+                self.request = requests.get(self.upstream, verify=False)
+                self.content = self.request.content
+                # self.is_url = False # still necessary for URLs or web units
 
         # Save the path to the file
         elif self.is_file:

