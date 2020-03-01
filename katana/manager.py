@@ -71,6 +71,7 @@ class Manager(configparser.ConfigParser):
             "outdir": "./results",
             "auto": False,
             "recurse": True,
+            "force": False,
             "exclude": "",
             "min-data": 5,
             "download": True,

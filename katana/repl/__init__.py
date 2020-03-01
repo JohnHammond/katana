@@ -17,6 +17,8 @@ import textwrap
 from cmd2 import clipboard
 from cmd2.argparse_custom import Cmd2ArgumentParser, CompletionItem
 from colorama import Fore, Style
+from dbus import DBusException
+from pyperclip import PyperclipException
 from watchdog.events import FileSystemEventHandler, FileSystemEvent, FileCreatedEvent
 from watchdog.observers import Observer
 from watchdog.observers.api import ObservedWatch
@@ -105,11 +107,15 @@ class ReplMonitor(JsonMonitor):
         chain = chain[::-1]
 
         # Send a desktop notification
-        notify2.init("new flag")
-        notification = notify2.Notification(
-            f"{flag}", f"{' -> '.join([str(x) for x in chain])}: solved"
-        )
-        notification.show()
+        try:
+            notify2.init("new flag")
+            notification = notify2.Notification(
+                f"{flag}", f"{' -> '.join([str(x) for x in chain])}: solved"
+            )
+            notification.show()
+        except DBusException:
+            # dbus wasn't available (probably no X11 session)
+            pass
 
         # Calculate ellapsed time
         ellapsed = chain[0].target.end_time - chain[0].target.start_time
@@ -159,7 +165,11 @@ class ReplMonitor(JsonMonitor):
                         )
 
         # Put the flag on the clipboard
-        clipboard.write_to_paste_buffer(flag)
+        try:
+            clipboard.write_to_paste_buffer(flag)
+        except PyperclipException:
+            # No clipboard available
+            pass
 
         # Notify the user
         with self.repl.terminal_lock:
@@ -335,6 +345,20 @@ class Repl(cmd2.Cmd):
 
         # Alias for quit
         self.do_exit = self.do_quit
+
+        # Add the requested filesystem monitors
+        for path in self.manager["manager"]["monitor"].split(";"):
+            path = os.path.expanduser(path)  # expand user directory if present
+            if not os.path.isdir(path):
+                self.perror(f"[{Fore.RED}!{Style.RESET}] {path}: not a directory")
+                continue
+            abs_path = os.path.realpath(os.path.abspath(path))
+            if abs_path in self.directories:
+                self.perror(f"[{Fore.RED}!{Style.RESET_ALL}] {dir}: already monitored")
+                continue
+            self.directories[abs_path] = self.observer.schedule(
+                self.fseventhandler, path, True
+            )
 
     def finalization_hook(
         self, data: cmd2.plugin.CommandFinalizationData

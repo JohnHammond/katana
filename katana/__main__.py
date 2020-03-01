@@ -131,8 +131,6 @@ def main():
     # Enable results removal if requested
     if args.force:
         manager["manager"]["force"] = "yes"
-    else:
-        manager["manager"]["force"] = "no"
 
     # Determine whether to display images or not
     if args.imagegui:
