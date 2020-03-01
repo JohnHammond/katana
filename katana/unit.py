@@ -325,7 +325,9 @@ class Unit(object):
         # Check that all the given binary dependencies exist
         try:
             for dep in cls.DEPENDENCIES:
-                subprocess.check_output(["/usr/bin/which", dep])
+                subprocess.check_output(
+                    ["/usr/bin/which", dep], stderr=subprocess.STDOUT
+                )
         except (FileNotFoundError, subprocess.CalledProcessError):
             # Ignore modules with bad dependencies
             raise MissingDependency(dep)
@@ -347,6 +349,7 @@ class Finder(object):
 
         # Default is an empty unit list
         self.units: List[Type[Unit]] = []
+        self.missing_deps: List[Tuple[str, str]] = []
 
         # Store manager reference for later
         self.manager: katana.manager.Manager = manager
@@ -356,7 +359,10 @@ class Finder(object):
             for unit in self.find(
                 os.path.join(katana.__path__[0], "units"), "katana.units."
             ):
-                self.register(unit)
+                try:
+                    self.register(unit)
+                except MissingDependency as e:
+                    self.missing_deps.append((unit.get_name(), str(e)))
 
     def validate(self) -> None:
         """ Validate the manager configuration for each unit. Units without

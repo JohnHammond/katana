@@ -347,18 +347,23 @@ class Repl(cmd2.Cmd):
         self.do_exit = self.do_quit
 
         # Add the requested filesystem monitors
-        for path in self.manager["manager"]["monitor"].split(";"):
-            path = os.path.expanduser(path)  # expand user directory if present
-            if not os.path.isdir(path):
-                self.perror(f"[{Fore.RED}!{Style.RESET_ALL}] {path}: not a directory")
-                continue
-            abs_path = os.path.realpath(os.path.abspath(path))
-            if abs_path in self.directories:
-                self.perror(f"[{Fore.RED}!{Style.RESET_ALL}] {dir}: already monitored")
-                continue
-            self.directories[abs_path] = self.observer.schedule(
-                self.fseventhandler, path, True
-            )
+        if self.manager["manager"].get("monitor", None) is not None:
+            for path in self.manager["manager"].get("monitor", "").split(";"):
+                path = os.path.expanduser(path)  # expand user directory if present
+                if not os.path.isdir(path):
+                    self.perror(
+                        f"[{Fore.RED}!{Style.RESET_ALL}] {path}: not a directory"
+                    )
+                    continue
+                abs_path = os.path.realpath(os.path.abspath(path))
+                if abs_path in self.directories:
+                    self.perror(
+                        f"[{Fore.RED}!{Style.RESET_ALL}] {dir}: already monitored"
+                    )
+                    continue
+                self.directories[abs_path] = self.observer.schedule(
+                    self.fseventhandler, path, True
+                )
 
     def finalization_hook(
         self, data: cmd2.plugin.CommandFinalizationData

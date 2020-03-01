@@ -163,6 +163,11 @@ def main():
     # Build the REPL and execute it
     sys.argv = sys.argv[:1]
     repl = Repl(manager)
+
+    # Warn the user about missing binary dependencies
+    for unit, dep in manager.finder.missing_deps:
+        repl.pwarning(f"{unit}: missing binary dependency: {dep}")
+
     sys.exit(repl.cmdloop())
 
 
