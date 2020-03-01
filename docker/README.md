@@ -35,3 +35,17 @@ The smallest configuration file you can use could be `katana.ini` like so:
 [manager]
 flag-format=FLAG{.*?}
 ```
+
+## Issues
+
+The things that do not work when using the Docker container:
+
+* Clipboard
+
+	When Katana finds a flag, it will not be able to have it automatically
+	copied into your clipboard.
+
+* Notifications
+
+	When Katana finds a flag, it will not be able to send you a desktop
+	notification explaining that it solved a challenge.

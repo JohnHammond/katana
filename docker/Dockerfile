@@ -41,7 +41,7 @@ RUN cd /usr/snow-20130616/ && make
 RUN cp /usr/snow-20130616/snow /usr/local/bin/snow && chmod +x /usr/local/bin/snow
 
 # Clone Katana Repository
-RUN git clone --recursive git@gitlab.com:JohnHammond/katana.git /katana
+RUN git clone --recursive git@github.com:JohnHammond/katana.git /katana
 # Install katana python dependencies
 RUN cd /katana && pip install -r requirements.txt
 
