@@ -18,13 +18,13 @@ python -m katana -c /data/katana.ini -m \
 	monitor=/data/targets,outdir=/data/results
 ```
 
-We recommend running katana with the following command:
+We recommend running Katana with the following command:
 
 ```shell
 $ docker run -v "$(CTF_DIRECTORY):/data" -it katana
 ```
 
 Where `CTF_DIRECTORY` is a directory with a configuration file and a `targets`
-directory. After katana is started, it will automatically monitor the `targets`
+directory. After Katana is started, it will automatically monitor the `targets`
 directory for targets to queue or you can manually queue targets as normal at
 the REPL. 

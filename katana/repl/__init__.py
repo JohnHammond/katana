@@ -350,7 +350,7 @@ class Repl(cmd2.Cmd):
         for path in self.manager["manager"]["monitor"].split(";"):
             path = os.path.expanduser(path)  # expand user directory if present
             if not os.path.isdir(path):
-                self.perror(f"[{Fore.RED}!{Style.RESET}] {path}: not a directory")
+                self.perror(f"[{Fore.RED}!{Style.RESET_ALL}] {path}: not a directory")
                 continue
             abs_path = os.path.realpath(os.path.abspath(path))
             if abs_path in self.directories:
@@ -614,7 +614,9 @@ class Repl(cmd2.Cmd):
 
                 dir = os.path.expanduser(dir)  # expand user directory if present
                 if not os.path.isdir(dir):
-                    self.perror(f"[{Fore.RED}!{Style.RESET}] {dir}: not a directory")
+                    self.perror(
+                        f"[{Fore.RED}!{Style.RESET_ALL}] {dir}: not a directory"
+                    )
                     continue
                 abs_dir = os.path.realpath(os.path.abspath(dir))
                 if abs_dir in self.directories:
@@ -631,7 +633,9 @@ class Repl(cmd2.Cmd):
 
                 # Make sure it exists
                 if not os.path.isdir(dir):
-                    self.perror(f"[{Fore.RED}!{Style.RESET}] {dir}: not a directory")
+                    self.perror(
+                        f"[{Fore.RED}!{Style.RESET_ALL}] {dir}: not a directory"
+                    )
                     continue
 
                 # Get the full canonical path
@@ -640,7 +644,7 @@ class Repl(cmd2.Cmd):
                 # Ensure we are actually monitoring it
                 if dir not in self.directories:
                     self.perror(
-                        f"[{Fore.RED}!{Style.RESET}] {dir}: not being monitored"
+                        f"[{Fore.RED}!{Style.RESET_ALL}] {dir}: not being monitored"
                     )
                     continue
 
