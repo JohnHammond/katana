@@ -18,5 +18,3 @@ make html
 When that is finished, you can `firefox build/html/index.html` to view the documentation.
 
 You may or may not need some Sphinx dependencies to run that. Theoretically, everything will be installed when running the script.
-
-**Note:** Not all the units and every piece of code may be documented just yet. Sorry. 

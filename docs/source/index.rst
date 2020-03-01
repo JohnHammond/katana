@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Katana - Automatic CTF Challenge S
+Katana - Automatic CTF Challenge Solver
 ==========================================
 
 ``katana`` is a command-line utility that automates checking the "low-hanging fruit" in a CTF challenge. Written in Python, it is intended to help an individual do things they might otherwise forget to do.
