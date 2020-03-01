@@ -41,6 +41,10 @@ RUN cd /katana && pip install -r requirements.txt
 RUN mkdir /data
 WORKDIR /katana
 
+# Copy the start script
+COPY katana.sh /start.sh
+RUN chmod +x /start.sh 
+
 # Run katana
-ENTRYPOINT ["python", "-m", "katana"]
+ENTRYPOINT ["/start.sh"]
 CMD ["-c", "/data/katana.ini", "-m", "monitor=/data/targets,outdir=/data/results"]
