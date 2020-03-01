@@ -3,7 +3,7 @@ XOR decoder
 
 You can supply a ``key`` argument to use for the XOR operation.
 With the current implementation, if the key is not provided, this unit will
-attempt to bruteforce the XOR with a single-byte range (0-255).
+attempt to bruteforce the XOR with a single-byte range (1-255).
 
 """
 
@@ -78,7 +78,7 @@ class Unit(CryptoUnit):
         """
         Evaluate the target. Perform the XOR operation with the provided
         ``key`` argument. If no key is provided, it will bruteforce a
-        single-byte XOR within the range of 0-255.
+        single-byte XOR within the range of 1-255.
 
         :param case: A case returned by ``enumerate``. For this unit, \
         the ``enumerate`` function is not used.
@@ -95,7 +95,7 @@ class Unit(CryptoUnit):
             xor_key = [xor_key]
         else:
             # if a value is not supplied, bruteforce in the single-byte range
-            xor_key = range(255)
+            xor_key = range(1, 255)
 
         for each_key in xor_key:
             try:

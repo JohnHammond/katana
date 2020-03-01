@@ -1,14 +1,6 @@
 # Dockerfile to spin up a working Katana installation
 FROM python:3.8
 
-# Setup SSH Keys
-RUN mkdir -p /root/.ssh
-COPY ./deploy-key /root/.ssh/id_rsa
-COPY ./deploy-key.pub /root/.ssh/id_rsa.pub
-COPY ./ssh_config /root/.ssh/config
-RUN chmod 600 /root/.ssh/id_rsa*
-RUN chmod 600 /root/.ssh/config
-
 # Install binary packages
 RUN apt-get update && apt-get upgrade
 # Base Dependencies
@@ -41,7 +33,7 @@ RUN cd /usr/snow-20130616/ && make
 RUN cp /usr/snow-20130616/snow /usr/local/bin/snow && chmod +x /usr/local/bin/snow
 
 # Clone Katana Repository
-RUN git clone --recursive git@github.com:JohnHammond/katana.git /katana
+RUN git clone --recursive https://github.com/JohnHammond/katana.git /katana
 # Install katana python dependencies
 RUN cd /katana && pip install -r requirements.txt
 
