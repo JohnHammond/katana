@@ -19,7 +19,7 @@ RUN apt-get install -y python-tk tk-dev libffi-dev libssl-dev pandoc \
 	libgd-dev
 RUN apt-get install -y less
 
-# Gem complained unless you bootstrapped rdoc first. I dont' know why.
+# Gem complained unless you bootstrapped rdoc first. I don't know why.
 RUN gem install rdoc --no-document
 RUN gem install zsteg
 
