@@ -72,7 +72,7 @@ autodoc_mock_imports = [
     "pillow",
     "clipboard",
     "jinja2",
-    "pyenchant",
+    "enchant",
     "pycrypto",
     "pytesseract",
     "dulwich",
