@@ -6,7 +6,7 @@
 $ docker build -t katana .
 ```
 
-*NOTE* - The build process takes ~5-10 minutes on our development machines.
+_NOTE_ - The build process takes 5-10 minutes on our development machines.
 There are a lot of dependencies to to install and/or build. Be patient.
 
 ## Running Katana
@@ -28,3 +28,10 @@ Where `CTF_DIRECTORY` is a directory with a configuration file and a `targets`
 directory. After Katana is started, it will automatically monitor the `targets`
 directory for targets to queue or you can manually queue targets as normal at
 the REPL. 
+
+The smallest configuration file you can use could be `katana.ini` like so:
+
+```
+[manager]
+flag-format=FLAG{.*?}
+```

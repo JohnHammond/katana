@@ -162,9 +162,7 @@ class Unit(object):
         if cls.get_name() not in manager:
             manager[cls.get_name()] = {}
 
-    def can_recurse(
-        self, unit_class: Type[katana.unit.Unit], direct: bool = True
-    ) -> bool:
+    def can_recurse(self, unit_class: Type[katana.unit.Unit]) -> bool:
         """ Checks recursion rules and returns whether or not recursion is
         allowed into the given unit class. This unit has already been matched
         to a given recursion target from this unit.
@@ -173,7 +171,8 @@ class Unit(object):
         self.
         
         :param unit_class: The child we are thinking recursing into
-        :param direct: I don't remember, honestly, and it's not used... """
+
+        """
 
         # Can we recurse into ourselves?
         if unit_class is self.__class__ and not self.RECURSE_SELF:
