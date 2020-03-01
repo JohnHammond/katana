@@ -46,7 +46,6 @@ sudo apt-get install -y python-tk tk-dev libffi-dev libssl-dev pandoc \
 	libgd-dev less python3-venv python3-dev python3-dbus
 ```
 
-
 **Setup**
 
 ```
@@ -62,6 +61,11 @@ you will need to run `python setup.py install` one more time.
 ```
 deactivate; rm -r env; python3.7 -m venv env; source env/bin/activate
 ```
+
+After installation, Katana will still require multiple external dependencies.
+The installation of each of these depends on your distribution and package
+manager, so an easier solution is to run Katana through Docker. You can read
+more about this in the [`docker/`](docker/) directory.
 
 
 Usage
