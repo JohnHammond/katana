@@ -104,6 +104,11 @@ class Manager(configparser.ConfigParser):
         self.threads = []
         # Flag pattern will be compiled upon running `start`
         self.flag_pattern = None
+
+        # This is dumb, and I don't know why we need it
+        if "flag-format" in self["manager"]:
+            self["manager"]["flag-format"] = self["manager"]["flag-format"]
+
         # Save the monitor
         self.monitor = monitor
         # Have we joined or aborted yet?
@@ -145,7 +150,7 @@ class Manager(configparser.ConfigParser):
         blocksize: int = 512,
         method: Callable = requests.get,
         *args,
-        **kwargs
+        **kwargs,
     ) -> Tuple[requests.Request, Generator[bytes, None, None]]:
         """ Begin the streaming download of a URL.
         
