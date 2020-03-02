@@ -7,11 +7,19 @@ from katana.repl.ctf import CTFProvider, Challenge, User, AuthenticationError, B
 
 
 class Provider(CTFProvider):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, url, username, password, api_version):
+
         self.session: requests.Session = None
         self.token: str = None
 
-        super(Provider, self).__init__(*args, **kwargs)
+        if api_version is None:
+            api_version = "/v1"
+        elif api_version == "v0":
+            api_version = ""
+        else:
+            api_version = f"/{self.api_version}"
+
+        super(Provider, self).__init__(url, username, password, api_version)
 
     def _api(
         self,
@@ -42,7 +50,7 @@ class Provider(CTFProvider):
 
         # Perform the request
         r = methods[method](
-            f"{self.url}/api/v1/{endpoint}",
+            f"{self.url}/api{self.api_version}/{endpoint}",
             json=args,
             params=params,
             headers={"X-CSRF-Token": self.token},
