@@ -106,14 +106,16 @@ class Unit(FileUnit):
         result = {"stdout": [], "stderr": []}
 
         # Capture the results from the process
-        output = bytes.decode(p.stdout.read(), "ascii")
-        error = bytes.decode(p.stderr.read(), "ascii")
+        # output = bytes.decode(p.stdout.read(), "ascii")
+        # error = bytes.decode(p.stderr.read(), "ascii")
+        output = p.stdout.read()
+        error = p.stderr.read()
 
         # zsteg does buffers output, so we need to clean those
         # unused status lines. The code below removes them.
-        delimeter = "\r"
-        cleaned_output = [line.strip() for line in output.split("\n") if line]
-        cleaned_errors = [line.strip() for line in error.split("\n") if line]
+        delimeter = b"\r"
+        cleaned_output = [line.strip() for line in output.split(b"\n") if line]
+        cleaned_errors = [line.strip() for line in error.split(b"\n") if line]
 
         # First, clean out the actual stdout results
         for line in cleaned_output:
@@ -125,7 +127,7 @@ class Unit(FileUnit):
             for temp_line in status_lines:
                 # this conditions determines whether or not if it was actually
                 # a bad status output
-                if not temp_line.endswith(".. \r"):
+                if not temp_line.endswith(b".. \r"):
 
                     # for this unit. we look for flags manually DURING the
                     # execution and processing, just in case something comes
@@ -144,7 +146,7 @@ class Unit(FileUnit):
         # (stdout or stderr), remove those keys from the results dictionary
         if not len(result["stderr"]):
             result.pop("stderr")
-        if not len(result["stdout"]) or "[=] nothing :(\r" in result["stdout"]:
+        if not len(result["stdout"]) or b"[=] nothing :(\r" in result["stdout"]:
             result.pop("stdout")
 
         # Report the results
