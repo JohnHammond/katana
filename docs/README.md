@@ -1,6 +1,9 @@
 Documentation
 ============
 
+You can find Katana's documentation online and published at 
+[https://ctf-katana.readthedocs.io](https://ctf-katana.readthedocs.io).
+
 Katana's documentation is built with [Sphinx](http://www.sphinx-doc.org/).
 
 We use docstrings so that we can take advantage of the `autodoc` extension. When you build the documentation, you can view it in a web browser with the very pretty [ReadTheDocs](https://readthedocs.org/) theme.

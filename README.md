@@ -5,6 +5,8 @@ Katana
 
 -----------------
 
+**Documentation:** [https://ctf-katana.readthedocs.io](https://ctf-katana.readthedocs.io)
+
 This repository attempts to offer code and material to automate 
 "running through the check-list" or hitting the "low-hanging fruit" in a 
 Capture the Flag challenge. It is meant to act as a utility to help an 
@@ -57,10 +59,6 @@ python setup.py install
 If things seemed to wrong during your installation, and you just want a clean 
 slate, you can tear down your virtual environment and start again. Note that 
 you will need to run `python setup.py install` one more time.
-
-```
-deactivate; rm -r env; python3.7 -m venv env; source env/bin/activate
-```
 
 After installation, Katana will still require multiple external dependencies.
 The installation of each of these depends on your distribution and package
