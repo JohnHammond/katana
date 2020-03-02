@@ -110,7 +110,9 @@ class ReplMonitor(JsonMonitor):
         try:
             notify2.init("new flag")
             notification = notify2.Notification(
-                f"{flag}", f"{' -> '.join([str(x) for x in chain])}: solved"
+                f"{flag}",
+                f"{' -> '.join([str(x) for x in chain])}: solved",
+                os.path.join(os.path.dirname(katana.util.__file__), "katana.png"),
             )
             notification.show()
         except DBusException:
