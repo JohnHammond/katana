@@ -48,13 +48,14 @@ class AuthenticationError(Exception):
 class CTFProvider(object):
     """ Provides an interface into a remote CTF platform """
 
-    def __init__(self, url: str, username: str, password: str):
+    def __init__(self, url: str, username: str, password: str, api_version: str):
         super(CTFProvider, self).__init__()
 
         # Store parameters
         self.url = url
         self.username = username
         self.password = password
+        self.api_version = api_version
         self.me: User = None
 
         # Authenticate and retrieve self user
@@ -152,6 +153,16 @@ def get_provider(provider: str, url: str, username: str, password: str) -> CTFPr
 
     # Ensure this is an allowed provider
     known_providers = ["ctfd", "pico"]
+
+    # Split provider from api version
+    provider = provider.split("-")
+    if len(provider) == 1:
+        provider = provider[0]
+        api_version = None
+    else:
+        api_version = "-".join(provider[1:])
+        provider = provider[0]
+
     if provider not in known_providers:
         raise ValueError(f"{provider}: not in known providers: {repr(known_providers)}")
 
@@ -159,7 +170,7 @@ def get_provider(provider: str, url: str, username: str, password: str) -> CTFPr
     module = importlib.import_module(f"katana.repl.{provider}")
 
     # Create the provider object
-    provider: CTFProvider = module.Provider(url, username, password)
+    provider: CTFProvider = module.Provider(url, username, password, api_version)
 
     # Return the new object
     return provider

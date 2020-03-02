@@ -6,6 +6,9 @@ from katana.repl.ctf import CTFProvider, Challenge, User, AuthenticationError, B
 
 
 class Provider(CTFProvider):
+    def __init__(self, *args, **kwargs):
+        super(Provider, self).__init__(*args, **kwargs)
+
     def _authenticate(self, username: str, password: str) -> None:
 
         # Build a requests session object
