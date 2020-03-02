@@ -290,15 +290,23 @@ class Manager(configparser.ConfigParser):
         )
         if match:
             # Flags should be printable
-            found = match.group().decode("utf-8")
-            if katana.util.isprintable(found):
-                # Strict flags means that the flag will be alone in the output
-                if unit is not None and unit.STRICT_FLAGS and len(found) == len(data):
-                    self.register_flag(unit, found)
-                    return True
-                elif unit is None or not unit.STRICT_FLAGS:
-                    self.register_flag(unit, found)
-                    return True
+            try:
+                found = match.group().decode("utf-8")
+            except UnicodeDecodeError:
+                pass
+            else:
+                if katana.util.isprintable(found):
+                    # Strict flags means that the flag will be alone in the output
+                    if (
+                        unit is not None
+                        and unit.STRICT_FLAGS
+                        and len(found) == len(data)
+                    ):
+                        self.register_flag(unit, found)
+                        return True
+                    elif unit is None or not unit.STRICT_FLAGS:
+                        self.register_flag(unit, found)
+                        return True
 
         return False
 

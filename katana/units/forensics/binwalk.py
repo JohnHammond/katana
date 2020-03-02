@@ -31,7 +31,7 @@ def md5sum(path: str) -> hashlib.md5:
 
 class Unit(FileUnit):
 
-    GROUPS = ["forensics", "binwalk"]
+    GROUPS = ["forensics", "binwalk", "carver"]
     """
     These are "tags" for a unit. Considering it is a Forensics unit,
     "forensics" is included, as well as the unit name "binwalk".
@@ -47,6 +47,11 @@ class Unit(FileUnit):
     """
     Required depenencies for this unit "binwalk". This must be in
     your PATH to be executed.
+    """
+
+    BLOCKED_GROUPS = ["carver"]
+    """
+    Groups which this unit cannot recurse into.
     """
 
     PRIORITY = 30

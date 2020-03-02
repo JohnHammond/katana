@@ -29,7 +29,7 @@ def md5sum(path):
 
 class Unit(FileUnit):
 
-    GROUPS = ["forensics", "foremost"]
+    GROUPS = ["forensics", "foremost", "carver"]
     """
     These are "tags" for a unit. Considering it is a Forensics unit,
     "forensics" is included, as well as the unit name "foremost".
@@ -45,6 +45,11 @@ class Unit(FileUnit):
     """
     Required depenencies for this unit "foremost". This must be in
     your PATH to be executed.
+    """
+
+    BLOCKED_GROUPS = ["carver"]
+    """
+    Groups which this unit cannot recurse into.
     """
 
     PRIORITY = 30

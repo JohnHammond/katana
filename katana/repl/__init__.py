@@ -143,7 +143,7 @@ class ReplMonitor(JsonMonitor):
             and "auto-submit" in self.repl.manager["ctf"]
             and self.repl.manager["ctf"].getboolean("auto-submit", False)
         ):
-            if unit.origin.is_url:
+            if unit.origin.is_url and unit.origin.url_pieces.group("uri") is not None:
                 u = unit.origin.url_pieces.group("uri").decode("utf-8").split("/")[-1]
             else:
                 u = unit.origin.hash.hexdigest()
@@ -183,6 +183,7 @@ class ReplMonitor(JsonMonitor):
         # Notify the user
         with self.repl.terminal_lock:
             self.repl.pexcept(exc)
+            self.repl.poutput("\n")
 
     def on_work(
         self,
