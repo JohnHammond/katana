@@ -87,7 +87,7 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
                 "https://6n9n93nlr5.execute-api.us-east-1.amazonaws.com/prod/solve"
             )
         except requests.exceptions.ConnectionError:
-            raise units.NotApplicable("cannot reach quipqiup solver")
+            raise NotApplicable("cannot reach quipqiup solver")
 
     def evaluate(self, case: Any) -> None:
         """
