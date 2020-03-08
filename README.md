@@ -45,13 +45,13 @@ sudo apt-get install -y python-tk tk-dev libffi-dev libssl-dev pandoc \
 	libgmp3-dev libzbar-dev tesseract-ocr xsel libpoppler-cpp-dev libmpc-dev \
 	libdbus-glib-1-dev ruby libenchant-dev apktool nodejs groff binwalk \
 	foremost tcpflow poppler-utils exiftool steghide stegsnow bison ffmpeg \
-	libgd-dev less python3-venv python3-dev python3-dbus
+	libgd-dev less
 ```
 
 **Setup**
 
 ```
-python3.7 -m venv --system-site-packages env
+python3.7 -m venv env
 source env/bin/activate
 python setup.py install
 ```
@@ -59,6 +59,16 @@ python setup.py install
 If things seemed to wrong during your installation, and you just want a clean 
 slate, you can tear down your virtual environment and start again. Note that 
 you will need to run `python setup.py install` one more time.
+
+If you're on a very old Ubuntu distribution and had to install Python 3.7
+manually, you may need to install `virtualenv` manually, and use `virtualenv`
+vice `python3.7 -m venv` like so:
+
+```
+pip3.7 install virtualenv
+virtualenv env
+source env/bin/activate
+```
 
 After installation, Katana will still require multiple external dependencies.
 The installation of each of these depends on your distribution and package
