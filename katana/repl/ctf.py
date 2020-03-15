@@ -52,7 +52,7 @@ class CTFProvider(object):
         super(CTFProvider, self).__init__()
 
         # Store parameters
-        self.url = url
+        self.url = url.rstrip("/")
         self.username = username
         self.password = password
         self.api_version = api_version

@@ -13,12 +13,13 @@ class Provider(CTFProvider):
 
         # Build a requests session object
         s = requests.session()
+        s.headers.update({"User-Agent": "curl/7.67.0"})
 
         # Grab a nonce
         r = s.get(f"{self.url}/login")
         if r.status_code != 200:
             raise AuthenticationError(
-                f"Received status code {r.status_code} from login"
+                f"Received status code {r.status_code} from login get"
             )
 
         # Parse the nonce
@@ -31,7 +32,7 @@ class Provider(CTFProvider):
         )
         if r.status_code != 200:
             raise AuthenticationError(
-                f"received status code {r.status_code} from login"
+                f"received status code {r.status_code} from login post"
             )
 
         # Grab the CSRF token
@@ -72,7 +73,7 @@ class Provider(CTFProvider):
         # Request the list of challenges
         r = self.session.get(f"{self.url}/api/v1/challenges")
         if r.status_code != 200:
-            raise RuntimeError("failed to retrieve challenges")
+            raise RuntimeError(f"failed to retrieve challenges")
 
         # Extract json data
         data = r.json()["data"]
