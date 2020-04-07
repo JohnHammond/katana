@@ -2,7 +2,7 @@
 FROM python:3.8
 
 # Install binary packages
-RUN apt-get update && apt-get upgrade
+RUN apt-get update && apt-get upgrade -y
 # Base Dependencies
 RUN apt-get install -y python-tk tk-dev libffi-dev libssl-dev pandoc \
 	libgmp3-dev libzbar-dev tesseract-ocr xsel libpoppler-cpp-dev libmpc-dev \
