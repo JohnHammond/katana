@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Tuple
 import time
 from PIL import Image
 import magic
-import notify2
+# import notify2 # JOHN: Removed to avoid dealing with dbus
 
 import argparse
 import cmd2.plugin
@@ -17,7 +17,7 @@ import textwrap
 from cmd2 import clipboard
 from cmd2.argparse_custom import Cmd2ArgumentParser, CompletionItem
 from colorama import Fore, Style
-from dbus import DBusException
+# from dbus import DBusException
 from pyperclip import PyperclipException
 from watchdog.events import FileSystemEventHandler, FileSystemEvent, FileCreatedEvent
 from watchdog.observers import Observer
@@ -106,18 +106,19 @@ class ReplMonitor(JsonMonitor):
         # Reverse the chain
         chain = chain[::-1]
 
-        # Send a desktop notification
-        try:
-            notify2.init("new flag")
-            notification = notify2.Notification(
-                f"{flag}",
-                f"{' -> '.join([str(x) for x in chain])}: solved",
-                os.path.join(os.path.dirname(katana.util.__file__), "katana.png"),
-            )
-            notification.show()
-        except DBusException:
-            # dbus wasn't available (probably no X11 session)
-            pass
+        # JOHN: This was hot-fix removed because of dbus issues.
+        # # Send a desktop notification
+        # try:
+        #     notify2.init("new flag")
+        #     notification = notify2.Notification(
+        #         f"{flag}",
+        #         f"{' -> '.join([str(x) for x in chain])}: solved",
+        #         os.path.join(os.path.dirname(katana.util.__file__), "katana.png"),
+        #     )
+        #     notification.show()
+        # except DBusException:
+        #     # dbus wasn't available (probably no X11 session)
+        #     pass
 
         # Calculate ellapsed time
         ellapsed = chain[0].target.end_time - chain[0].target.start_time
