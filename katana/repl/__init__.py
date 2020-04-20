@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Tuple
 import time
 from PIL import Image
 import magic
+
 # import notify2 # JOHN: Removed to avoid dealing with dbus
 
 import argparse
@@ -17,6 +18,7 @@ import textwrap
 from cmd2 import clipboard
 from cmd2.argparse_custom import Cmd2ArgumentParser, CompletionItem
 from colorama import Fore, Style
+
 # from dbus import DBusException
 from pyperclip import PyperclipException
 from watchdog.events import FileSystemEventHandler, FileSystemEvent, FileCreatedEvent
@@ -1513,6 +1515,10 @@ class Repl(cmd2.Cmd):
                 bytes(challenge.description, "utf-8"), config=config, background=True
             )
             targets.append(self.ctf_targets[key][1])
+
+        if len(targets) == 0:
+            self.poutput(f"[{Fore.YELLOW}!{Fore.RESET}] no targets found")
+            return
 
         # Wait for target to complete
         if args.only:
