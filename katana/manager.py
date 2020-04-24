@@ -67,7 +67,7 @@ class Manager(configparser.ConfigParser):
         # Default values for configuration items
         self["DEFAULT"] = {
             "units": "",
-            "threads": len(os.sched_getaffinity(0)),
+            "threads": 4,
             "outdir": "./results",
             "auto": False,
             "recurse": True,
@@ -84,6 +84,15 @@ class Manager(configparser.ConfigParser):
 
         if "manager" not in self:
             self["manager"] = {}
+
+        try:
+            self["DEFAULT"]["threads"] = str(len(os.sched_getaffinity(0)))
+        except AttributeError:
+            # os.sched_getaffinity does not exist. We fallback to
+            # multiprocessing
+            import multiprocessing
+
+            self["DEFAULT"]["threads"] = str(multiprocessing.cpu_count())
 
         # Load a configuration file if specified
         if config_path is not None and len(self.read(config_path)) == 0:
