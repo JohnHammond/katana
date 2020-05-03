@@ -120,7 +120,7 @@ class Unit(FileUnit):
             raise NotApplicable("cannot read file")
 
         except Exception:
-            raise NotApplicable("unknown error occured")
+            raise NotApplicable("unknown error occurred")
 
     def enumerate(self):
         """
