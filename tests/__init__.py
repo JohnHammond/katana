@@ -1,7 +1,7 @@
 """
 Katana Unit tests are designed to test the individual katana units. Confusingly,
 we are also utilizing the Python UnitTest module. Each Python Unit Test should
-correspond to a single Katana Unit. The unit test will run katan with a target,
+correspond to a single Katana Unit. The unit test will run katana with a target,
 and ensure that it finds the known flag. You should create multiple tests per
 unit to cover all valid forms of the specific challenge you are attempting to
 solve.
