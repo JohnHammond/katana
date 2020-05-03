@@ -6,7 +6,7 @@ from katana.manager import Manager
 from katana.unit import Unit
 from katana.monitor import Monitor
 
-# A custom monitor which will recieve notifications about units
+# A custom monitor which will receive notifications about units
 # The default monitor prints notifications of flags with logging as well but
 # this allows you to do fancier status updates if you are building an interface
 # of some kind
