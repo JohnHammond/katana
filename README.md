@@ -82,7 +82,7 @@ Usage
 Whenever Katana runs, it creates a `results` directory where it stores its 
 findings and **artifacts** (files et. al.) that may be generated from units.
 
-Katana will not run if the `results` directory already exists. You can use
+Katana will not run if the `results` directory already exists. You can
 have Katana automatically remove the `results` directory before it runs with
 the `--force` command-line argument.
 
