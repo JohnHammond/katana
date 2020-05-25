@@ -6,6 +6,7 @@
 # top-most EditorConfig file.
 root = true
 
+[**]
 # Unix style newlines prefered.
 end_of_line = lf
 
@@ -16,18 +17,18 @@ insert_final_newline = true
 charset = utf-8
 
 # Use 4 indentations globally except for IML/XML, check next section.
-[!*.{iml,xml}]
+[!**.{iml,xml}]
 indent_size = 4
 
 # IML & XML configuration based on ./.idea/*.iml
-[*.{iml,xml}]
+[**.{iml,xml}]
 indent_size = 2
 indent_style = space
 
 # Use spaces if the file is a python file.
-[*.py]
+[**.py]
 indent_style = space
 
 # Use tabs if the file is NOT a python, IML nor XML file.
-[!*.{py,iml,xml}]
+[!**.{py,iml,xml}]
 indent_style = tab
