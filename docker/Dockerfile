@@ -19,7 +19,7 @@ RUN gem install zsteg
 RUN git clone https://github.com/gleitz/npiet /opt/npiet
 # npiet includes `sys/malloc.h` which doesn't exist. Malloc definitions come
 # from stdlib.h.
-RUN sed -i 's|sys/malloc\.h|stdlib.h|g' /opt/npiet/npiet-foogol.y
+RUN sed -i 's|sys/malloc\.h|stdlib.h|g' /opt/npiet/npiet-foogol.*
 RUN cd /opt/npiet && ./configure && make && make install
 
 # Download jsteg
