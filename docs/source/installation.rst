@@ -61,7 +61,7 @@ distribution documentation for further assistance in installing them.
 - jsteg
 - node
 - binwalk
-- foremosy
+- foremost
 - unzip
 - npiet
 - tcpflow
