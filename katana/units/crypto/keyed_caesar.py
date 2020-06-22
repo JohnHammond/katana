@@ -1,7 +1,7 @@
 """
 Perform a Keyed Caesar cipher on the target.
 
-You can read moer about the Caesar cipher here:
+You can read more about the Caesar cipher here:
 http://rumkin.com/tools/cipher/caesar-keyed.php
 
 This unit inherits from the 
