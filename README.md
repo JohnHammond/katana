@@ -1,3 +1,5 @@
+
+[![Run on Repl.it](https://repl.it/badge/github/JohnHammond/katana)](https://repl.it/github/JohnHammond/katana)
 Katana
 ==============
 
