@@ -19,7 +19,7 @@ A lot of the context and ideas from this stem from the living document at
 
 Katana is written in Python 3.
 
-**Please note that is project is not heavily maintained.**
+**Please note that this project is not heavily maintained.**
 
 DISCLAIMER
 ----------
@@ -58,7 +58,7 @@ source env/bin/activate
 python setup.py install
 ```
 
-If things seemed to wrong during your installation, and you just want a clean 
+If things seemed to go wrong during your installation, and you just want a clean 
 slate, you can tear down your virtual environment and start again. Note that 
 you will need to run `python setup.py install` one more time.
 
