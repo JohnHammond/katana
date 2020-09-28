@@ -23,7 +23,7 @@ class Provider(CTFProvider):
             )
 
         # Parse the nonce
-        nonce = r.text.split('name="nonce" value="')[1].split('"')[0]
+        nonce = r.text.split('name="nonce"')[1].split('value="')[1].split('"')[0]
 
         # Attempt authentication
         r = s.post(
