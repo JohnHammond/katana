@@ -34,18 +34,26 @@ from katana.units.crypto import CryptoUnit
 
 def decodeSubstitute(cipher: str, time=3, spaces=True) -> str:
     """
-    This is stolen from https://github.com/rallip/substituteBreaker
+    This is based on https://github.com/rallip/substituteBreaker
     All it does is use the ``requests`` module to send the ciphertext to
     quipqiup and returns the results as a string.
     """
-    url = "https://6n9n93nlr5.execute-api.us-east-1.amazonaws.com/prod/solve"
-    clues = ""
-    data = {"ciphertext": cipher, "clues": clues, "solve-spaces": spaces, "time": time}
     headers = {
         "Content-type": "application/x-www-form-urlencoded",
     }
+    
+    clues = ""
+    url = "https://quipqiup.com/solve"
+    data = {"ciphertext":cipher,"clues":clues,"mode":"auto","was_auto":True,"was_clue":False}
 
-    return requests.post(url, data=json.dumps(data), headers=headers).text
+    response = json.loads( requests.post(url, data=json.dumps(data), headers=headers, verify=False).text )
+
+    sleep(response["max_time"])
+    
+    url = "https://quipqiup.com/status"
+    data = {"id":response["id"]}
+
+    return requests.post(url, data=json.dumps(data), headers=headers, verify=False).text
 
 
 class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
@@ -84,7 +92,7 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
 
         try:
             requests.get(
-                "https://6n9n93nlr5.execute-api.us-east-1.amazonaws.com/prod/solve"
+                "https://quipqiup.com/", verify=False
             )
         except requests.exceptions.ConnectionError:
             raise NotApplicable("cannot reach quipqiup solver")
