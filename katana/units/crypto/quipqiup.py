@@ -27,6 +27,7 @@ import json  # json is used for communicating with quipqiup.com
 import requests
 import io
 from typing import Any
+from time import sleep
 
 from katana.unit import NotEnglishAndPrintableUnit, NotApplicable
 from katana.units.crypto import CryptoUnit
