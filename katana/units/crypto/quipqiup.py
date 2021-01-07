@@ -33,7 +33,7 @@ from katana.unit import NotEnglishAndPrintableUnit, NotApplicable
 from katana.units.crypto import CryptoUnit
 
 
-def decodeSubstitute(cipher: str, time=3, spaces=True) -> str:
+def decodeSubstitute(cipher: str, time=3) -> str:
     """
     This is based on https://github.com/rallip/substituteBreaker
     All it does is use the ``requests`` module to send the ciphertext to
@@ -49,7 +49,7 @@ def decodeSubstitute(cipher: str, time=3, spaces=True) -> str:
 
     response = json.loads( requests.post(url, data=json.dumps(data), headers=headers, verify=False).text )
 
-    sleep(response["max_time"])
+    sleep( min(response["max_time"], time) )
     
     url = "https://quipqiup.com/status"
     data = {"id":response["id"]}
