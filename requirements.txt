@@ -28,3 +28,4 @@ watchdog
 regex
 dbus-python
 notify2
+pygments>=2.7.4 # not directly required, pinned by Snyk to avoid a vulnerability
