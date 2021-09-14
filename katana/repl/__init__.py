@@ -343,6 +343,14 @@ class Repl(cmd2.Cmd):
         # Register hook to update prompt
         self.register_cmdfinalization_hook(self.finalization_hook)
 
+        # Set a default flag-format if none supplied
+        if self.manager.flag_pattern is None:
+            flag_format = "S+{.*?}"
+            self.manager.set("manager", "flag-format", flag_format)
+            self.poutput(
+                f"[{Fore.BLUE}+{Style.RESET_ALL}] Using default flag-format `{flag_format}`"
+            )
+
         # Start the manager
         self.manager.start()
 
