@@ -588,7 +588,7 @@ class Repl(cmd2.Cmd):
         "directory",
         nargs="+",
         help="The directories to stop monitoring",
-        choices_method=get_monitor_choices,
+        choices_provider=get_monitor_choices,
     )
     monitor_remove_parser.set_defaults(action="remove")
 
@@ -610,7 +610,7 @@ class Repl(cmd2.Cmd):
         "directory",
         nargs="+",
         help="The directories to monitor",
-        completer_method=functools.partial(
+        completer=functools.partial(
             cmd2.Cmd.path_complete, path_filter=lambda path: os.path.isdir(path)
         ),
     )
@@ -707,7 +707,7 @@ class Repl(cmd2.Cmd):
     target_view_parser.add_argument(
         "target",
         help="The target to view",
-        choices_method=functools.partial(get_target_choices, uncomplete=False),
+        choices_provider=functools.partial(get_target_choices, uncomplete=False),
     )
     target_view_parser.set_defaults(action="view")
 
@@ -775,7 +775,7 @@ class Repl(cmd2.Cmd):
         help="Disable automatic unit selection for recursive targets",
     )
     target_add_parser.add_argument(
-        "target", help="the target to evaluate", completer_method=cmd2.Cmd.path_complete
+        "target", help="the target to evaluate", completer=cmd2.Cmd.path_complete
     )
     target_add_parser.add_argument(
         "option",
@@ -883,7 +883,7 @@ class Repl(cmd2.Cmd):
         "target",
         nargs="+",
         help="the target id (hash) to stop",
-        choices_method=functools.partial(get_target_choices, uncomplete=True),
+        choices_provider=functools.partial(get_target_choices, uncomplete=True),
     )
     target_stop_parser.set_defaults(action="stop")
 
@@ -1005,7 +1005,7 @@ class Repl(cmd2.Cmd):
     target_solution_parser.add_argument(
         "target",
         help="The target hash or upstream (if --raw is specified)",
-        choices_method=get_target_choices,
+        choices_provider=get_target_choices,
     )
     target_solution_parser.set_defaults(action="solution")
 
@@ -1176,7 +1176,7 @@ class Repl(cmd2.Cmd):
         "file",
         help="Configuration file",
         nargs="+",
-        completer_method=cmd2.Cmd.path_complete,
+        completer=cmd2.Cmd.path_complete,
     )
 
     @cmd2.with_argparser(config_parser)
@@ -1267,7 +1267,7 @@ class Repl(cmd2.Cmd):
         "challenge_id",
         type=str,
         help="Challenge ID to submit to",
-        choices_method=get_challenge_choices,
+        choices_provider=get_challenge_choices,
     )
     ctf_submit_parser.add_argument("flag", type=str, help="Flag to submit")
     ctf_submit_parser.set_defaults(action="submit")
@@ -1407,7 +1407,7 @@ class Repl(cmd2.Cmd):
         "challenge_id",
         type=str,
         help="Challenge ID to queue",
-        choices_method=get_challenge_choices,
+        choices_provider=get_challenge_choices,
     )
     ctf_queue_parser.add_argument(
         "option",
@@ -1665,7 +1665,7 @@ class Repl(cmd2.Cmd):
         "challenge_id",
         type=str,
         help="Challenge to view",
-        choices_method=get_challenge_choices,
+        choices_provider=get_challenge_choices,
     )
     ctf_show_parser.set_defaults(action="show")
 
