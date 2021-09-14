@@ -9,6 +9,7 @@ import threading
 import queue
 import time
 import os
+import sys
 import regex as re
 import shutil
 import requests
@@ -712,6 +713,12 @@ class Manager(configparser.ConfigParser):
             "force"
         ):
             shutil.rmtree(self["manager"]["outdir"])
+        elif os.path.isdir(self["manager"]["outdir"]):
+            rm_outdir = input("Do you want to delete prior results [y/N]: ")
+            if rm_outdir.lower() == "y" or rm_outdir.lower() == "yes":
+                shutil.rmtree(self["manager"]["outdir"])
+            else:
+                sys.exit()
 
         # Create the directory tree for the output
         os.makedirs(self["manager"]["outdir"])
