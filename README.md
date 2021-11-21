@@ -45,7 +45,7 @@ virtual environment.
 sudo apt update
 sudo apt-get install -y python-tk tk-dev libffi-dev libssl-dev pandoc \
 	libgmp3-dev libzbar-dev tesseract-ocr xsel libpoppler-cpp-dev libmpc-dev \
-	libdbus-glib-1-dev ruby libenchant-dev apktool nodejs groff binwalk \
+	libdbus-glib-1-dev ruby libenchant-2-dev apktool nodejs groff binwalk \
 	foremost tcpflow poppler-utils exiftool steghide stegsnow bison ffmpeg \
 	libgd-dev less
 ```
