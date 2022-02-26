@@ -1,5 +1,5 @@
 # Dockerfile to spin up a working Katana installation
-FROM python:3.8
+FROM python:3.10.0b3
 
 ENV DEBIAN_FRONTEND=noninteractive
 
