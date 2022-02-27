@@ -39,6 +39,15 @@ Getting Started
 We recommend running this with the latest version of Python and inside of a 
 virtual environment.
 
+**Lazy Way**
+
+You can just run the installer script to install and setup katana.
+
+```
+chmod +x installer.sh
+sudo ./installer.sh
+```
+
 **On Ubuntu**
 
 ```
