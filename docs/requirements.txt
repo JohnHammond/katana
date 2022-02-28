@@ -2,3 +2,4 @@ wheel
 sphinx
 sphinx-rtd-theme
 regex
+pygments>=2.7.4 # not directly required, pinned by Snyk to avoid a vulnerability
