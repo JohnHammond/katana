@@ -42,6 +42,20 @@ RUN cp /usr/snow-20130616/snow /usr/local/bin/snow && chmod +x /usr/local/bin/sn
 RUN git clone --recursive https://github.com/JohnHammond/katana.git /katana
 # Install katana python dependencies
 WORKDIR /katana
+# Unfortunately, since we clone this I can't make a change directly and had to path with SED. 
+# I could have changed the clone to a Copy of this project, but that would require moving the Dockerfile
+# up a directory (due to security concerns Docker cannot build anything above its build context)
+# Arguably a Copy makes more sense as the Clone makes testing local changes harder.
+# So to make it explicit, I'd recommend 
+# 1. Moving the Dockerfile up a directory
+# 2. Removing the Cloning
+# 3. COPYing the local folder
+	# COPY . /katana
+# 4. Updating the path of the COPY that occurs like 15 lines down
+	# COPY ./docker/katana.sh /start.sh
+
+RUN sed -i "s/cmd2=='1.0.1'/cmd2==1.0.1/" requirements.txt
+
 RUN pip install -r requirements.txt
 
 # Create runtime data directory directory
