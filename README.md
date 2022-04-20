@@ -95,7 +95,8 @@ katana --force -f "FLAG{.*?}" "RkxBR3t0aGlzX2lzX2FfYmFzZTY0X2ZsYWd9"
 Known issues
 ---------------
 ModuleNotFoundError: No module named 'colorama' -- Run `pip install colorama`
-TypeError: __init__() got a unexpected keyword argument 'choices_method' -- Run `pip uninstall cmd2 && pip install cmd2=="1.0.1"
+TypeError: \_\_init\_\
+_() got a unexpected keyword argument 'choices_method' -- Run `pip uninstall cmd2 && pip install cmd2=="1.0.1"
 
 Framework Methodology
 ---------------------
