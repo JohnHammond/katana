@@ -71,6 +71,12 @@ class Unit(CryptoUnit):
     Do not recurse into self.
     """
 
+    VERY_SPECIAL_KEYS = [
+        bytes( [i*i % 256 for i in range(128)] ), # i^2
+        bytes( [i % 256 for i in range(256)] ), # i
+        bytes( [2*i % 256 for i in range(128)] ), # 2i
+    ]
+
     # Inheriting from a CryptoUnit will ensure this will not run on URLs
     # or files that could be anything useful (image, document, audio, etc.)
 
@@ -95,7 +101,8 @@ class Unit(CryptoUnit):
             xor_key = [xor_key]
         else:
             # if a value is not supplied, bruteforce in the single-byte range
-            xor_key = range(1, 255)
+            xor_key = list(range(1, 255))
+            xor_key.extend(self.VERY_SPECIAL_KEYS)
 
         for each_key in xor_key:
             try:
