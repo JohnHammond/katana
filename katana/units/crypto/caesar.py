@@ -49,7 +49,7 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
     spiral into a disaster.
     """
 
-    PRIORITY = 40
+    PRIORITY = 70
     """
     Priority works with 0 being the highest priority, and 100 being the 
     lowest priority. 50 is the default priorty. This unit has a somewhat 

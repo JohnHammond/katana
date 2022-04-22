@@ -18,6 +18,7 @@ from typing import Generator, Any
 from katana.unit import NotEnglishAndPrintableUnit
 from katana.unit import NotApplicable
 from katana.units.crypto import CryptoUnit
+from katana import util
 
 
 class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
@@ -34,7 +35,7 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
     spiral into a disaster.
     """
 
-    PRIORITY = 50
+    PRIORITY = 80
     """
     Priority works with 0 being the highest priority, and 100 being the 
     lowest priority. 50 is the default priorty. 
@@ -85,4 +86,5 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
                 result.append((ord(c) + shift) % 255)
 
         # Register the data
-        self.manager.register_data(self, bytes(result))
+        if util.is_interesting:
+            self.manager.register_data(self, bytes(result))

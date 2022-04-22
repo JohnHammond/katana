@@ -18,7 +18,7 @@ from katana.target import Target
 from katana.util import is_good_magic
 import katana.util
 
-BASE64_PATTERN = rb"[a-zA-Z0-9+/]+={0,2}"
+BASE64_PATTERN = rb"[a-zA-Z0-9+/\n]+={0,2}"
 BASE64_REGEX = re.compile(BASE64_PATTERN, re.MULTILINE | re.DOTALL | re.IGNORECASE)
 
 
@@ -38,7 +38,7 @@ class Unit(RegexUnit):
     """
 
     # Regular expression pattern
-    PATTERN = re.compile(rb"[a-zA-Z0-9+/]{4,}={0,2}", re.MULTILINE | re.DOTALL)
+    PATTERN = re.compile(rb"[a-zA-Z0-9+/\n]{4,}={0,2}", re.MULTILINE | re.DOTALL)
 
     def __init__(self, manager: Manager, target: Target):
         super(Unit, self).__init__(manager, target)
@@ -59,24 +59,13 @@ class Unit(RegexUnit):
         """
 
         try:
-            # Decode chunk
-            result = base64.b64decode(match.group())
+            match = match.group().replace(b"\n",b'')
 
-            # Keep it if it is printable
-            if katana.util.isprintable(result):
-                self.manager.register_data(self, result)
-            else:
-                # if not printable, we might only want it if it is a file.
-                magic_info = magic.from_buffer(result)
-                if katana.util.is_good_magic(magic_info):
-                    # Generate a new artifact
-                    filename, handle = self.generate_artifact(
-                        "decoded", mode="wb", create=True
-                    )
-                    handle.write(result)
-                    handle.close()
-                    # Register the artifact with the manager
-                    self.manager.register_artifact(self, filename)
+            if len(match) < 8:
+                return
+            # Decode chunk
+            result = base64.b64decode(match)
+            self.register_result(result)
 
         except (UnicodeDecodeError, binascii.Error, ValueError):
             # This won't decode right... must not be right! Ignore it.

@@ -23,7 +23,7 @@ import string
 
 from katana.unit import NotEnglishAndPrintableUnit, NotApplicable
 from katana.units.crypto import CryptoUnit
-
+from katana import util
 
 def encryptFence(plain, rails, offset=0):
     """
@@ -132,7 +132,7 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
     would be silly.
     """
 
-    PRIORITY = 60
+    PRIORITY = 70
     """
     Priority works with 0 being the highest priority, and 100 being the 
     lowest priority. 50 is the default priorty. This unit has a slightly
@@ -183,4 +183,8 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
         """
 
         result = decryptFence(self.target.raw, case[0], case[1])
-        self.manager.register_data(self, result)
+        # Class is buggy and keeps adding # ahead 
+        if result[0] == '#':
+            return
+        if util.is_interesting:
+            self.manager.register_data(self, result)

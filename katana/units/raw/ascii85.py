@@ -62,25 +62,13 @@ class Unit(BaseUnit):
         :return: None. This function should not return any data.
         """
 
+        if len(self.target.raw) < 8:
+            return
+
         try:
             # Attempt a85decode of raw data
             result = base64.a85decode(self.target.raw)
-
-            # Check that the result is printable data
-            if katana.util.isprintable(result):
-                self.manager.register_data(self, result)
-            else:
-                # if it's not printable, we might only want it if it is a file...
-                magic_info = magic.from_buffer(result)
-                if katana.util.is_good_magic(magic_info):
-                    # Create the artifact and dump the data
-                    filename, handle = self.generate_artifact(
-                        "decoded", mode="wb", create=True
-                    )
-                    handle.write(result)
-                    handle.close()
-                    # Register the artifact with the manager
-                    self.manager.register_artifact(self, filename)
+            self.register_result(result)
 
         except (UnicodeDecodeError, binascii.Error, ValueError):
             # This won't decode right... must not be right! Ignore it.

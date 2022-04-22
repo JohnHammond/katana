@@ -90,4 +90,4 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
         result: str = "".join(new_string)
 
         # Register the data!
-        self.manager.register_data(self, result)
+        self.register_result(bytes(result, 'utf-8'))

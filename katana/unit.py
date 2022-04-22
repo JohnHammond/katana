@@ -313,6 +313,20 @@ class Unit(object):
         """ same as get but returns an integer value """
         return self.target.config.getint(str(self), name, fallback=default)
 
+    def register_result(self, result):
+        if katana.util.is_interesting(result):
+            if len(result) > 512:
+                # Generate a new artifact
+                filename, handle = self.generate_artifact(
+                    "decoded", mode="wb", create=True
+                )
+                handle.write(result)
+                handle.close()
+                # Register the artifact with the manager
+                self.manager.register_artifact(self, filename)
+            else:
+                self.manager.register_data(self, result)
+
     @classmethod
     def check_deps(cls):
         """ 
@@ -571,6 +585,8 @@ class RegexUnit(Unit):
 
     # The pattern used for matching (pre-compiled)
     PATTERN: re.Pattern
+
+    RECURSE_SELF: bool = True
 
     def __init__(self, manager: katana.manager.Manager, target: katana.target.Target):
         super(RegexUnit, self).__init__(manager, target)

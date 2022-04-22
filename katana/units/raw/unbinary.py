@@ -42,19 +42,21 @@ class Unit(RegexUnit):
         :return: None. This function should not return any data.
         """
 
-        match: List[bytes] = match.group().split(b" ")
+        match = match.group()
+        if len(match) < 40:
+            return
+
+        match: List[bytes] = match.split(b" ")
         result = b""
 
         # Convert all the bits into bytes (little endian)
         for m in match:
             result += int(m, 2).to_bytes((len(m) + 7) // 8, byteorder="little")
 
-        # Register data
-        self.manager.register_data(self, result)
+        self.register_result(result)
 
         result = b""
         for m in match:
             result += int(m, 2).to_bytes((len(m) + 7) // 8, byteorder="big")
 
-        # Register data
-        self.manager.register_data(self, result)
+        self.register_result(result)

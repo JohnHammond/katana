@@ -32,7 +32,7 @@ class Unit(RegexUnit):
     """
 
     # What are we looking for?
-    PATTERN = re.compile(rb"[a-zA-Z0-9+/]+", re.MULTILINE | re.DOTALL)
+    PATTERN = re.compile(rb"[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+", re.MULTILINE | re.DOTALL)
 
     def __init__(self, *args, **kwargs):
         super(Unit, self).__init__(*args, **kwargs)
@@ -55,22 +55,7 @@ class Unit(RegexUnit):
         try:
             # Decode chunk
             result = base58.b58decode(match.group())
-
-            # We want to know about this if it is printable!
-            if katana.util.isprintable(result):
-                self.manager.register_data(self, result)
-            else:
-                # if not printable, we might only want it if it is a file.
-                magic_info = magic.from_buffer(result)
-                if katana.util.is_good_magic(magic_info):
-                    # Generate an artifact and dump the data
-                    filename, handle = self.generate_artifact(
-                        "decoded", mode="wb", create=True
-                    )
-                    handle.write(result)
-                    handle.close()
-                    # Register the artifact with the manager
-                    self.manager.register_artifact(self, filename)
+            self.register_result(result)
 
         except (UnicodeDecodeError, binascii.Error, ValueError):
             # This won't decode right... must not be right! Ignore it.
@@ -80,21 +65,8 @@ class Unit(RegexUnit):
         # Base58 can also include error checking... so try to "check" as well!
         try:
             result = base58.b58decode_check(match.group())
+            self.register_result(result)
 
-            if katana.util.isprintable(result):
-                self.manager.register_data(self, result)
-            else:
-                # if not printable, we might only want it if it is a file.
-                magic_info = magic.from_buffer(result)
-                if katana.util.is_good_magic(magic_info):
-                    # Create an artifact and dump data
-                    filename, handle = katana.create_artifact(
-                        self, "decoded", mode="wb", create=True
-                    )
-                    handle.write(result)
-                    handle.close()
-                    # Register artifact
-                    self.manager.register_artifact(filename)
         except (UnicodeDecodeError, binascii.Error, ValueError):
             # This won't decode right... must not be right! Ignore it.
             # I pass here because there might be more than one string to decode

@@ -70,24 +70,11 @@ class Unit(BaseUnit):
         # Iterate over all matched chunks
         for match in self.matches:
             try:
+                if len(match) < 16:
+                    continue
                 # Attempt decode
                 result = base64.b32decode(match)
-
-                # Keep it if it is printable
-                if katana.util.isprintable(result):
-                    self.manager.register_data(self, result)
-                else:
-                    # if not printable, we might only want it if it is a file.
-                    magic_info = magic.from_buffer(result)
-                    if katana.util.is_good_magic(magic_info):
-                        # Generate a new artifact
-                        filename, handle = self.generate_artifact(
-                            "decoded", mode="wb", create=True
-                        )
-                        handle.write(result)
-                        handle.close()
-                        # Register the artifact with the manager
-                        self.manager.register_artifact(self, filename)
+                self.register_result(result)
             except (UnicodeDecodeError, binascii.Error, ValueError):
                 # This won't decode right... must not be right! Ignore it.
                 # `pass` because there might be more than one string to decode

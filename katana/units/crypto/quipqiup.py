@@ -105,6 +105,8 @@ class Unit(NotEnglishAndPrintableUnit, CryptoUnit):
 
             found_solution = ""
             best_score = -10
+            if "solutions" not in j.keys():
+                return
             for sol in j["solutions"]:
                 if sol["logp"] > best_score:
                     found_solution = sol["plaintext"]

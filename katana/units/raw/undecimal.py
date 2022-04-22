@@ -41,7 +41,11 @@ class Unit(RegexUnit):
         :return: None. This function should not return any data.
         """
 
-        match = match.group().split(b" ")
+        match = match.group()
+        if len(match) < 12:
+            return
+
+        match = match.split(b" ")
 
         # Decode big endian
         result = b""
@@ -49,7 +53,7 @@ class Unit(RegexUnit):
             v = int(m)
             result += v.to_bytes((v.bit_length() + 7) // 8, byteorder="little")
 
-        self.manager.register_data(self, result)
+        self.register_result(result)
 
         # Decode little endian
         result = b""
@@ -57,4 +61,4 @@ class Unit(RegexUnit):
             v = int(m)
             result += v.to_bytes((v.bit_length() + 7) // 8, byteorder="big")
 
-        self.manager.register_data(self, result)
+        self.register_result(result)

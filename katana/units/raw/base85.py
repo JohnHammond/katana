@@ -58,22 +58,8 @@ class Unit(RegexUnit):
         try:
             # Attempt decode
             result = base64.b85decode(match.group())
+            self.register_result(result)
 
-            # Keep it if it is printable
-            if katana.util.isprintable(result):
-                self.manager.register_data(self, result)
-            else:
-                # if not printable, we might only want it if it is a file.
-                magic_info = magic.from_buffer(result)
-                if katana.util.is_good_magic(magic_info):
-                    # Generate a new artifact
-                    filename, handle = self.generate_artifact(
-                        "decoded", mode="wb", create=True
-                    )
-                    handle.write(result)
-                    handle.close()
-                    # Register the artifact with the manager
-                    self.manager.register_artifact(self, filename)
         except (UnicodeDecodeError, binascii.Error, ValueError):
             # This won't decode right... must not be right! Ignore it.
             # I pass here because there might be more than one string to decode

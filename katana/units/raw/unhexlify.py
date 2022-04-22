@@ -13,7 +13,7 @@ from katana.unit import RegexUnit
 
 class Unit(RegexUnit):
 
-    PRIORITY = 50
+    PRIORITY = 20
     """
     Priority works with 0 being the highest priority, and 100 being the 
     lowest priority. 50 is the default priorty. This unit has a
@@ -42,15 +42,18 @@ class Unit(RegexUnit):
         :return: None. This function should not return any data.
         """
 
-        match = match.group().split(b" ")
+        match = match.group()
+        if len(match) < 12:
+            return
 
+        match = match.split(b" ")
         # Decode big endian
         result = b""
         for m in match:
             v = int(m, 16)
             result += v.to_bytes((v.bit_length() + 7) // 8, byteorder="little")
 
-        self.manager.register_data(self, result)
+        self.register_result(result)
 
         # Decode little endian
         result = b""
@@ -58,4 +61,4 @@ class Unit(RegexUnit):
             v = int(m, 16)
             result += v.to_bytes((v.bit_length() + 7) // 8, byteorder="big")
 
-        self.manager.register_data(self, result)
+        self.register_result(result)

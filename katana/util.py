@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import string
-
+import magic
 
 def isprintable(data) -> bool:
     """
@@ -11,8 +11,8 @@ def isprintable(data) -> bool:
 
     if type(data) is str:
         data = data.encode("utf-8")
-    for c in data:
-        if c not in bytes(string.printable, "ascii"):
+    for c in set(data):
+        if chr(c) not in string.printable:
             return False
 
     return True
@@ -78,3 +78,20 @@ def process_output(popen_object) -> dict:
 
     if result != {}:
         return result
+
+def is_interesting(data: str):
+    # longer than flg{}
+    if len(data) < 6:
+        return False
+
+    # Keep it if it is printable
+    if isprintable(data):
+        return True
+
+    # Only check if file at least half a Kb
+    elif len(data) > 512:
+        # if not printable, we might only want it if it is a file.
+        magic_info = magic.from_buffer(data)
+        if is_good_magic(magic_info):
+            return True
+    return False
