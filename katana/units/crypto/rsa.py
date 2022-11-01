@@ -283,7 +283,7 @@ def parse_int(given):
         given = given.rstrip("L")
 
     if not util.isprintable(given):
-        given = binascii.hexlify(given)
+        given = binascii.hexlify(given.encode('utf-8')).decode('utf-8')
     if given == "":
         return found
     try:

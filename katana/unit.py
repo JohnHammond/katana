@@ -544,7 +544,10 @@ class FileUnit(Unit):
 
         # No keywords matched
         raise NotApplicable("no matching keywords found in magic")
-
+    
+    def file_content(self):
+        with open(self.target.path, 'rb') as f:
+            return f.read()
 
 class PrintableDataUnit(Unit):
     r""" This unit base class ensures that the target content contains only

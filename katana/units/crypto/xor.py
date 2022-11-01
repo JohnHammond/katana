@@ -10,8 +10,9 @@ attempt to bruteforce the XOR with a single-byte range (1-255).
 import io
 from typing import Any
 
-import binascii
 
+import binascii
+from katana.util import *
 from katana.unit import Unit as BaseUnit
 from katana.units.crypto import CryptoUnit
 
@@ -109,7 +110,9 @@ class Unit(CryptoUnit):
                 result = xor(self.target.raw, each_key).decode("latin-1")
 
                 if result.isprintable():
-                    self.manager.register_data(self, result)
+                    c = freq_analysis(result)
+                    if maybe_l33t(result, c) or maybe_text(result, c):
+                        self.manager.register_data(self, result)
 
             except (UnicodeDecodeError, binascii.Error):
                 # if we cannot decode it, stop trying!

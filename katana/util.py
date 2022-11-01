@@ -1,6 +1,26 @@
 #!/usr/bin/env python3
 import string
 import magic
+from collections import Counter
+
+def freq_analysis(content):
+    c = Counter(content)
+    return c.most_common()
+    
+def maybe_text(content, freq=None):
+    if freq is None:
+        freq = freq_analysis(content)
+    s = set([e[0].lower() for e in freq[:20]])
+    tf = {'r', '\n', 'n', 'y', 'd', 'c', 'i', 'l', 'f', 'u', 'g', 'p', ' ', 't', 'o', 'h', 'a', 's', 'm', 'e'}
+    return len(s & tf) > len(tf) / 0.5
+
+def maybe_l33t(content, freq=None):
+    if freq is None:
+        freq = freq_analysis(content)
+    s = set([e[0].lower() for e in freq[:20]])
+    tf = {'r', 'n', 'y', 'd', 'c', '1', 'l', 'f', 'u', 'g', 'p', '_', 't', '0', 'h', '4', 's', 'm', '3'}
+    return len(s & tf) > len(tf) / 0.5
+
 
 def isprintable(data) -> bool:
     """

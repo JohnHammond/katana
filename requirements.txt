@@ -28,3 +28,4 @@ watchdog
 regex
 dbus-python
 notify2
+pwntools

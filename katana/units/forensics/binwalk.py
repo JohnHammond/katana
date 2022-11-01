@@ -17,7 +17,6 @@ import shutil
 
 from katana.unit import FileUnit
 
-
 def md5sum(path: str) -> hashlib.md5:
     """
     Quick convenience function to get the MD5 hash of a file
