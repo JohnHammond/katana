@@ -7,7 +7,7 @@ pillow
 clipboard
 jinja2
 pyenchant
-pycrypto
+pycryptodome
 pytesseract
 dulwich
 bs4
@@ -21,7 +21,7 @@ PyPDF2
 pyopenssl
 sphinx
 sphinx-rtd-theme
-gmpy
+gmpy2
 git+https://github.com/elliptic-shiho/primefac-fork#egg=primefac
 cmd2=='1.0.1'
 watchdog
